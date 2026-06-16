@@ -1,0 +1,34 @@
+---
+description: Prisma 7 schema change workflow (generate + db push)
+globs: prisma/schema.prisma
+alwaysApply: false
+---
+
+# Prisma Workflow
+
+This project uses **Prisma 7** (`prisma-client`, rust-free) with the `@prisma/adapter-pg` driver adapter. The client is generated to `lib/generated/prisma` (git-ignored), and the DB connection lives in `prisma.config.ts` via `DATABASE_URL`.
+
+## After ANY change to `prisma/schema.prisma`
+
+Always run both, in order:
+
+```bash
+npx prisma generate   # regenerate the typed client in lib/generated/prisma
+npx prisma db push    # sync the schema to the database (local dev)
+```
+
+`prisma generate` is required because in Prisma 7 `db push`/`migrate` no longer run it automatically, and the client is not in `node_modules`.
+
+## DATABASE_URL hostname
+
+- Running CLI/app **on the host** (normal dev): use `localhost`
+  `postgresql://meisterflow:meisterflow@localhost:5432/meisterflow_crm`
+- Inside the Docker Compose network: use the `postgres` service hostname.
+
+If `db push` fails with `P1001: Can't reach database server at postgres:5432`, the `.env` `DATABASE_URL` is using the Docker hostname while running on the host — switch it to `localhost`.
+
+## Notes
+
+- Start the database first: `docker compose up -d`.
+- Use `npx prisma db push` for local iteration; use `npx prisma migrate dev` only when creating versioned migrations.
+- Import the client from `@/lib/generated/prisma/client` and the shared instance from `@/lib/prisma`.

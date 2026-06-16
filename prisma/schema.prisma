@@ -1,0 +1,91 @@
+// Prisma 7 schema.
+// The database connection URL is configured in prisma.config.ts (not here).
+// Docs: https://www.prisma.io/docs/orm/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  BUSINESS
+}
+
+enum SubscriptionPlan {
+  BASIC
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELED
+}
+
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  name     String?
+  password String
+  role     Role   @default(BUSINESS)
+
+  // A user can own many businesses (1 user → many businesses).
+  businesses Business[]
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Business {
+  id      String @id @default(uuid())
+  name    String
+  slug    String @unique
+  ownerId String @map("owner_id")
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  config       BusinessConfig?
+  subscription Subscription?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@map("businesses")
+}
+
+model BusinessConfig {
+  id                 String    @id @default(uuid())
+  businessId         String    @unique @map("business_id")
+  business           Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  timezone           String    @default("UTC")
+  resendDomain       String?   @map("resend_domain")
+  resendFromEmail    String?   @map("resend_from_email")
+  calendarProvider   String?   @map("calendar_provider")
+  calendarConnectedAt DateTime? @map("calendar_connected_at")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("business_configs")
+}
+
+model Subscription {
+  id         String             @id @default(uuid())
+  businessId String             @unique @map("business_id")
+  business   Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  plan       SubscriptionPlan   @default(BASIC)
+  status     SubscriptionStatus @default(ACTIVE)
+  notes      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscriptions")
+}
