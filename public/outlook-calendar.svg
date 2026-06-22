@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <rect x="12" y="45" width="122" height="122" rx="20" fill="#0078D4"/>
+  <path d="M176 132V60c0-8.8-7.2-16-16-16H70c-8.8 0-16 7.2-16 16v18h90c5.5 0 10 4.5 10 10v60h16c8.8 0 16-7.2 16-16z" fill="#0364B8"/>
+  <path d="M160 60H70c-8.8 0-16 7.2-16 16v108c0 8.8 7.2 16 16 16h90c8.8 0 16-7.2 16-16V76c0-8.8-7.2-16-16-16z" fill="#0078D4"/>
+  <path d="M80 94h48v48H80V94z" fill="#36B8F1" opacity="0.8"/>
+  <path d="M80 94h24v48H80V94z" fill="#0078D4" opacity="0.3"/>
+  <path d="M100 110l14-10v20l-14-10z" fill="white" opacity="0.6"/>
+  <path d="M52 82h52c5.5 0 10 4.5 10 10v52c0 5.5-4.5 10-10 10H52c-5.5 0-10-4.5-10-10V92c0-5.5 4.5-10 10-10z" fill="url(#outlook-gradient)"/>
+  <defs>
+    <linearGradient id="outlook-gradient" x1="47" y1="79" x2="107" y2="157" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1784D9"/>
+      <stop offset="0.5" stop-color="#107AD5"/>
+      <stop offset="1" stop-color="#0A63C9"/>
+    </linearGradient>
+  </defs>
+  <path d="M72 106c-6.9 0-12.5 5.2-12.5 13s5.6 13 12.5 13c7 0 12.5-5.2 12.5-13s-5.5-13-12.5-13zm0 20.5c-3.8 0-6.6-3.2-6.6-7.5s2.8-7.5 6.6-7.5c3.9 0 6.6 3.2 6.6 7.5s-2.7 7.5-6.6 7.5z" fill="white"/>
+  <path d="M88.5 106h-3v4h-5v-4h-3v20h3v-8h5v8h3v-20z" fill="white"/>
+</svg>

@@ -1,0 +1,2 @@
+companyName,firstName,lastName,email,phone,address,postalCode,city,status,notes
+Acme Roofing Ltd,Anna,Meier,anna.meier@example.com,+41 44 123 45 67,"Bahnhofstrasse 10",8001,Zuerich,ACTIVE,"Preferred contact: email"

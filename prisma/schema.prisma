@@ -26,6 +26,167 @@ enum SubscriptionStatus {
   CANCELED
 }
 
+enum CalendarProvider {
+  GOOGLE
+  OUTLOOK
+}
+
+enum BookingStatus {
+  SCHEDULED
+  CONFIRMED
+  COMPLETED
+  OVERDUE
+  CANCELLED
+}
+
+enum BookingSource {
+  CALENDAR_IMPORT
+  MANUAL
+}
+
+enum CustomerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum CustomerSource {
+  MANUAL
+  CALENDAR
+}
+
+enum CronJobType {
+  RECONCILE_CALENDAR
+  RENEW_CALENDAR_SUBSCRIPTIONS
+  PROCESS_INVOICE_SEQUENCES
+  PROCESS_SEQUENCES
+  PROCESS_APPOINTMENT_REMINDERS
+}
+
+enum CronJobStatus {
+  SUCCESS
+  FAILED
+  SKIPPED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum MessageChannel {
+  EMAIL
+}
+
+enum MessageProvider {
+  GOOGLE
+  OUTLOOK
+  RESEND
+  MAILGUN
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum MessagePurpose {
+  INVOICE
+  REVIEW
+  REMINDER
+  SEQUENCE
+  MANUAL
+}
+
+enum SequenceType {
+  INVOICE
+  REVIEW
+}
+
+enum SequenceDelayUnit {
+  MINUTES
+  HOURS
+  DAYS
+}
+
+enum SequenceEnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum ActivityLogType {
+  CRONJOB
+  EMAIL
+  SEQUENCE
+}
+
+enum ActivityLogSubType {
+  SEQUENCE
+  INVOICE
+  CALENDAR
+  REVIEW
+  APPOINTMENT
+}
+
+enum ActivityLogLevel {
+  INFO
+  WARNING
+  ERROR
+}
+
+enum ReminderOffsetUnit {
+  MINUTES
+  HOURS
+  DAYS
+}
+
+enum WebsiteTicketStatus {
+  PENDING
+  IN_PROGRESS
+  NEEDS_INFO
+  DONE
+  REJECTED
+}
+
+enum WebsiteTicketType {
+  UI_CHANGE
+  BUG
+  CONTENT
+  SEO
+  OTHER
+}
+
+enum WebsiteTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum FormFieldType {
+  TEXT
+  EMAIL
+  PHONE
+  TEXTAREA
+  NUMBER
+}
+
+enum EnquiryStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+enum ReviewStatus {
+  REQUESTED
+  RECEIVED
+  DECLINED
+}
+
 model User {
   id       String @id @default(uuid())
   email    String @unique
@@ -33,10 +194,8 @@ model User {
   password String
   role     Role   @default(BUSINESS)
 
-  // A user can own many businesses (1 user → many businesses).
   businesses Business[]
 
-  // Metadata
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -50,8 +209,22 @@ model Business {
   ownerId String @map("owner_id")
   owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  config       BusinessConfig?
-  subscription Subscription?
+  config              BusinessConfig?
+  subscription        Subscription?
+  calendarConnection  CalendarConnection?
+  customers           Customer[]
+  bookings            Booking[]
+  reviews             Review[]
+  invoiceTemplates    InvoiceTemplate[]
+  invoices            Invoice[]
+  sequenceTemplates   SequenceTemplate[]
+  sequenceEnrollments SequenceEnrollment[]
+  activityLogs        ActivityLog[]
+  appointmentReminderConfig AppointmentReminderConfig?
+  websiteTickets      WebsiteTicket[]
+  inbox               Inbox?
+  forms               Form[]
+  enquiries           Enquiry[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -61,19 +234,536 @@ model Business {
 }
 
 model BusinessConfig {
-  id                 String    @id @default(uuid())
-  businessId         String    @unique @map("business_id")
-  business           Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  timezone           String    @default("UTC")
-  resendDomain       String?   @map("resend_domain")
-  resendFromEmail    String?   @map("resend_from_email")
-  calendarProvider   String?   @map("calendar_provider")
-  calendarConnectedAt DateTime? @map("calendar_connected_at")
+  id         String   @id @default(uuid())
+  businessId String   @unique @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  timezone        String @default("UTC")
+  resendDomain    String? @map("resend_domain")
+  resendFromEmail String? @map("resend_from_email")
+
+  // Onboarding progress
+  onboardingStep        Int       @default(1) @map("onboarding_step")
+  onboardingCompletedAt DateTime? @map("onboarding_completed_at")
+
+  // Step 1 — company details
+  contactPerson  String? @map("contact_person")
+  businessEmail  String? @map("business_email")
+  phone          String?
+  address        String?
+  postalCode     String? @map("postal_code")
+  city           String?
+  taxId          String? @map("tax_id")
+  billingAddress String? @map("billing_address")
+  logoUrl        String? @map("logo_url")
+
+  // Step 2 — website
+  domain             String?
+  hostingAccess      String? @map("hosting_access")
+  hasWebsite         Boolean @default(false) @map("has_website")
+  hasGoogleAnalytics Boolean @default(false) @map("has_google_analytics")
+  hasSearchConsole   Boolean @default(false) @map("has_search_console")
+  googleReviewUrl    String? @map("google_review_url") @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("business_configs")
+}
+
+model WebsiteTicket {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  type        WebsiteTicketType     @default(UI_CHANGE)
+  priority    WebsiteTicketPriority @default(MEDIUM)
+  status      WebsiteTicketStatus   @default(PENDING)
+  title       String
+  description String?               @db.Text
+  adminNote   String?               @db.Text @map("admin_note")
+
+  attachments WebsiteTicketAttachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, status, createdAt])
+  @@map("website_tickets")
+}
+
+model WebsiteTicketAttachment {
+  id         String        @id @default(uuid())
+  ticketId   String        @map("ticket_id")
+  ticket     WebsiteTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  businessId String        @map("business_id")
+
+  fileName    String @map("file_name")
+  mimeType    String @map("mime_type")
+  size        Int
+  storagePath String @map("storage_path") @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId])
+  @@index([businessId])
+  @@map("website_ticket_attachments")
+}
+
+model CalendarConnection {
+  id             String            @id @default(uuid())
+  businessId     String            @unique @map("business_id")
+  business       Business          @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  provider       CalendarProvider?
+  accessToken    String?           @map("access_token") @db.Text
+  refreshToken   String?           @map("refresh_token") @db.Text
+  tokenExpiresAt DateTime?         @map("token_expires_at")
+  accountEmail   String?           @map("account_email")
+  accountId      String?           @map("account_id")
+  calendarId     String?           @default("primary") @map("calendar_id")
+  connectedAt    DateTime?         @map("connected_at")
+
+  // Sync state
+  syncToken           String?   @map("sync_token") @db.Text
+  deltaLink           String?   @map("delta_link") @db.Text
+  initialSyncAt       DateTime? @map("initial_sync_at")
+  lastSyncedAt        DateTime? @map("last_synced_at")
+  lastSyncError       String?   @map("last_sync_error") @db.Text
+
+  // Google push channel
+  webhookChannelId    String?   @map("webhook_channel_id")
+  webhookResourceId   String?   @map("webhook_resource_id")
+  webhookExpiresAt    DateTime? @map("webhook_expires_at")
+
+  // Microsoft Graph subscription
+  graphSubscriptionId String?   @map("graph_subscription_id")
+  graphSubscriptionExpiresAt DateTime? @map("graph_subscription_expires_at")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("calendar_connections")
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  companyName String? @map("company_name")
+  firstName   String? @map("first_name")
+  lastName    String? @map("last_name")
+  email       String
+  phone       String?
+  address     String?
+  postalCode  String? @map("postal_code")
+  city        String?
+  status      CustomerStatus @default(ACTIVE)
+  source      CustomerSource @default(MANUAL)
+  notes       String?        @db.Text
+
+  bookings Booking[]
+  invoices Invoice[]
+  messages Message[]
+  reviews  Review[]
+  enquiries Enquiry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, email])
+  @@index([businessId])
+  @@index([businessId, status])
+  @@map("customers")
+}
+
+model Booking {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId String?  @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  title    String
+  startsAt DateTime @map("starts_at")
+  endsAt   DateTime @map("ends_at")
+  location String?
+  meetingUrl String? @map("meeting_url")
+  notes    String?  @db.Text
+  allDay   Boolean  @default(false) @map("all_day")
+  remindersEnabled Boolean @default(true) @map("reminders_enabled")
+
+  status BookingStatus @default(CONFIRMED)
+  source BookingSource @default(CALENDAR_IMPORT)
+
+  externalEventId  String?           @map("external_event_id")
+  externalProvider CalendarProvider? @map("external_provider")
+
+  /** True for rows created during the one-time forward import (skip automation). */
+  skipAutomation Boolean @default(false) @map("skip_automation")
+
+  reviews Review[]
+  reminderDeliveries AppointmentReminderDelivery[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, externalProvider, externalEventId])
+  @@index([businessId, startsAt])
+  @@map("bookings")
+}
+
+model AppointmentReminderConfig {
+  id         String   @id @default(uuid())
+  businessId String   @unique @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  enabled  Boolean @default(false)
+  subject  String  @default("Reminder: {{appointmentTitle}} with {{businessName}}")
+  bodyText String  @default("Hello {{customerName}},\n\nThis is a reminder for your appointment with {{businessName}}.\n\nAppointment: {{appointmentTitle}}\nDate: {{appointmentDate}}\nTime: {{appointmentTime}}\n\n{{meetingUrl}}\n\nThank you.") @map("body_text") @db.Text
+
+  offsets AppointmentReminderOffset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("appointment_reminder_configs")
+}
+
+model AppointmentReminderOffset {
+  id       String                    @id @default(uuid())
+  configId String                    @map("config_id")
+  config   AppointmentReminderConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  amount    Int
+  unit      ReminderOffsetUnit @default(HOURS)
+  sortOrder Int                @default(0) @map("sort_order")
+
+  deliveries AppointmentReminderDelivery[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([configId, sortOrder])
+  @@map("appointment_reminder_offsets")
+}
+
+model AppointmentReminderDelivery {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  bookingId  String   @map("booking_id")
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  offsetId String                    @map("offset_id")
+  offset   AppointmentReminderOffset @relation(fields: [offsetId], references: [id], onDelete: Cascade)
+
+  messageId String?   @map("message_id")
+  sentAt    DateTime  @default(now()) @map("sent_at")
+
+  createdAt DateTime @default(now())
+
+  @@unique([bookingId, offsetId])
+  @@index([businessId, sentAt])
+  @@map("appointment_reminder_deliveries")
+}
+
+model Review {
+  id         String       @id @default(uuid())
+  businessId String       @map("business_id")
+  business   Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  bookingId  String?      @map("booking_id")
+  booking    Booking?     @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  customerId String       @map("customer_id")
+  customer   Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  status      ReviewStatus @default(REQUESTED)
+  rating      Int?                        // 1–5, null until submitted
+  content     String?      @db.Text       // null until submitted
+  requestedAt DateTime?    @map("requested_at")
+  requestReason String?    @map("request_reason") @db.Text
+  requestCount Int         @default(0) @map("request_count")
+  respondedAt DateTime?    @map("responded_at")
+
+  sequenceEnrollments SequenceEnrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, status, createdAt])
+  @@index([customerId])
+  @@map("reviews")
+}
+
+model InvoiceTemplate {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name         String  @default("Default")
+  defaultTitle String? @map("default_title")
+  defaultNotes String? @map("default_notes") @db.Text
+  dueDays      Int     @default(30) @map("due_days")
+  vatRate      Decimal @default(8.1) @map("vat_rate") @db.Decimal(5, 2)
+  currency     String  @default("CHF")
+
+  services InvoiceTemplateService[]
+  invoices Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("invoice_templates")
+}
+
+model InvoiceTemplateService {
+  id         String          @id @default(uuid())
+  templateId String          @map("template_id")
+  template   InvoiceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  name               String
+  description        String?  @db.Text
+  defaultUnitPrice   Decimal? @map("default_unit_price") @db.Decimal(12, 2)
+  defaultQuantity    Decimal  @default(1) @map("default_quantity") @db.Decimal(12, 3)
+  sortOrder          Int      @default(0) @map("sort_order")
+
+  lineItems InvoiceLineItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([templateId, sortOrder])
+  @@map("invoice_template_services")
+}
+
+model Invoice {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  templateId String?  @map("template_id")
+  template   InvoiceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  number    String
+  title     String?
+  issueDate DateTime @map("issue_date")
+  dueDate   DateTime @map("due_date")
+  status    InvoiceStatus @default(DRAFT)
+
+  vatRate   Decimal @map("vat_rate") @db.Decimal(5, 2)
+  subtotal  Decimal @db.Decimal(12, 2)
+  vatAmount Decimal @map("vat_amount") @db.Decimal(12, 2)
+  total     Decimal @db.Decimal(12, 2)
+  currency  String  @default("CHF")
+
+  notes  String?   @db.Text
+  sentAt DateTime? @map("sent_at")
+  paidAt DateTime? @map("paid_at")
+
+  lineItems InvoiceLineItem[]
+  messages  Message[]
+  sequenceEnrollments SequenceEnrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, number])
+  @@index([businessId, status])
+  @@index([businessId, issueDate])
+  @@index([customerId])
+  @@map("invoices")
+}
+
+model SequenceTemplate {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  type      SequenceType @default(INVOICE)
+  name      String
+  isActive  Boolean @default(true) @map("is_active")
+  autoStart Boolean @default(false) @map("auto_start")
+
+  steps       SequenceStep[]
+  enrollments SequenceEnrollment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, name])
+  @@index([businessId, type, isActive])
+  @@map("sequence_templates")
+}
+
+model SequenceStep {
+  id         String           @id @default(uuid())
+  sequenceId String           @map("sequence_id")
+  sequence   SequenceTemplate @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+
+  sortOrder   Int               @default(0) @map("sort_order")
+  delayAmount Int               @default(0) @map("delay_amount")
+  delayUnit   SequenceDelayUnit @default(HOURS) @map("delay_unit")
+  subject     String
+  bodyText    String            @map("body_text") @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sequenceId, sortOrder])
+  @@map("sequence_steps")
+}
+
+model SequenceEnrollment {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  sequenceId String           @map("sequence_id")
+  sequence   SequenceTemplate @relation(fields: [sequenceId], references: [id], onDelete: Restrict)
+
+  invoiceId String?  @map("invoice_id")
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  reviewId String? @map("review_id")
+  review   Review? @relation(fields: [reviewId], references: [id], onDelete: SetNull)
+
+  status           SequenceEnrollmentStatus @default(ACTIVE)
+  currentStepIndex Int                      @default(0) @map("current_step_index")
+  nextRunAt        DateTime?                @map("next_run_at")
+  startedAt        DateTime                 @default(now()) @map("started_at")
+  completedAt      DateTime?                @map("completed_at")
+  lastError        String?                  @map("last_error") @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([invoiceId])
+  @@unique([reviewId])
+  @@index([businessId, status, nextRunAt])
+  @@index([sequenceId])
+  @@index([reviewId])
+  @@map("sequence_enrollments")
+}
+
+model ActivityLog {
+  id         String    @id @default(uuid())
+  businessId String?   @map("business_id")
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  type    ActivityLogType
+  subType ActivityLogSubType? @map("sub_type")
+  level   ActivityLogLevel   @default(INFO)
+  message String
+
+  invoiceId            String? @map("invoice_id")
+  reviewId             String? @map("review_id")
+  customerId           String? @map("customer_id")
+  messageId            String? @map("message_id")
+  sequenceId           String? @map("sequence_id")
+  sequenceEnrollmentId String? @map("sequence_enrollment_id")
+  metadata             Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([businessId, createdAt])
+  @@index([type, subType, createdAt])
+  @@index([sequenceId])
+  @@index([sequenceEnrollmentId])
+  @@index([invoiceId])
+  @@index([reviewId])
+  @@map("activity_logs")
+}
+
+model Inbox {
+  id         String   @id @default(uuid())
+  businessId String   @unique @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  messages Message[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("inboxes")
+}
+
+model Message {
+  id      String @id @default(uuid())
+  inboxId String @map("inbox_id")
+  inbox   Inbox  @relation(fields: [inboxId], references: [id], onDelete: Cascade)
+
+  channel  MessageChannel @default(EMAIL)
+  provider MessageProvider
+  purpose  MessagePurpose  @default(MANUAL)
+  status   MessageStatus   @default(PENDING)
+
+  fromAddress String  @map("from_address")
+  toAddress   String  @map("to_address")
+  subject     String
+  bodyText    String? @map("body_text") @db.Text
+  bodyHtml    String? @map("body_html") @db.Text
+
+  customerId String?   @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  invoiceId  String?   @map("invoice_id")
+  invoice    Invoice?  @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  externalId String? @map("external_id")
+  error      String? @db.Text
+  metadata   Json?
+
+  sentAt    DateTime? @map("sent_at")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([inboxId, createdAt])
+  @@index([invoiceId])
+  @@index([customerId])
+  @@map("messages")
+}
+
+model InvoiceLineItem {
+  id        String  @id @default(uuid())
+  invoiceId String  @map("invoice_id")
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  templateServiceId String?                 @map("template_service_id")
+  templateService   InvoiceTemplateService? @relation(fields: [templateServiceId], references: [id], onDelete: SetNull)
+
+  description String
+  quantity    Decimal @db.Decimal(12, 3)
+  unitPrice   Decimal @map("unit_price") @db.Decimal(12, 2)
+  lineTotal   Decimal @map("line_total") @db.Decimal(12, 2)
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId, sortOrder])
+  @@map("invoice_line_items")
+}
+
+model CronJob {
+  id              String         @id @default(uuid())
+  name            String
+  type            CronJobType    @unique
+  enabled         Boolean        @default(true)
+  intervalSeconds Int            @map("interval_seconds")
+  nextRunAt       DateTime?      @map("next_run_at")
+  lastRunAt       DateTime?      @map("last_run_at")
+  lastStatus      CronJobStatus? @map("last_status")
+  lastResult      Json?          @map("last_result")
+  lastError       String?        @map("last_error") @db.Text
+  isRunning       Boolean        @default(false) @map("is_running")
+  runStartedAt    DateTime?      @map("run_started_at")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled, nextRunAt])
+  @@map("cron_jobs")
 }
 
 model Subscription {
@@ -88,4 +778,66 @@ model Subscription {
   updatedAt DateTime @updatedAt
 
   @@map("subscriptions")
+}
+
+model Form {
+  id           String   @id @default(uuid())
+  businessId   String   @map("business_id")
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  name         String
+  webhookToken String   @unique @map("webhook_token")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  fields    FormField[]
+  enquiries Enquiry[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, name])
+  @@index([businessId])
+  @@map("forms")
+}
+
+model FormField {
+  id       String @id @default(uuid())
+  formId   String @map("form_id")
+  form     Form   @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  key         String
+  label       String
+  type        FormFieldType
+  required    Boolean @default(false)
+  placeholder String?
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([formId, key])
+  @@index([formId, sortOrder])
+  @@map("form_fields")
+}
+
+model Enquiry {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  formId     String   @map("form_id")
+  form       Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  customerId String?   @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  status EnquiryStatus @default(NEW)
+  data   Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, createdAt])
+  @@index([businessId, status])
+  @@index([formId, createdAt])
+  @@index([customerId])
+  @@map("enquiries")
 }

@@ -1,6 +1,14 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+cmd --resume 0f7d6f52-73b0-44b9-a9e8-5e395fc2816a
+
 ## Getting Started
+
+Reference App:
+https://meisterflow-kundenportal.base44.app/login
+
+NGROK:
+npx ngrok http --domain=deservedly-underaccommodated-maryrose.ngrok-free.dev 3000 --config ~/.ngrok1.yml
 
 First, run the development server:
 

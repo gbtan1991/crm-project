@@ -1,4 +1,5 @@
 import { Building2 } from "lucide-react";
+import Link from "next/link";
 
 import { AddBusinessDialog } from "@/app/(admin)/admin/businesses/add-business-dialog";
 import { BusinessRowActions } from "@/app/(admin)/admin/businesses/business-row-actions";
@@ -13,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { businessDashboardPath } from "@/lib/business-paths";
 import { listBusinessesForAdmin } from "@/lib/businesses";
 import { parsePageParam } from "@/lib/pagination";
 
@@ -72,7 +74,12 @@ export default async function AdminBusinessesPage({
                 {businesses.rows.map((business) => (
                   <TableRow key={business.id}>
                     <TableCell className="pl-6">
-                      <div className="font-medium">{business.name}</div>
+                      <Link
+                        href={businessDashboardPath(business.id)}
+                        className="font-medium text-foreground hover:text-primary hover:underline"
+                      >
+                        {business.name}
+                      </Link>
                       <div className="text-xs text-muted-foreground">
                         /{business.slug}
                       </div>

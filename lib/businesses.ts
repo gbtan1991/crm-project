@@ -215,6 +215,7 @@ export async function createBusiness(
       slug,
       config: { create: {} },
       subscription: { create: {} },
+      inbox: { create: {} },
       owner: {
         create: {
           name: input.ownerName,

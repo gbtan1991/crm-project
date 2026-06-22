@@ -8,13 +8,31 @@ type TablePaginationProps = {
   page: number;
   totalPages: number;
   total: number;
+  preserveQuery?: Record<string, string | undefined>;
 };
+
+function buildPageHref(
+  basePath: string,
+  page: number,
+  preserveQuery?: Record<string, string | undefined>,
+) {
+  const params = new URLSearchParams();
+  if (preserveQuery) {
+    for (const [key, value] of Object.entries(preserveQuery)) {
+      if (value) params.set(key, value);
+    }
+  }
+  if (page > 1) params.set("page", String(page));
+  const query = params.toString();
+  return query ? `${basePath}?${query}` : basePath;
+}
 
 export function TablePagination({
   basePath,
   page,
   totalPages,
   total,
+  preserveQuery,
 }: TablePaginationProps) {
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
@@ -27,7 +45,7 @@ export function TablePagination({
       <div className="flex items-center gap-2">
         {hasPrev ? (
           <Button asChild variant="outline" size="sm">
-            <Link href={`${basePath}?page=${page - 1}`}>
+            <Link href={buildPageHref(basePath, page - 1, preserveQuery)}>
               <ChevronLeft className="size-4" />
               Previous
             </Link>
@@ -41,7 +59,7 @@ export function TablePagination({
 
         {hasNext ? (
           <Button asChild variant="outline" size="sm">
-            <Link href={`${basePath}?page=${page + 1}`}>
+            <Link href={buildPageHref(basePath, page + 1, preserveQuery)}>
               Next
               <ChevronRight className="size-4" />
             </Link>

@@ -9,7 +9,9 @@ export default async function Home() {
   const session = await auth();
 
   if (session?.user) {
-    redirect(getDashboardPath(session.user.role));
+    redirect(
+      getDashboardPath(session.user.role, session.user.businessId),
+    );
   }
 
   return (

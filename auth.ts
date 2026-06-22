@@ -12,6 +12,9 @@ const credentialsSchema = z.object({
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Self-hosted (Docker / localhost / ngrok): trust the request Host header.
+  // See https://errors.authjs.dev#untrustedhost
+  trustHost: true,
   pages: {
     signIn: "/",
   },

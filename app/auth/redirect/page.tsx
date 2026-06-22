@@ -10,5 +10,7 @@ export default async function AuthRedirectPage() {
     redirect("/");
   }
 
-  redirect(getDashboardPath(session.user.role));
+  redirect(
+    getDashboardPath(session.user.role, session.user.businessId),
+  );
 }

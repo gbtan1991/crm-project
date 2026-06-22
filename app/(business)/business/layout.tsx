@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { getDashboardPath } from "@/lib/auth/redirects";
 import { Role } from "@/lib/generated/prisma/client";
 
-export default async function BusinessLayout({
+export default async function BusinessRootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -15,12 +15,8 @@ export default async function BusinessLayout({
     redirect("/");
   }
 
-  if (session.user.role !== Role.BUSINESS) {
-    redirect(getDashboardPath(session.user.role));
-  }
-
-  if (!session.user.businessId) {
-    redirect("/");
+  if (session.user.role !== Role.BUSINESS && session.user.role !== Role.ADMIN) {
+    redirect(getDashboardPath(session.user.role, session.user.businessId));
   }
 
   return <>{children}</>;

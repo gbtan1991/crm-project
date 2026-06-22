@@ -117,11 +117,12 @@ Adopted from the FusionSync AI in-app scheduler pattern (referenced from `fusion
 ## 6. Core Feature Summary (from SOW)
 
 - **Multi-tenant** isolated business workspaces.
-- **Calendar integration** — Google/Outlook per business, 2-way event sync.
-- **Booking system** — tracks appointments; auto-starts the booking-reminder sequence.
+- **Calendar integration** — Google/Outlook per business, 2-way event sync. See [`calendar/calendar.md`](./calendar/calendar.md).
+- **Booking system** — tracks appointments; auto-starts the booking-reminder sequence. See [`appointment.md`](./appointment.md).
 - **Automation sequences** — email channel, scheduled via the cron scheduler; booking reminders & invoice follow-ups.
 - **Bookkeeping & invoicing** — templated invoices, editable price at send; sending triggers the invoice sequence.
-- **Customer / opportunity tracking** — auto (on booking) or manual; full journey/event history.
+- **Customer / opportunity tracking** — auto (on booking), enquiry-linked, CSV import, or manual. See [`customer.md`](./customer.md).
+- **Enquiries** — forms, public webhooks, status workflow, and customer conversion/linking. See [`enquiry.md`](./enquiry.md).
 - **Reusable templates** — customizable per business.
 - **White-labeled email** — Resend from each business's own domain.
 
