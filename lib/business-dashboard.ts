@@ -14,6 +14,7 @@ export type BusinessKpiStats = {
   upcomingAppointments: number;
   appointmentsToday: number;
   openInvoices: { count: number; total: number };
+  paidInvoices: { count: number; total: number };
   newEnquiries: number;
   enquiriesThisWeek: number;
   currency: string;
@@ -69,6 +70,8 @@ export async function getBusinessDashboardData(
     bookings,
     openInvoiceAgg,
     openInvoiceCount,
+    paidInvoiceAgg,
+    paidInvoiceCount,
     newEnquiries,
     enquiriesThisWeek,
     recentCustomers,
@@ -101,6 +104,11 @@ export async function getBusinessDashboardData(
       _sum: { total: true },
     }),
     prisma.invoice.count({ where: { businessId, status: "OPEN" } }),
+    prisma.invoice.aggregate({
+      where: { businessId, status: "PAID" },
+      _sum: { total: true },
+    }),
+    prisma.invoice.count({ where: { businessId, status: "PAID" } }),
     prisma.enquiry.count({ where: { businessId, status: "NEW" } }),
     prisma.enquiry.count({
       where: {
@@ -323,6 +331,10 @@ export async function getBusinessDashboardData(
     openInvoices: {
       count: openInvoiceCount,
       total: decimalToNumber(openInvoiceAgg._sum.total),
+    },
+    paidInvoices: {
+      count: paidInvoiceCount,
+      total: decimalToNumber(paidInvoiceAgg._sum.total),
     },
     newEnquiries,
     enquiriesThisWeek,

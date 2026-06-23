@@ -34,6 +34,21 @@ type OutlookDeltaResponse = {
   "@odata.deltaLink"?: string;
 };
 
+const OUTLOOK_DELTA_PAGE_SIZE = 100;
+
+const OUTLOOK_DELTA_HEADERS = {
+  Prefer: `odata.maxpagesize=${OUTLOOK_DELTA_PAGE_SIZE}, outlook.timezone="UTC"`,
+};
+
+function parseOutlookDateTime(dateTime: string): Date {
+  // Graph returns UTC wall times without a Z suffix when outlook.timezone is set.
+  if (!dateTime.endsWith("Z") && !/[+-]\d{2}:\d{2}$/.test(dateTime)) {
+    return new Date(`${dateTime}Z`);
+  }
+
+  return new Date(dateTime);
+}
+
 function parseOutlookEvent(event: OutlookEvent): NormalizedCalendarEvent | null {
   if (!event.id) {
     return null;
@@ -61,8 +76,8 @@ function parseOutlookEvent(event: OutlookEvent): NormalizedCalendarEvent | null 
   return {
     externalEventId: event.id,
     title: event.subject?.trim() || "Untitled event",
-    startsAt: new Date(event.start.dateTime),
-    endsAt: new Date(event.end.dateTime),
+    startsAt: parseOutlookDateTime(event.start.dateTime),
+    endsAt: parseOutlookDateTime(event.end.dateTime),
     location: event.location?.displayName ?? undefined,
     meetingUrl: event.onlineMeeting?.joinUrl ?? event.onlineMeetingUrl,
     notes: event.bodyPreview ?? undefined,
@@ -80,13 +95,17 @@ async function fetchOutlookDelta(
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      Prefer: 'outlook.timezone="UTC"',
+      ...OUTLOOK_DELTA_HEADERS,
     },
   });
 
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(`Outlook Calendar API error (${response.status}): ${body}`);
+    const error = new Error(
+      `Outlook Calendar API error (${response.status}): ${body}`,
+    );
+    (error as Error & { status: number }).status = response.status;
+    throw error;
   }
 
   return response.json() as Promise<OutlookDeltaResponse>;
@@ -98,7 +117,6 @@ function buildOutlookInitialDeltaUrl(ctx: CalendarConnectionContext) {
   const params = new URLSearchParams({
     startDateTime: toRfc3339(start),
     endDateTime: toRfc3339(end),
-    $top: "100",
   });
 
   return `https://graph.microsoft.com/v1.0/me/calendarView/delta?${params}`;
@@ -175,19 +193,42 @@ export async function runOutlookIncrementalSync(
   const events: NormalizedCalendarEvent[] = [];
   let deltaLink: string | undefined;
 
-  while (url) {
-    const page = await fetchOutlookDelta(accessToken, url);
-    for (const item of page.value ?? []) {
-      const parsed = parseOutlookEvent(item);
-      if (parsed) {
-        events.push(parsed);
+  try {
+    while (url) {
+      const page = await fetchOutlookDelta(accessToken, url);
+      for (const item of page.value ?? []) {
+        const parsed = parseOutlookEvent(item);
+        if (parsed) {
+          events.push(parsed);
+        }
+      }
+
+      url = page["@odata.nextLink"];
+      if (page["@odata.deltaLink"]) {
+        deltaLink = page["@odata.deltaLink"];
       }
     }
+  } catch (error) {
+    const status =
+      error instanceof Error && "status" in error
+        ? (error as Error & { status?: number }).status
+        : undefined;
+    const message = error instanceof Error ? error.message : String(error);
+    const deltaExpired =
+      status === 410 ||
+      message.includes("(410)") ||
+      message.includes("syncStateNotFound") ||
+      message.includes("SyncStateNotFound");
 
-    url = page["@odata.nextLink"];
-    if (page["@odata.deltaLink"]) {
-      deltaLink = page["@odata.deltaLink"];
+    if (deltaExpired) {
+      await prisma.calendarConnection.update({
+        where: { businessId: ctx.businessId },
+        data: { deltaLink: null },
+      });
+      return runOutlookInitialSync(ctx);
     }
+
+    throw error;
   }
 
   const result = await applyCalendarEvents(events, {

@@ -75,6 +75,10 @@ export function PublicReviewForm({
       }
 
       setStatus("RECEIVED");
+
+      if (rating >= 4 && googleReviewUrl) {
+        window.open(googleReviewUrl, "_blank", "noopener,noreferrer");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {

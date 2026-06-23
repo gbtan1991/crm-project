@@ -36,3 +36,15 @@ export const googleReviewSettingsSchema = z.object({
 export type GoogleReviewSettingsInput = z.infer<
   typeof googleReviewSettingsSchema
 >;
+
+export const businessGeneralSettingsSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(2, "Business name must be at least 2 characters."),
+  timezone: z.string().trim().min(1, "Enter a timezone."),
+});
+
+export type BusinessGeneralSettingsInput = z.infer<
+  typeof businessGeneralSettingsSchema
+>;

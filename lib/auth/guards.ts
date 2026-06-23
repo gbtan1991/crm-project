@@ -33,6 +33,16 @@ export async function requireAdmin(): Promise<SessionUser> {
   return session.user;
 }
 
+export async function requireAuthenticatedUser(): Promise<SessionUser> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    throw new ApiAuthError(401, "Authentication required.");
+  }
+
+  return session.user;
+}
+
 /**
  * Ensures the current user owns the business in the URL.
  */

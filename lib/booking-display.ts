@@ -68,9 +68,10 @@ export function formatBookingTime(
   value: Date | string,
   timeZone?: string,
 ): string {
-  return new Date(value).toLocaleTimeString(undefined, {
+  return new Date(value).toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: true,
     timeZone,
   });
 }

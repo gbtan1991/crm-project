@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { businessProfilePath, businessSettingsPath } from "@/lib/business-paths";
 import { cn } from "@/lib/utils";
 
 function getUserInitials(name?: string | null, email?: string | null): string {
@@ -41,7 +42,8 @@ export function BusinessUserMenu({
   email?: string | null;
 }) {
   const initials = getUserInitials(name, email);
-  const settingsPath = `/business/${businessId}/settings`;
+  const profilePath = businessProfilePath(businessId);
+  const settingsPath = businessSettingsPath(businessId, "calendar");
   const displayName = name?.trim() || email || "Account";
 
   return (
@@ -79,7 +81,7 @@ export function BusinessUserMenu({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href={settingsPath}>
+          <Link href={profilePath}>
             <User />
             Profile
           </Link>

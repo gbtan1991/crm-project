@@ -39,19 +39,29 @@ const KPI_CONFIG = [
       `${stats.openInvoices.count} invoice${stats.openInvoices.count === 1 ? "" : "s"}`,
   },
   {
-    key: "newEnquiries",
-    label: "New enquiries",
-    icon: Inbox,
+    key: "paidInvoices",
+    label: "Paid invoices",
+    icon: FileText,
     iconClass: "bg-emerald-500/10 text-emerald-600",
-    format: (stats: BusinessKpiStats) => String(stats.newEnquiries),
+    format: (stats: BusinessKpiStats) =>
+      formatMoney(stats.paidInvoices.total, stats.currency),
     sublabel: (stats: BusinessKpiStats) =>
-      `${stats.enquiriesThisWeek} this week`,
+      `${stats.paidInvoices.count} invoice${stats.paidInvoices.count === 1 ? "" : "s"}`,
   },
+  // {
+  //   key: "newEnquiries",
+  //   label: "New enquiries",
+  //   icon: Inbox,
+  //   iconClass: "bg-emerald-500/10 text-emerald-600",
+  //   format: (stats: BusinessKpiStats) => String(stats.newEnquiries),
+  //   sublabel: (stats: BusinessKpiStats) =>
+  //     `${stats.enquiriesThisWeek} this week`,
+  // },
 ] as const;
 
 export function BusinessDashboardKpiCards({ stats }: { stats: BusinessKpiStats }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
       {KPI_CONFIG.map((item) => {
         const Icon = item.icon;
         const sublabel =

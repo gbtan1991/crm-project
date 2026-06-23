@@ -4,7 +4,6 @@ import type { CalendarSyncResult } from "@/lib/calendar/types";
 import { syncBusinessTimeZoneFromCalendar } from "@/lib/calendar/timezone";
 import { runGoogleIncrementalSync, runGoogleInitialSync } from "@/lib/google-calendar/sync";
 import {
-  registerGoogleWebhook,
   renewGoogleWebhookIfNeeded,
 } from "@/lib/google-calendar/webhooks";
 import {
@@ -12,7 +11,6 @@ import {
   runOutlookInitialSync,
 } from "@/lib/outlook-calendar/sync";
 import {
-  registerOutlookWebhook,
   renewOutlookWebhookIfNeeded,
 } from "@/lib/outlook-calendar/webhooks";
 
@@ -53,10 +51,17 @@ export async function setupCalendarSync(businessId: string) {
       ? await runGoogleInitialSync(ctx)
       : await runOutlookInitialSync(ctx);
 
-  if (ctx.provider === CalendarProvider.GOOGLE) {
-    await registerGoogleWebhook(businessId);
-  } else {
-    await registerOutlookWebhook(businessId);
+  try {
+    if (ctx.provider === CalendarProvider.GOOGLE) {
+      await renewGoogleWebhookIfNeeded(businessId);
+    } else {
+      await renewOutlookWebhookIfNeeded(businessId);
+    }
+  } catch (webhookError) {
+    console.error(
+      `[calendar] webhook registration failed for ${businessId}`,
+      webhookError,
+    );
   }
 
   return initialResult;
@@ -86,6 +91,19 @@ export async function syncBusinessCalendar(
         ctx.provider === CalendarProvider.GOOGLE
           ? await runGoogleIncrementalSync(ctx)
           : await runOutlookIncrementalSync(ctx);
+    }
+
+    try {
+      if (ctx.provider === CalendarProvider.GOOGLE) {
+        await renewGoogleWebhookIfNeeded(businessId);
+      } else {
+        await renewOutlookWebhookIfNeeded(businessId);
+      }
+    } catch (webhookError) {
+      console.error(
+        `[calendar] webhook registration failed for ${businessId}`,
+        webhookError,
+      );
     }
 
     return result;

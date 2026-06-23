@@ -721,8 +721,8 @@ export function ReviewList({
                   </TableCell>
                   <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
                     {review.requestedAt
-                      ? new Date(review.requestedAt).toLocaleDateString()
-                      : new Date(review.createdAt).toLocaleDateString()}
+                      ? new Date(review.requestedAt).toLocaleDateString("en-US")
+                      : new Date(review.createdAt).toLocaleDateString("en-US")}
                     {review.requestCount > 1 ? ` · ${review.requestCount}x` : ""}
                   </TableCell>
                   <TableCell className="hidden max-w-[240px] truncate text-xs text-muted-foreground lg:table-cell">

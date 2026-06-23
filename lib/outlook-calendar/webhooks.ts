@@ -58,6 +58,10 @@ export async function registerOutlookWebhook(businessId: string) {
       graphSubscriptionExpiresAt: new Date(data.expirationDateTime),
     },
   });
+
+  console.info(
+    `[outlook/webhook] registered subscription ${data.id} for business ${businessId} -> ${webhookUrl}`,
+  );
 }
 
 export async function stopOutlookWebhook(businessId: string) {

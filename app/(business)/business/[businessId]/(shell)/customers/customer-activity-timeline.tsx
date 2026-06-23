@@ -48,7 +48,7 @@ function formatTimelineDate(
   timeZone?: string,
   includeTime = false,
 ): string {
-  return new Date(value).toLocaleString(undefined, {
+  return new Date(value).toLocaleString("en-US", {
     timeZone,
     dateStyle: "medium",
     ...(includeTime ? { timeStyle: "short" as const } : {}),

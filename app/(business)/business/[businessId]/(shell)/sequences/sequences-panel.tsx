@@ -586,7 +586,7 @@ function SequenceLogs({
               </div>
             </div>
             <time className="text-xs text-muted-foreground">
-              {new Date(log.createdAt).toLocaleString()}
+              {new Date(log.createdAt).toLocaleString("en-US")}
             </time>
           </div>
         ))}

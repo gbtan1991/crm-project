@@ -5,6 +5,7 @@ import { BusinessNav } from "@/app/(business)/business/business-nav";
 import { OnboardingFab } from "@/app/(business)/business/onboarding-fab";
 import { getBusinessForViewer } from "@/lib/business-context";
 import { isOnboardingComplete } from "@/lib/business-paths";
+import { prisma } from "@/lib/prisma";
 
 export default async function BusinessShellLayout({
   children,
@@ -21,13 +22,18 @@ export default async function BusinessShellLayout({
 
   const onboardingComplete = isOnboardingComplete(business.config);
 
+  const accountUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { name: true, email: true },
+  });
+
   return (
     <>
       <BusinessNav
         businessId={business.id}
         businessName={business.name}
-        name={session.user.name}
-        email={session.user.email}
+        name={accountUser?.name ?? session.user.name}
+        email={accountUser?.email ?? session.user.email}
         role={session.user.role}
       />
       <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>

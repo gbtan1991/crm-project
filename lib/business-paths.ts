@@ -96,3 +96,41 @@ export function businessReviewsPath(businessId: string): string {
 export function businessWebsitePath(businessId: string): string {
   return `${businessBasePath(businessId)}/website`;
 }
+
+export type BusinessProfileTab = "details" | "password";
+
+export function businessProfilePath(
+  businessId: string,
+  tab?: BusinessProfileTab,
+): string {
+  const base = `${businessBasePath(businessId)}/profile`;
+  return tab === "password" ? `${base}?tab=password` : base;
+}
+
+export type BusinessSettingsTab = "calendar" | "general";
+
+export function businessSettingsPath(
+  businessId: string,
+  tab?: BusinessSettingsTab,
+): string {
+  const base = `${businessBasePath(businessId)}/settings`;
+  if (tab === "general") {
+    return `${base}?tab=general`;
+  }
+  if (tab === "calendar") {
+    return `${base}?tab=calendar`;
+  }
+  return `${base}?tab=calendar`;
+}
+
+export function resolveBusinessSettingsTab(
+  tab: string | null | undefined,
+): BusinessSettingsTab {
+  return tab === "general" ? "general" : "calendar";
+}
+
+export function resolveBusinessProfileTab(
+  tab: string | null | undefined,
+): BusinessProfileTab {
+  return tab === "password" ? "password" : "details";
+}
