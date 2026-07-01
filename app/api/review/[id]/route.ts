@@ -13,7 +13,7 @@ export async function GET(
 
     if (!review) {
       return NextResponse.json(
-        { error: "Review not found." },
+        { error: "Bewertung nicht gefunden." },
         { status: 404 },
       );
     }
@@ -22,7 +22,7 @@ export async function GET(
   } catch (error) {
     console.error("[review/id][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load review." },
+      { error: "Bewertung konnte nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -40,7 +40,7 @@ export async function POST(
     if (!parsed.success) {
       const firstError = parsed.error.issues[0];
       return NextResponse.json(
-        { error: firstError?.message ?? "Invalid input." },
+        { error: firstError?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -53,7 +53,7 @@ export async function POST(
     }
     console.error("[review/id][POST]", error);
     return NextResponse.json(
-      { error: "Failed to submit review." },
+      { error: "Bewertung konnte nicht gesendet werden." },
       { status: 500 },
     );
   }

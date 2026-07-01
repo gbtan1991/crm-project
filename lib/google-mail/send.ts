@@ -4,6 +4,7 @@ type GmailSendInput = {
   to: string;
   subject: string;
   bodyText: string;
+  bodyHtml?: string;
   attachments?: Array<{
     filename: string;
     contentType: string;
@@ -26,24 +27,74 @@ function encodeHeaderValue(value: string): string {
 }
 
 function buildMimeMessage(input: GmailSendInput): string {
-  const boundary = `mf_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const hasHtml = Boolean(input.bodyHtml?.trim());
+  const mixedBoundary = `mf_mixed_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const alternativeBoundary = `mf_alt_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const hasAttachments = (input.attachments?.length ?? 0) > 0;
+
   const lines: string[] = [
     `From: ${input.from}`,
     `To: ${input.to}`,
     `Subject: ${encodeHeaderValue(input.subject)}`,
     "MIME-Version: 1.0",
-    `Content-Type: multipart/mixed; boundary="${boundary}"`,
-    "",
-    `--${boundary}`,
-    "Content-Type: text/plain; charset=UTF-8",
-    "Content-Transfer-Encoding: 7bit",
-    "",
-    input.bodyText,
   ];
 
-  for (const attachment of input.attachments ?? []) {
+  if (hasAttachments) {
+    lines.push(`Content-Type: multipart/mixed; boundary="${mixedBoundary}"`, "");
+  } else if (hasHtml) {
+    lines.push(`Content-Type: multipart/alternative; boundary="${alternativeBoundary}"`, "");
+  } else {
+    lines.push("Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: 7bit", "", input.bodyText);
+    return lines.join("\r\n");
+  }
+
+  function appendAlternativeParts(boundary: string) {
     lines.push(
       `--${boundary}`,
+      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      input.bodyText,
+    );
+
+    if (hasHtml) {
+      lines.push(
+        `--${boundary}`,
+        "Content-Type: text/html; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        input.bodyHtml ?? "",
+      );
+    }
+
+    lines.push(`--${boundary}--`, "");
+  }
+
+  if (hasAttachments) {
+    lines.push(`--${mixedBoundary}`);
+    if (hasHtml) {
+      lines.push(
+        `Content-Type: multipart/alternative; boundary="${alternativeBoundary}"`,
+        "",
+      );
+      appendAlternativeParts(alternativeBoundary);
+    } else {
+      lines.push(
+        "Content-Type: text/plain; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        input.bodyText,
+        "",
+      );
+    }
+  } else {
+    appendAlternativeParts(alternativeBoundary);
+  }
+
+  const attachmentBoundary = hasAttachments ? mixedBoundary : null;
+  for (const attachment of input.attachments ?? []) {
+    lines.push(
+      `--${attachmentBoundary}`,
       `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
       `Content-Disposition: attachment; filename="${attachment.filename}"`,
       "Content-Transfer-Encoding: base64",
@@ -52,7 +103,10 @@ function buildMimeMessage(input: GmailSendInput): string {
     );
   }
 
-  lines.push(`--${boundary}--`, "");
+  if (attachmentBoundary) {
+    lines.push(`--${attachmentBoundary}--`, "");
+  }
+
   return lines.join("\r\n");
 }
 

@@ -100,7 +100,7 @@ export async function patchOnboarding(
     select: { id: true, config: { select: { id: true } } },
   });
   if (!existing) {
-    return { ok: false, error: "Business not found." };
+    return { ok: false, error: "Unternehmen nicht gefunden." };
   }
 
   if (input.step === 1) {
@@ -193,7 +193,7 @@ export async function patchOnboarding(
 
   const state = await getOnboardingState(businessId);
   if (!state) {
-    return { ok: false, error: "Business not found." };
+    return { ok: false, error: "Unternehmen nicht gefunden." };
   }
   return { ok: true, state };
 }

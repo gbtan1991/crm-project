@@ -23,7 +23,7 @@ export async function GET(_request: Request, context: RouteContext) {
     });
 
     if (!attachment) {
-      return NextResponse.json({ error: "Attachment not found." }, { status: 404 });
+      return NextResponse.json({ error: "Anhang nicht gefunden." }, { status: 404 });
     }
 
     return new NextResponse(attachment.data, {
@@ -39,7 +39,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/website-ticket-attachments][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load attachment." },
+      { error: "Anhang konnte nicht geladen werden." },
       { status: 500 },
     );
   }

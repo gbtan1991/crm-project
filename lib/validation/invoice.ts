@@ -10,7 +10,7 @@ export const invoiceStatusSchema = z.enum([
 
 export const invoiceTemplateServiceSchema = z.object({
   id: z.string().uuid().optional(),
-  name: z.string().trim().min(1, "Service name is required.").max(200),
+  name: z.string().trim().min(1, "Leistungsname ist erforderlich.").max(200),
   description: z.string().trim().max(2000).optional().or(z.literal("")),
   defaultUnitPrice: z.coerce.number().min(0).optional().nullable(),
   defaultQuantity: z.coerce.number().positive().default(1),
@@ -18,7 +18,7 @@ export const invoiceTemplateServiceSchema = z.object({
 });
 
 export const invoiceTemplateWriteSchema = z.object({
-  name: z.string().trim().min(1, "Template name is required.").max(100),
+  name: z.string().trim().min(1, "Vorlagenname ist erforderlich.").max(100),
   defaultTitle: z.string().trim().max(200).optional().or(z.literal("")),
   defaultNotes: z.string().trim().max(5000).optional().or(z.literal("")),
   dueDays: z.coerce.number().int().min(1).max(365).default(30),
@@ -26,14 +26,14 @@ export const invoiceTemplateWriteSchema = z.object({
   currency: z.string().trim().length(3).optional(),
   services: z
     .array(invoiceTemplateServiceSchema)
-    .min(1, "Add at least one service."),
+    .min(1, "Fügen Sie mindestens eine Leistung hinzu."),
 });
 
 export const invoiceLineItemWriteSchema = z.object({
   templateServiceId: z.string().uuid().optional().nullable(),
-  description: z.string().trim().min(1, "Description is required.").max(500),
-  quantity: z.coerce.number().positive("Quantity must be greater than zero."),
-  unitPrice: z.coerce.number().min(0, "Unit price cannot be negative."),
+  description: z.string().trim().min(1, "Beschreibung ist erforderlich.").max(500),
+  quantity: z.coerce.number().positive("Menge muss größer als null sein."),
+  unitPrice: z.coerce.number().min(0, "Einzelpreis darf nicht negativ sein."),
   sortOrder: z.coerce.number().int().min(0).optional(),
 });
 
@@ -49,9 +49,9 @@ function isValidInvoiceDateValue(value: string): boolean {
 
 const invoiceDateSchema = z
   .string()
-  .min(1, "Date is required.")
+  .min(1, "Datum ist erforderlich.")
   .refine(isValidInvoiceDateValue, {
-    message: "Enter a valid invoice date.",
+    message: "Geben Sie ein gültiges Rechnungsdatum ein.",
   });
 
 const invoiceWriteBaseSchema = z.object({
@@ -63,14 +63,14 @@ const invoiceWriteBaseSchema = z.object({
   notes: z.string().trim().max(5000).optional().or(z.literal("")),
   lineItems: z
     .array(invoiceLineItemWriteSchema)
-    .min(1, "Add at least one line item."),
+    .min(1, "Fügen Sie mindestens eine Position hinzu."),
 });
 
 export const invoiceWriteSchema = invoiceWriteBaseSchema
   .refine(
     (input) => parseInvoiceDate(input.dueDate) >= parseInvoiceDate(input.issueDate),
     {
-      message: "Due date cannot be before issue date.",
+      message: "Fälligkeitsdatum darf nicht vor dem Rechnungsdatum liegen.",
       path: ["dueDate"],
     },
   );
@@ -86,7 +86,7 @@ export const invoiceUpdateSchema = invoiceWriteBaseSchema
       !input.dueDate ||
       parseInvoiceDate(input.dueDate) >= parseInvoiceDate(input.issueDate),
     {
-      message: "Due date cannot be before issue date.",
+      message: "Fälligkeitsdatum darf nicht vor dem Rechnungsdatum liegen.",
       path: ["dueDate"],
     },
   );

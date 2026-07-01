@@ -233,7 +233,7 @@ export async function getBusinessDashboardData(
     ...recentCustomers.map((customer) => ({
       id: `customer-${customer.id}`,
       kind: "customer" as const,
-      title: `New customer — ${
+      title: `Neuer Kunde — ${
         customer.companyName ||
         [customer.firstName, customer.lastName].filter(Boolean).join(" ") ||
         customer.email
@@ -245,7 +245,7 @@ export async function getBusinessDashboardData(
     ...recentBookings.map((booking) => ({
       id: `booking-${booking.id}`,
       kind: "booking" as const,
-      title: `Appointment — ${booking.title}`,
+      title: `Termin — ${booking.title}`,
       subtitle: booking.customer
         ? booking.customer.companyName ||
           [booking.customer.firstName, booking.customer.lastName]
@@ -268,7 +268,7 @@ export async function getBusinessDashboardData(
         return {
           id: `invoice-paid-${invoice.id}`,
           kind: "invoice_paid" as const,
-          title: `Invoice paid — ${invoice.number}`,
+          title: `Rechnung bezahlt — ${invoice.number}`,
           subtitle: customerName,
           occurredAt: invoice.updatedAt.toISOString(),
           href: businessInvoicePath(businessId, invoice.id),
@@ -279,7 +279,7 @@ export async function getBusinessDashboardData(
         return {
           id: `invoice-sent-${invoice.id}`,
           kind: "invoice_sent" as const,
-          title: `Invoice sent — ${invoice.number}`,
+          title: `Rechnung versendet — ${invoice.number}`,
           subtitle: customerName,
           occurredAt: invoice.sentAt.toISOString(),
           href: businessInvoicePath(businessId, invoice.id),
@@ -289,7 +289,7 @@ export async function getBusinessDashboardData(
       return {
         id: `invoice-${invoice.id}`,
         kind: "invoice" as const,
-        title: `Invoice — ${invoice.number}`,
+        title: `Rechnung — ${invoice.number}`,
         subtitle: customerName,
         occurredAt: invoice.updatedAt.toISOString(),
         href: businessInvoicePath(businessId, invoice.id),
@@ -306,12 +306,12 @@ export async function getBusinessDashboardData(
           ? data.name
           : typeof data.email === "string"
             ? data.email
-            : "New enquiry";
+            : "Neue Anfrage";
 
       return {
         id: `enquiry-${enquiry.id}`,
         kind: "enquiry" as const,
-        title: `Enquiry — ${name}`,
+        title: `Anfrage — ${name}`,
         subtitle: enquiry.form.name,
         occurredAt: enquiry.createdAt.toISOString(),
         href: businessEnquiriesPath(businessId),

@@ -9,11 +9,11 @@ export const ENQUIRY_STATUS_OPTIONS: EnquiryStatusValue[] = [
 export function enquiryStatusLabel(status: EnquiryStatusValue): string {
   switch (status) {
     case "NEW":
-      return "New";
+      return "Neu";
     case "READ":
-      return "Read";
+      return "Gelesen";
     case "ARCHIVED":
-      return "Archived";
+      return "Archiviert";
     default:
       return status;
   }
@@ -38,7 +38,7 @@ export function formatEnquiryDate(
   value: string,
   timeZone?: string,
 ): string {
-  return new Date(value).toLocaleDateString(undefined, {
+  return new Date(value).toLocaleDateString("de-CH", {
     timeZone,
     dateStyle: "medium",
   });
@@ -48,7 +48,7 @@ export function formatEnquiryReceivedAt(
   value: string,
   timeZone?: string,
 ): string {
-  return new Date(value).toLocaleString(undefined, {
+  return new Date(value).toLocaleString("de-CH", {
     timeZone,
     dateStyle: "medium",
     timeStyle: "short",

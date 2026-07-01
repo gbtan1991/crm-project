@@ -51,21 +51,21 @@ async function sendOtpEmail(input: {
     return {
       ok: false as const,
       error:
-        "No connected Google or Outlook mailbox is available to send the verification code.",
+        "Es ist kein verbundenes Google- oder Outlook-Postfach verfügbar, um den Bestätigungscode zu senden.",
     };
   }
 
-  const subject = `${input.code} is your MeisterFlow verification code`;
+  const subject = `${input.code} ist Ihr MeisterFlow-Bestätigungscode`;
   const bodyText = [
-    `Hello,`,
+    `Guten Tag,`,
     ``,
-    `Use this verification code to reset your MeisterFlow password for ${input.businessName}:`,
+    `Verwenden Sie diesen Bestätigungscode, um Ihr MeisterFlow-Passwort für ${input.businessName} zurückzusetzen:`,
     ``,
     input.code,
     ``,
-    `This code expires in 10 minutes.`,
+    `Dieser Code läuft in 10 Minuten ab.`,
     ``,
-    `If you did not request this, you can ignore this email.`,
+    `Falls Sie dies nicht angefordert haben, können Sie diese E-Mail ignorieren.`,
   ].join("\n");
 
   try {
@@ -87,7 +87,7 @@ async function sendOtpEmail(input: {
     } else {
       return {
         ok: false as const,
-        error: "Password reset requires a connected Google or Outlook mailbox.",
+        error: "Passwort-Zurücksetzen erfordert ein verbundenes Google- oder Outlook-Postfach.",
       };
     }
 
@@ -98,7 +98,7 @@ async function sendOtpEmail(input: {
         ? error.message
         : error instanceof Error
           ? error.message
-          : "Failed to send verification code.";
+          : "Bestätigungscode konnte nicht gesendet werden.";
 
     return { ok: false as const, error: message };
   }
@@ -126,7 +126,7 @@ export async function requestPasswordResetOtp(email: string) {
   if (user.role === Role.ADMIN) {
     return {
       ok: false as const,
-      error: "Admin password reset is not available here. Contact platform support.",
+      error: "Admin-Passwort-Zurücksetzen ist hier nicht verfügbar. Wenden Sie sich an den Plattform-Support.",
     };
   }
 
@@ -134,7 +134,7 @@ export async function requestPasswordResetOtp(email: string) {
   if (!business) {
     return {
       ok: false as const,
-      error: "No business account is linked to this email.",
+      error: "Mit dieser E-Mail ist kein Unternehmenskonto verknüpft.",
     };
   }
 
@@ -172,13 +172,13 @@ export async function requestPasswordResetOtp(email: string) {
 async function verifyOtpForUser(userId: string, otp: string) {
   const record = await findLatestActiveOtp(userId);
   if (!record) {
-    return { ok: false as const, error: "Verification code expired or invalid." };
+    return { ok: false as const, error: "Bestätigungscode abgelaufen oder ungültig." };
   }
 
   if (record.attempts >= MAX_OTP_ATTEMPTS) {
     return {
       ok: false as const,
-      error: "Too many invalid attempts. Request a new verification code.",
+      error: "Zu viele ungültige Versuche. Fordern Sie einen neuen Bestätigungscode an.",
     };
   }
 
@@ -188,7 +188,7 @@ async function verifyOtpForUser(userId: string, otp: string) {
       where: { id: record.id },
       data: { attempts: { increment: 1 } },
     });
-    return { ok: false as const, error: "Verification code is incorrect." };
+    return { ok: false as const, error: "Bestätigungscode ist falsch." };
   }
 
   return { ok: true as const, otpId: record.id };
@@ -201,7 +201,7 @@ export async function verifyPasswordResetOtp(email: string, otp: string) {
   });
 
   if (!user) {
-    return { ok: false as const, error: "Verification code expired or invalid." };
+    return { ok: false as const, error: "Bestätigungscode abgelaufen oder ungültig." };
   }
 
   return verifyOtpForUser(user.id, otp);
@@ -218,7 +218,7 @@ export async function resetPasswordWithOtp(
   });
 
   if (!user) {
-    return { ok: false as const, error: "Verification code expired or invalid." };
+    return { ok: false as const, error: "Bestätigungscode abgelaufen oder ungültig." };
   }
 
   const verification = await verifyOtpForUser(user.id, otp);

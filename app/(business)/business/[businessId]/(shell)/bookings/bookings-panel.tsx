@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Settings, Trash2 } from "lucide-react";
+import { Loader2, Plus, Settings, Trash2, Eye } from "lucide-react";
 import { toast } from "sonner";
+
+import { EmailPreviewDialog } from "@/app/(business)/business/[businessId]/(shell)/sequences/email-preview-dialog";
 
 import { BookingDetailDialog } from "@/app/(business)/business/[businessId]/(shell)/bookings/booking-detail-dialog";
 import { BookingsList } from "@/app/(business)/business/[businessId]/(shell)/bookings/bookings-list";
@@ -32,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { AppointmentReminderSettingsRow } from "@/lib/appointment-reminders";
 import type { BookingListRow, BookingStats } from "@/lib/bookings";
 import type { CustomerOption } from "@/lib/customers";
+import { appointmentReminderPreviewVariables } from "@/lib/email-preview";
 
 type ReminderOffsetDraft = {
   key: string;
@@ -47,24 +50,38 @@ function newOffsetDraft(index = 0): ReminderOffsetDraft {
   };
 }
 
+function reminderOffsetUnitLabel(unit: ReminderOffsetDraft["unit"], amount: number) {
+  switch (unit) {
+    case "MINUTES":
+      return amount === 1 ? "Minute" : "Minuten";
+    case "HOURS":
+      return amount === 1 ? "Stunde" : "Stunden";
+    case "DAYS":
+      return amount === 1 ? "Tag" : "Tage";
+    default:
+      return String(unit);
+  }
+}
+
 function reminderOffsetDescription(offset: ReminderOffsetDraft) {
   const amount = Number(offset.amount);
   const safeAmount =
     Number.isFinite(amount) && amount > 0 ? amount : Number(offset.amount) || 0;
-  const unit = offset.unit.toLowerCase().replace(/s$/, "");
-  const label = safeAmount === 1 ? unit : `${unit}s`;
+  const label = reminderOffsetUnitLabel(offset.unit, safeAmount || 1);
 
-  return `Send reminder ${safeAmount || offset.amount || "?"} ${label} before the appointment starts.`;
+  return `Erinnerung ${safeAmount || offset.amount || "?"} ${label} vor Terminbeginn senden.`;
 }
 
 function AppointmentReminderSettingsDialog({
   businessId,
+  businessName,
   open,
   settings,
   onOpenChange,
   onSaved,
 }: {
   businessId: string;
+  businessName: string;
   open: boolean;
   settings: AppointmentReminderSettingsRow;
   onOpenChange: (open: boolean) => void;
@@ -73,6 +90,7 @@ function AppointmentReminderSettingsDialog({
   const [enabled, setEnabled] = useState(settings.enabled);
   const [subject, setSubject] = useState(settings.subject);
   const [bodyText, setBodyText] = useState(settings.bodyText);
+  const [bodyHtml, setBodyHtml] = useState(settings.bodyHtml);
   const [offsets, setOffsets] = useState<ReminderOffsetDraft[]>(
     settings.offsets.map((offset) => ({
       key: offset.id,
@@ -82,6 +100,7 @@ function AppointmentReminderSettingsDialog({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   function updateOffset(key: string, patch: Partial<ReminderOffsetDraft>) {
     setOffsets((current) =>
@@ -102,11 +121,12 @@ function AppointmentReminderSettingsDialog({
     if (
       !subject.trim() ||
       !bodyText.trim() ||
+      !bodyHtml.trim() ||
       payloadOffsets.some(
         (offset) => !Number.isFinite(offset.amount) || offset.amount < 1,
       )
     ) {
-      setError("Add a subject, body, and valid reminder times.");
+      setError("Bitte Betreff, HTML-Text, Klartext und gültige Erinnerungszeiten angeben.");
       return;
     }
 
@@ -121,6 +141,7 @@ function AppointmentReminderSettingsDialog({
             enabled,
             subject,
             bodyText,
+            bodyHtml,
             offsets: payloadOffsets,
           }),
         },
@@ -128,17 +149,17 @@ function AppointmentReminderSettingsDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to save reminder settings.");
+        throw new Error(data.error ?? "Erinnerungseinstellungen konnten nicht gespeichert werden.");
       }
 
-      toast.success("Appointment reminder settings saved.");
+      toast.success("Erinnerungseinstellungen gespeichert.");
       onOpenChange(false);
       onSaved();
     } catch (saveError) {
       const message =
         saveError instanceof Error
           ? saveError.message
-          : "Failed to save reminder settings.";
+          : "Erinnerungseinstellungen konnten nicht gespeichert werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -147,12 +168,13 @@ function AppointmentReminderSettingsDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Appointment reminders</DialogTitle>
+          <DialogTitle>Terminerinnerungen</DialogTitle>
           <DialogDescription>
-            Send reminder emails before appointment start times.
+            Erinnerungs-E-Mails vor Terminbeginn senden.
           </DialogDescription>
         </DialogHeader>
 
@@ -165,7 +187,7 @@ function AppointmentReminderSettingsDialog({
 
           <div className="flex items-center justify-between rounded-lg border border-border p-4">
             <div>
-              <Label>Enable reminders</Label>
+              <Label>Erinnerungen aktivieren</Label>
               <p className="text-sm text-muted-foreground">
                 Reminders use the connected Google or Outlook mailbox.
               </p>
@@ -174,7 +196,7 @@ function AppointmentReminderSettingsDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="appointment-reminder-subject">Subject</Label>
+            <Label htmlFor="appointment-reminder-subject">Betreff</Label>
             <Input
               id="appointment-reminder-subject"
               value={subject}
@@ -183,24 +205,48 @@ function AppointmentReminderSettingsDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="appointment-reminder-body">Body</Label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label htmlFor="appointment-reminder-body-html">HTML-Text</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setPreviewOpen(true)}
+              >
+                <Eye className="size-4" />
+                Preview
+              </Button>
+            </div>
+            <Textarea
+              id="appointment-reminder-body-html"
+              value={bodyHtml}
+              onChange={(event) => setBodyHtml(event.target.value)}
+              rows={12}
+              className="font-mono text-xs"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="appointment-reminder-body">Klartext-Fallback</Label>
             <Textarea
               id="appointment-reminder-body"
               value={bodyText}
               onChange={(event) => setBodyText(event.target.value)}
-              rows={9}
+              rows={6}
             />
           </div>
 
           <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
             Variables: {"{{customerName}}"}, {"{{businessName}}"},{" "}
             {"{{appointmentTitle}}"}, {"{{appointmentDate}}"},{" "}
-            {"{{appointmentTime}}"}, {"{{meetingUrl}}"}.
+            {"{{appointmentTime}}"}, {"{{meetingUrl}}"}, {"{{meetingLink}}"}.
+            {" "}
+            Use {"{{meetingLink}}"} in HTML for a clickable meeting link.
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>When to send</Label>
+              <Label>Versandzeitpunkt</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -218,7 +264,7 @@ function AppointmentReminderSettingsDialog({
                 <CardContent className="space-y-2 p-4">
                   <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
                     <div className="space-y-2">
-                      <Label>Amount</Label>
+                      <Label>Anzahl</Label>
                       <Input
                         type="number"
                         min="1"
@@ -229,7 +275,7 @@ function AppointmentReminderSettingsDialog({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit before appointment</Label>
+                      <Label>Einheit vor Termin</Label>
                       <Select
                         value={offset.unit}
                         onValueChange={(value) =>
@@ -242,9 +288,9 @@ function AppointmentReminderSettingsDialog({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="MINUTES">Minutes</SelectItem>
-                          <SelectItem value="HOURS">Hours</SelectItem>
-                          <SelectItem value="DAYS">Days</SelectItem>
+                          <SelectItem value="MINUTES">Minuten</SelectItem>
+                          <SelectItem value="HOURS">Stunden</SelectItem>
+                          <SelectItem value="DAYS">Tage</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -279,26 +325,37 @@ function AppointmentReminderSettingsDialog({
             onClick={() => onOpenChange(false)}
             disabled={saving}
           >
-            Cancel
+            Abbrechen
           </Button>
           <Button type="button" onClick={() => void handleSave()} disabled={saving}>
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving…
+                Wird gespeichert…
               </>
             ) : (
-              "Save reminders"
+              "Erinnerungen speichern"
             )}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+      <EmailPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        subject={subject}
+        bodyHtml={bodyHtml}
+        bodyText={bodyText}
+        sampleVariables={appointmentReminderPreviewVariables(businessName)}
+      />
+    </>
   );
 }
 
 export function BookingsPanel({
   businessId,
+  businessName,
   bookings,
   calendarConnected,
   customers,
@@ -307,6 +364,7 @@ export function BookingsPanel({
   reminderSettings,
 }: {
   businessId: string;
+  businessName: string;
   bookings: BookingListRow[];
   calendarConnected: boolean;
   customers: CustomerOption[];
@@ -335,13 +393,13 @@ export function BookingsPanel({
     <>
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <p className="text-sm text-muted-foreground">
-          {stats.today} today · {stats.thisWeek} this week · {stats.nextWeek} next
-          week · Times shown in {timeZone}
+          {stats.today} heute · {stats.thisWeek} diese Woche · {stats.nextWeek} nächste
+          Woche · Zeiten in {timeZone}
         </p>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setSettingsOpen(true)}>
             <Settings className="size-4" />
-            Reminder settings
+            Erinnerungseinstellungen
           </Button>
           <Button
             onClick={() => setCreateOpen(true)}
@@ -349,19 +407,18 @@ export function BookingsPanel({
             title={
               calendarConnected
                 ? undefined
-                : "Connect Google or Outlook Calendar before creating appointments."
+                : "Verbinden Sie Google oder Outlook Kalender, bevor Sie Termine erstellen."
             }
           >
             <Plus className="size-4" />
-            New appointment
+            Neuer Termin
           </Button>
         </div>
       </div>
       {!calendarConnected ? (
         <p className="mb-6 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-          Connect Google or Outlook Calendar before creating appointments. New
-          appointments are created as calendar events and synced back to
-          MeisterFlow.
+          Verbinden Sie Google oder Outlook Kalender, bevor Sie Termine erstellen. Neue
+          Termine werden als Kalenderereignisse erstellt und nach MeisterFlow synchronisiert.
         </p>
       ) : null}
 
@@ -400,6 +457,7 @@ export function BookingsPanel({
 
       <AppointmentReminderSettingsDialog
         businessId={businessId}
+        businessName={businessName}
         open={settingsOpen}
         settings={reminderSettings}
         onOpenChange={setSettingsOpen}

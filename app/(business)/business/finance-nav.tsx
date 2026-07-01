@@ -18,15 +18,15 @@ import { businessFinancePath } from "@/lib/business-paths";
 import { cn } from "@/lib/utils";
 
 const FINANCE_TABS = [
-  { segment: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { segment: "invoices", label: "Invoices", icon: FileText },
-  { segment: "payments", label: "Payments", icon: CreditCard },
-  { segment: "reminders", label: "Reminders", icon: Bell },
-  { segment: "reports", label: "Reports", icon: TrendingUp },
-  { segment: "payouts", label: "Payouts", icon: Wallet },
-  { segment: "fees", label: "Fees", icon: Percent },
-  { segment: "subscription", label: "Subscription", icon: RefreshCw },
-  { segment: "settings", label: "Settings", icon: Settings2 },
+  { segment: "dashboard", label: "Übersicht", icon: LayoutDashboard },
+  { segment: "invoices", label: "Rechnungen", icon: FileText },
+  { segment: "payments", label: "Zahlungen", icon: CreditCard },
+  { segment: "reminders", label: "Erinnerungen", icon: Bell },
+  { segment: "reports", label: "Berichte", icon: TrendingUp },
+  { segment: "payouts", label: "Auszahlungen", icon: Wallet },
+  { segment: "fees", label: "Gebühren", icon: Percent },
+  { segment: "subscription", label: "Abonnement", icon: RefreshCw },
+  { segment: "settings", label: "Einstellungen", icon: Settings2 },
 ] as const;
 
 export function FinanceNav({ businessId }: { businessId: string }) {

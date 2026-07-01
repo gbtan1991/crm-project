@@ -19,11 +19,11 @@ import type { CustomerTimelineEvent } from "@/lib/customer-activity";
 import { cn } from "@/lib/utils";
 
 const TYPE_META = {
-  booking: { label: "Appointment", icon: CalendarDays },
-  invoice: { label: "Invoice", icon: Receipt },
-  inquiry: { label: "Inquiry", icon: Inbox },
-  offer: { label: "Offer", icon: FileText },
-  review: { label: "Review", icon: Star },
+  booking: { label: "Termin", icon: CalendarDays },
+  invoice: { label: "Rechnung", icon: Receipt },
+  inquiry: { label: "Anfrage", icon: Inbox },
+  offer: { label: "Angebot", icon: FileText },
+  review: { label: "Bewertung", icon: Star },
 } as const;
 
 function statusBadgeVariant(
@@ -48,7 +48,7 @@ function formatTimelineDate(
   timeZone?: string,
   includeTime = false,
 ): string {
-  return new Date(value).toLocaleString("en-US", {
+  return new Date(value).toLocaleString("de-CH", {
     timeZone,
     dateStyle: "medium",
     ...(includeTime ? { timeStyle: "short" as const } : {}),
@@ -65,9 +65,9 @@ export function CustomerActivityTimeline({
   if (events.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border px-6 py-12 text-center">
-        <p className="font-medium">No activity yet</p>
+        <p className="font-medium">Noch keine Aktivität</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Appointments and invoices for this customer will appear here in
+          Termine und Rechnungen für diesen Kunden erscheinen hier in
           chronological order.
         </p>
       </div>

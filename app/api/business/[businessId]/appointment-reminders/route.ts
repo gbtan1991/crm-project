@@ -24,7 +24,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/appointment-reminders][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load appointment reminder settings." },
+      { error: "Terminerinnerungseinstellungen konnten nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -39,7 +39,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const parsed = appointmentReminderSettingsSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -55,7 +55,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
     console.error("[business/appointment-reminders][PUT]", error);
     return NextResponse.json(
-      { error: "Failed to save appointment reminder settings." },
+      { error: "Terminerinnerungseinstellungen konnten nicht gespeichert werden." },
       { status: 500 },
     );
   }

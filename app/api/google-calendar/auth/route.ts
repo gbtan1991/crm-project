@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const parsed = calendarAuthRequestSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -31,11 +31,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: "Invalid request data." }, { status: 400 });
+      return NextResponse.json({ error: "Ungültige Anfragedaten." }, { status: 400 });
     }
     console.error("[google-calendar/auth][POST]", error);
     return NextResponse.json(
-      { error: "Failed to generate auth URL." },
+      { error: "Authentifizierungs-URL konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

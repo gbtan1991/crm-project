@@ -15,7 +15,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const result = await buildInvoicePdfForBusiness(businessId, invoiceId);
 
     if (!result) {
-      return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+      return NextResponse.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
     }
 
     return new NextResponse(Buffer.from(result.pdf), {
@@ -31,7 +31,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id/pdf][GET]", error);
     return NextResponse.json(
-      { error: "Failed to generate invoice PDF." },
+      { error: "Rechnungs-PDF konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

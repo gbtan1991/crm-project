@@ -183,7 +183,7 @@ export async function createBookingForBusiness(
     },
   });
   if (!customer) {
-    return { error: "Customer not found.", status: 400 } satisfies BookingMutationError;
+    return { error: "Kunde nicht gefunden.", status: 400 } satisfies BookingMutationError;
   }
 
   const startsAt = new Date(input.startsAt);
@@ -268,7 +268,7 @@ export async function createBookingForBusiness(
       error:
         error instanceof Error
           ? error.message
-          : "Failed to create calendar appointment.",
+          : "Kalendertermin konnte nicht erstellt werden.",
       status: 502,
     } satisfies BookingMutationError;
   }
@@ -300,7 +300,7 @@ export async function updateBookingForBusiness(
       },
     });
     if (!customer) {
-      return { error: "Customer not found.", status: 400 } satisfies BookingMutationError;
+      return { error: "Kunde nicht gefunden.", status: 400 } satisfies BookingMutationError;
     }
   }
 
@@ -311,7 +311,7 @@ export async function updateBookingForBusiness(
 
   if (endsAt <= startsAt) {
     return {
-      error: "End time must be after start time.",
+      error: "Endzeit muss nach der Startzeit liegen.",
       status: 400,
     } satisfies BookingMutationError;
   }

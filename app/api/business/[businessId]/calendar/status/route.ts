@@ -44,7 +44,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/calendar/status][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load calendar status." },
+      { error: "Kalenderstatus konnte nicht geladen werden." },
       { status: 500 },
     );
   }

@@ -7,8 +7,7 @@ cmd --resume 0f7d6f52-73b0-44b9-a9e8-5e395fc2816a
 Reference App:
 https://meisterflow-kundenportal.base44.app/login
 
-NGROK:
-npx ngrok http --domain=deservedly-underaccommodated-maryrose.ngrok-free.dev 3000 --config ~/.ngrok1.yml
+NGROK: npx ngrok http --url=bring-envious-trivial.ngrok-free.dev 3000
 
 First, run the development server:
 

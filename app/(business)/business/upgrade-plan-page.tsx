@@ -21,14 +21,14 @@ export function UpgradePlanPage({
           <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
             <LockKeyhole className="size-6" />
           </div>
-          <Badge variant="secondary">Pro plan</Badge>
+          <Badge variant="secondary">Pro-Plan</Badge>
           <div className="space-y-2">
             <h2 className="font-heading text-xl font-bold">
-              Upgrade to Pro to unlock {feature}
+              Upgraden Sie auf Pro, um {feature} freizuschalten
             </h2>
             <p className="mx-auto max-w-xl text-sm text-muted-foreground">
-              This section is available on the Pro plan. Your current Basic plan
-              keeps core CRM, appointments, enquiries, and invoicing available.
+              Dieser Bereich ist im Pro-Plan verfügbar. Ihr aktueller Basic-Plan
+              bietet weiterhin CRM, Termine, Anfragen und Rechnungen.
             </p>
           </div>
         </CardContent>

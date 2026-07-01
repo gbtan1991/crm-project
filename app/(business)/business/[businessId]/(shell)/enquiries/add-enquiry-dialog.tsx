@@ -70,7 +70,7 @@ export function AddEnquiryDialog({
     event.preventDefault();
 
     if (!selectedForm) {
-      setError("Create an active form before adding enquiries.");
+      setError("Erstellen Sie ein aktives Formular, bevor Sie Anfragen hinzufügen.");
       return;
     }
 
@@ -89,16 +89,16 @@ export function AddEnquiryDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setError(data.error ?? "Failed to create enquiry.");
+        setError(data.error ?? "Anfrage konnte nicht erstellt werden.");
         return;
       }
 
-      toast.success("Enquiry added.");
+      toast.success("Anfrage hinzugefügt.");
       setOpen(false);
       reset();
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setSubmitting(false);
     }
@@ -117,13 +117,13 @@ export function AddEnquiryDialog({
       <DialogTrigger asChild>
         <Button size="sm" disabled={activeForms.length === 0}>
           <Plus className="size-4" />
-          Add new
+          Neu hinzufügen
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <form onSubmit={(event) => void handleSubmit(event)}>
           <DialogHeader>
-            <DialogTitle>Add enquiry</DialogTitle>
+            <DialogTitle>Anfrage hinzufügen</DialogTitle>
             <DialogDescription>
               Manually record an enquiry using one of your active forms.
             </DialogDescription>
@@ -132,15 +132,15 @@ export function AddEnquiryDialog({
           <div className="space-y-4 py-4">
             {activeForms.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No active forms yet. Create a form on the Forms tab first.
+                Noch keine aktiven Formulare. Erstellen Sie zuerst ein Formular im Tab Formulare.
               </p>
             ) : (
               <>
                 <div className="space-y-2">
-                  <Label>Form</Label>
+                  <Label>Formular</Label>
                   <Select value={formId} onValueChange={handleFormChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a form" />
+                      <SelectValue placeholder="Formular auswählen" />
                     </SelectTrigger>
                     <SelectContent>
                       {activeForms.map((form) => (
@@ -175,7 +175,7 @@ export function AddEnquiryDialog({
               variant="outline"
               onClick={() => setOpen(false)}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button
               type="submit"
@@ -184,10 +184,10 @@ export function AddEnquiryDialog({
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Saving…
+                  Wird gespeichert…
                 </>
               ) : (
-                "Add enquiry"
+                "Anfrage hinzufügen"
               )}
             </Button>
           </DialogFooter>

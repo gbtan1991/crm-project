@@ -12,7 +12,7 @@ export async function PATCH(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -26,7 +26,7 @@ export async function PATCH(request: Request) {
     }
     console.error("[user/profile][PATCH]", error);
     return NextResponse.json(
-      { error: "Failed to update profile." },
+      { error: "Profil konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }

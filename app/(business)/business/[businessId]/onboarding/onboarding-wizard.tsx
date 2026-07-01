@@ -93,13 +93,13 @@ export function OnboardingWizard({
 
   useEffect(() => {
     if (oauthSuccess === "google") {
-      toast.success("Google Calendar connected.");
+      toast.success("Google Kalender verbunden.");
       router.replace(businessOnboardingPath(businessId));
     } else if (oauthSuccess === "outlook") {
-      toast.success("Outlook Calendar connected.");
+      toast.success("Outlook-Kalender verbunden.");
       router.replace(businessOnboardingPath(businessId));
     } else if (oauthError) {
-      toast.error("Calendar connection failed. Please try again.");
+      toast.error("Kalenderverbindung fehlgeschlagen. Bitte versuchen Sie es erneut.");
       router.replace(businessOnboardingPath(businessId));
     }
   }, [oauthSuccess, oauthError, businessId, router]);
@@ -117,13 +117,13 @@ export function OnboardingWizard({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "Failed to save.");
+        setError(data.error ?? "Speichern fehlgeschlagen.");
         return false;
       }
       router.refresh();
       return true;
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
       return false;
     } finally {
       setSaving(false);
@@ -178,12 +178,12 @@ export function OnboardingWizard({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.authUrl) {
-        setError(data.error ?? "Failed to start calendar connection.");
+        setError(data.error ?? "Kalenderverbindung konnte nicht gestartet werden.");
         return;
       }
       window.location.href = data.authUrl as string;
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setConnecting(false);
     }
@@ -197,7 +197,7 @@ export function OnboardingWizard({
     });
     if (!ok) return;
     if (complete) {
-      toast.success("Setup complete!");
+      toast.success("Einrichtung abgeschlossen!");
       router.push(businessDashboardPath(businessId));
       router.refresh();
     }
@@ -213,28 +213,28 @@ export function OnboardingWizard({
 
       {step === 1 ? (
         <StepCard
-          title="Company details"
-          subtitle="These details are used on invoices, quotes, and customer emails."
+          title="Unternehmensdaten"
+          subtitle="Diese Angaben werden auf Rechnungen, Offerten und Kunden-E-Mails verwendet."
           icon={Building2}
           nextDisabled={!company.name.trim()}
           saving={saving}
           onNext={() => void handleCompanyNext()}
         >
           <div className="space-y-2">
-            <Label htmlFor="name">Business name *</Label>
+            <Label htmlFor="name">Firmenname *</Label>
             <Input
               id="name"
               value={company.name}
               onChange={(e) =>
                 setCompany({ ...company, name: e.target.value })
               }
-              placeholder="Acme Roofing Ltd"
+              placeholder="Acme Dach AG"
               required
             />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="contactPerson">Contact person</Label>
+              <Label htmlFor="contactPerson">Kontaktperson</Label>
               <Input
                 id="contactPerson"
                 value={company.contactPerson}
@@ -245,7 +245,7 @@ export function OnboardingWizard({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Telefon</Label>
               <Input
                 id="phone"
                 value={company.phone}
@@ -257,7 +257,7 @@ export function OnboardingWizard({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="businessEmail">Business email</Label>
+            <Label htmlFor="businessEmail">Geschäfts-E-Mail</Label>
             <Input
               id="businessEmail"
               type="email"
@@ -269,19 +269,19 @@ export function OnboardingWizard({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
+            <Label htmlFor="address">Adresse</Label>
             <Input
               id="address"
               value={company.address}
               onChange={(e) =>
                 setCompany({ ...company, address: e.target.value })
               }
-              placeholder="Main Street 1"
+              placeholder="Musterstrasse 1"
             />
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="postalCode">Postal code</Label>
+              <Label htmlFor="postalCode">PLZ</Label>
               <Input
                 id="postalCode"
                 value={company.postalCode}
@@ -291,7 +291,7 @@ export function OnboardingWizard({
               />
             </div>
             <div className="col-span-2 space-y-2">
-              <Label htmlFor="city">City</Label>
+              <Label htmlFor="city">Ort</Label>
               <Input
                 id="city"
                 value={company.city}
@@ -302,7 +302,7 @@ export function OnboardingWizard({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="taxId">Tax / UID number</Label>
+            <Label htmlFor="taxId">UID-Nummer</Label>
             <Input
               id="taxId"
               value={company.taxId}
@@ -313,14 +313,14 @@ export function OnboardingWizard({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="billingAddress">Billing address (if different)</Label>
+            <Label htmlFor="billingAddress">Rechnungsadresse (falls abweichend)</Label>
             <Textarea
               id="billingAddress"
               value={company.billingAddress}
               onChange={(e) =>
                 setCompany({ ...company, billingAddress: e.target.value })
               }
-              placeholder="Only if different from the company address"
+              placeholder="Nur falls abweichend von der Firmenadresse"
             />
           </div>
         </StepCard>
@@ -329,7 +329,7 @@ export function OnboardingWizard({
       {step === 2 ? (
         <StepCard
           title="Website"
-          subtitle="Connect your online presence with MeisterFlow."
+          subtitle="Verbinden Sie Ihre Online-Präsenz mit MeisterFlow."
           icon={Globe}
           saving={saving}
           allowSkip
@@ -349,7 +349,7 @@ export function OnboardingWizard({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hostingAccess">Hosting provider (optional)</Label>
+            <Label htmlFor="hostingAccess">Hosting-Anbieter (optional)</Label>
             <Input
               id="hostingAccess"
               value={website.hostingAccess}
@@ -363,18 +363,18 @@ export function OnboardingWizard({
             {[
               {
                 key: "hasWebsite" as const,
-                label: "Existing website",
-                sub: "You already have an active website",
+                label: "Bestehende Website",
+                sub: "Sie haben bereits eine aktive Website",
               },
               {
                 key: "hasGoogleAnalytics" as const,
                 label: "Google Analytics",
-                sub: "Visitor tracking is already set up",
+                sub: "Besuchertracking ist bereits eingerichtet",
               },
               {
                 key: "hasSearchConsole" as const,
                 label: "Google Search Console",
-                sub: "Search performance is already monitored",
+                sub: "Suchperformance wird bereits überwacht",
               },
             ].map(({ key, label, sub }) => (
               <div
@@ -399,12 +399,12 @@ export function OnboardingWizard({
 
       {step === 3 ? (
         <StepCard
-          title="Connect calendar"
-          subtitle="Connect your calendar so MeisterFlow can listen for booking activity."
+          title="Kalender verbinden"
+          subtitle="Verbinden Sie Ihren Kalender, damit MeisterFlow Terminaktivitäten erfassen kann."
           icon={CalendarDays}
           saving={saving}
           allowSkip
-          nextLabel="Finish setup"
+          nextLabel="Einrichtung abschliessen"
           onBack={() => setStep(2)}
           onSkip={() => void handleCalendarNext(true)}
           onNext={() => void handleCalendarNext(true)}
@@ -444,19 +444,19 @@ export function OnboardingWizard({
               {connecting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Redirecting…
+                  Weiterleitung…
                 </>
               ) : connectedProvider === calendarProvider ? (
-                "Connected"
+                "Verbunden"
               ) : calendarProvider === "GOOGLE" ? (
-                "Connect Google Calendar"
+                "Google Kalender verbinden"
               ) : (
-                "Connect Microsoft Outlook"
+                "Microsoft Outlook verbinden"
               )}
             </Button>
           ) : (
             <p className="text-center text-sm text-muted-foreground">
-              Select a calendar provider above to continue.
+              Wählen Sie oben einen Kalenderanbieter aus, um fortzufahren.
             </p>
           )}
 
@@ -467,7 +467,7 @@ export function OnboardingWizard({
               </div>
               <div>
                 <p className="text-sm font-semibold text-emerald-700">
-                  Calendar connected
+                  Kalender verbunden
                 </p>
                 <p className="text-xs text-emerald-600">{calendarEmail}</p>
               </div>
@@ -480,10 +480,10 @@ export function OnboardingWizard({
               <div>
                 <p className="text-sm font-semibold text-blue-700">
                   {CALENDAR_OPTIONS.find((o) => o.id === calendarProvider)?.name}{" "}
-                  selected
+                  ausgewählt
                 </p>
                 <p className="text-xs text-blue-600">
-                  Authorize access to start syncing calendar events.
+                  Autorisieren Sie den Zugriff, um Kalendertermine zu synchronisieren.
                 </p>
               </div>
             </div>
@@ -491,13 +491,13 @@ export function OnboardingWizard({
 
           <div className="rounded-xl bg-muted/60 p-4">
             <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Once connected, MeisterFlow will listen for:
+              Nach der Verbindung erfasst MeisterFlow:
             </p>
             <ul className="space-y-1">
               {[
-                "New bookings",
-                "Rescheduled appointments",
-                "Cancelled appointments",
+                "Neue Termine",
+                "Verschobene Termine",
+                "Abgesagte Termine",
               ].map((item) => (
                 <li
                   key={item}

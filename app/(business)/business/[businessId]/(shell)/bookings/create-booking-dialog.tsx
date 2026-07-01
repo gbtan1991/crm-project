@@ -96,12 +96,12 @@ export function CreateBookingDialog({
     setError(null);
 
     if (!calendarConnected) {
-      setError("Connect a calendar before creating appointments.");
+      setError("Verbinden Sie zuerst einen Kalender, bevor Sie Termine erstellen.");
       return;
     }
 
     if (customerId === NO_CUSTOMER_VALUE) {
-      setError("Select or create a customer before creating an appointment.");
+      setError("Wählen oder erstellen Sie einen Kunden, bevor Sie einen Termin anlegen.");
       return;
     }
 
@@ -123,10 +123,10 @@ export function CreateBookingDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to create appointment.");
+        throw new Error(data.error ?? "Termin konnte nicht erstellt werden.");
       }
 
-      toast.success("Appointment created.");
+      toast.success("Termin erstellt.");
       onOpenChange(false);
       reset();
       onCreated?.();
@@ -134,7 +134,7 @@ export function CreateBookingDialog({
       const message =
         submitError instanceof Error
           ? submitError.message
-          : "Failed to create appointment.";
+          : "Termin konnte nicht erstellt werden.";
       setError(message);
     } finally {
       setSubmitting(false);
@@ -155,7 +155,7 @@ export function CreateBookingDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to create customer.");
+        throw new Error(data.error ?? "Kunde konnte nicht erstellt werden.");
       }
 
       const customer = data.customer as CustomerOption;
@@ -163,12 +163,12 @@ export function CreateBookingDialog({
       setCustomerId(customer.id);
       setCustomerValues(emptyCustomerForm);
       setCustomerOpen(false);
-      toast.success("Customer created.");
+      toast.success("Kunde erstellt.");
     } catch (createError) {
       setCustomerError(
         createError instanceof Error
           ? createError.message
-          : "Failed to create customer.",
+          : "Kunde konnte nicht erstellt werden.",
       );
     } finally {
       setCustomerSubmitting(false);
@@ -188,16 +188,16 @@ export function CreateBookingDialog({
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>New appointment</DialogTitle>
+            <DialogTitle>Neuer Termin</DialogTitle>
             <DialogDescription>
-              Create an appointment in your connected calendar and sync it back
-              to MeisterFlow.
+              Erstellen Sie einen Termin in Ihrem verbundenen Kalender und synchronisieren Sie ihn
+              mit MeisterFlow.
             </DialogDescription>
           </DialogHeader>
 
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="booking-title">Title</Label>
+            <Label htmlFor="booking-title">Titel</Label>
             <Input
               id="booking-title"
               value={title}
@@ -207,7 +207,7 @@ export function CreateBookingDialog({
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="booking-start">Starts</Label>
+              <Label htmlFor="booking-start">Beginn</Label>
               <Input
                 id="booking-start"
                 type="datetime-local"
@@ -217,7 +217,7 @@ export function CreateBookingDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="booking-end">Ends</Label>
+              <Label htmlFor="booking-end">Ende</Label>
               <Input
                 id="booking-end"
                 type="datetime-local"
@@ -234,7 +234,7 @@ export function CreateBookingDialog({
                 <DialogTrigger asChild>
                   <Button type="button" variant="outline" size="sm">
                     <Plus className="size-4" />
-                    New customer
+                    Neuer Kunde
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
@@ -243,10 +243,10 @@ export function CreateBookingDialog({
                     className="space-y-4"
                   >
                     <DialogHeader>
-                      <DialogTitle>New customer</DialogTitle>
+                      <DialogTitle>Neuer Kunde</DialogTitle>
                       <DialogDescription>
-                        Create a customer, then continue scheduling the
-                        appointment.
+                        Erstellen Sie einen Kunden und fahren Sie dann mit der Terminplanung
+                        fort.
                       </DialogDescription>
                     </DialogHeader>
                     {customerError ? (
@@ -266,7 +266,7 @@ export function CreateBookingDialog({
                         onClick={() => setCustomerOpen(false)}
                         disabled={customerSubmitting}
                       >
-                        Cancel
+                        Abbrechen
                       </Button>
                       <Button
                         type="submit"
@@ -277,10 +277,10 @@ export function CreateBookingDialog({
                         {customerSubmitting ? (
                           <>
                             <Loader2 className="size-4 animate-spin" />
-                            Saving…
+                            Wird gespeichert…
                           </>
                         ) : (
-                          "Create customer"
+                          "Kunde erstellen"
                         )}
                       </Button>
                     </DialogFooter>
@@ -290,11 +290,11 @@ export function CreateBookingDialog({
             </div>
             <Select value={customerId} onValueChange={setCustomerId}>
               <SelectTrigger id="booking-customer">
-                <SelectValue placeholder="Select customer" />
+                <SelectValue placeholder="Kunde auswählen" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={NO_CUSTOMER_VALUE} disabled>
-                  Select a customer
+                  Kunde auswählen
                 </SelectItem>
                 {localCustomers.map((customer) => (
                   <SelectItem key={customer.id} value={customer.id}>
@@ -305,16 +305,16 @@ export function CreateBookingDialog({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="booking-location">Location</Label>
+            <Label htmlFor="booking-location">Ort</Label>
             <Input
               id="booking-location"
               value={location}
               onChange={(event) => setLocation(event.target.value)}
-              placeholder="On-site, phone, video call…"
+              placeholder="Vor Ort, Telefon, Videokonferenz …"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="booking-notes">Notes</Label>
+            <Label htmlFor="booking-notes">Notizen</Label>
             <Textarea
               id="booking-notes"
               value={notes}
@@ -334,7 +334,7 @@ export function CreateBookingDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button
               type="submit"
@@ -343,10 +343,10 @@ export function CreateBookingDialog({
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Creating…
+                  Wird erstellt…
                 </>
               ) : (
-                "Create appointment"
+                "Termin erstellen"
               )}
             </Button>
           </DialogFooter>

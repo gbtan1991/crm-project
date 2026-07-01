@@ -31,13 +31,13 @@ export function BusinessRecentActivity({
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-base">Recent activity</CardTitle>
+        <CardTitle className="text-base">Letzte Aktivitäten</CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Activity from customers, appointments, invoices, and enquiries will
-            show up here.
+            Aktivitäten von Kunden, Terminen, Rechnungen und Anfragen
+            erscheinen hier.
           </p>
         ) : (
           <ul className="space-y-4">

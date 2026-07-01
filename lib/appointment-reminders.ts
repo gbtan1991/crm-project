@@ -15,23 +15,17 @@ import { GmailSendError, sendGmailMessage } from "@/lib/google-mail/send";
 import { ensureInboxForBusiness } from "@/lib/inbox";
 import { OutlookCalendarOAuth } from "@/lib/outlook-calendar/oauth";
 import { OutlookSendError, sendOutlookMessage } from "@/lib/outlook-mail/send";
+import { buildEmailHtmlFromPlainText, wrapEmailContentHtml } from "@/lib/email-html";
+import {
+  defaultAppointmentReminderHtml,
+  defaultAppointmentReminderText,
+} from "@/lib/email-templates";
 import { prisma } from "@/lib/prisma";
 import type { AppointmentReminderSettingsInput } from "@/lib/validation/appointment-reminder";
 
-const DEFAULT_SUBJECT = "Reminder: {{appointmentTitle}} with {{businessName}}";
-const DEFAULT_BODY = [
-  "Hello {{customerName}},",
-  "",
-  "This is a reminder for your appointment with {{businessName}}.",
-  "",
-  "Appointment: {{appointmentTitle}}",
-  "Date: {{appointmentDate}}",
-  "Time: {{appointmentTime}}",
-  "",
-  "{{meetingUrl}}",
-  "",
-  "Thank you.",
-].join("\n");
+const DEFAULT_SUBJECT = "Erinnerung: {{appointmentTitle}} bei {{businessName}}";
+const DEFAULT_BODY = defaultAppointmentReminderText();
+const DEFAULT_BODY_HTML = defaultAppointmentReminderHtml();
 const LOOKAHEAD_MS = 2 * 60 * 1000;
 
 export type AppointmentReminderOffsetRow = {
@@ -45,6 +39,7 @@ export type AppointmentReminderSettingsRow = {
   enabled: boolean;
   subject: string;
   bodyText: string;
+  bodyHtml: string;
   offsets: AppointmentReminderOffsetRow[];
 };
 
@@ -62,6 +57,7 @@ function serializeSettings(config: {
   enabled: boolean;
   subject: string;
   bodyText: string;
+  bodyHtml: string | null;
   offsets: Array<{
     id: string;
     amount: number;
@@ -73,6 +69,7 @@ function serializeSettings(config: {
     enabled: config?.enabled ?? false,
     subject: config?.subject ?? DEFAULT_SUBJECT,
     bodyText: config?.bodyText ?? DEFAULT_BODY,
+    bodyHtml: config?.bodyHtml ?? DEFAULT_BODY_HTML,
     offsets:
       config?.offsets.map((offset) => ({
         id: offset.id,
@@ -110,12 +107,14 @@ export async function updateAppointmentReminderSettings(
         enabled: input.enabled,
         subject: input.subject.trim(),
         bodyText: input.bodyText.trim(),
+        bodyHtml: input.bodyHtml?.trim() || null,
       },
       create: {
         businessId,
         enabled: input.enabled,
         subject: input.subject.trim(),
         bodyText: input.bodyText.trim(),
+        bodyHtml: input.bodyHtml?.trim() || null,
       },
       select: { id: true },
     });
@@ -144,8 +143,8 @@ export async function updateAppointmentReminderSettings(
     type: ActivityLogType.SEQUENCE,
     subType: ActivityLogSubType.APPOINTMENT,
     message: input.enabled
-      ? "Appointment reminder settings enabled."
-      : "Appointment reminder settings disabled.",
+      ? "Terminerinnerungen aktiviert."
+      : "Terminerinnerungen deaktiviert.",
     metadata: {
       offsets: input.offsets.map((offset) => ({
         amount: offset.amount,
@@ -179,6 +178,7 @@ async function sendAppointmentReminder(input: {
   offsetId: string;
   subject: string;
   bodyText: string;
+  bodyHtml?: string;
 }) {
   const [booking, connection, inbox] = await Promise.all([
     prisma.booking.findFirst({
@@ -213,16 +213,16 @@ async function sendAppointmentReminder(input: {
   ]);
 
   if (!booking?.customer) {
-    return { ok: false as const, error: "Booking has no customer email." };
+    return { ok: false as const, error: "Für diese Buchung ist keine Kunden-E-Mail hinterlegt." };
   }
   if (!connection?.connectedAt || !connection.accountEmail) {
-    return { ok: false as const, error: "Connect Google or Outlook to send reminders." };
+    return { ok: false as const, error: "Verbinden Sie Google oder Outlook, um Erinnerungen zu senden." };
   }
   if (
     connection.provider !== CalendarProvider.GOOGLE &&
     connection.provider !== CalendarProvider.OUTLOOK
   ) {
-    return { ok: false as const, error: "Appointment reminders require Google or Outlook." };
+    return { ok: false as const, error: "Terminerinnerungen erfordern Google oder Outlook." };
   }
 
   const timeZone = booking.business.config?.timezone ?? "UTC";
@@ -238,10 +238,16 @@ async function sendAppointmentReminder(input: {
       timeStyle: "short",
       timeZone,
     }).format(booking.startsAt),
-    meetingUrl: booking.meetingUrl ? `Meeting link: ${booking.meetingUrl}` : "",
+    meetingUrl: booking.meetingUrl ? `Meeting-Link: ${booking.meetingUrl}` : "",
+    meetingLink: booking.meetingUrl
+      ? `<a href="${booking.meetingUrl}" style="color:#2563eb;text-decoration:underline;">Meeting beitreten</a>`
+      : "",
   };
   const subject = renderTemplate(input.subject, context);
   const bodyText = renderTemplate(input.bodyText, context);
+  const bodyHtml = input.bodyHtml
+    ? wrapEmailContentHtml(renderTemplate(input.bodyHtml, context))
+    : buildEmailHtmlFromPlainText(bodyText);
 
   const message = await prisma.message.create({
     data: {
@@ -257,6 +263,7 @@ async function sendAppointmentReminder(input: {
       toAddress: booking.customer.email,
       subject,
       bodyText,
+      bodyHtml,
       customerId: booking.customer.id,
       metadata: {
         bookingId: booking.id,
@@ -275,12 +282,14 @@ async function sendAppointmentReminder(input: {
             to: booking.customer.email,
             subject,
             bodyText,
+            bodyHtml,
           })
         : await sendOutlookMessage({
             accessToken: await OutlookCalendarOAuth.getValidAccessToken(input.businessId),
             to: booking.customer.email,
             subject,
             bodyText,
+            bodyHtml,
           });
 
     await prisma.$transaction([
@@ -302,7 +311,7 @@ async function sendAppointmentReminder(input: {
       businessId: input.businessId,
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.APPOINTMENT,
-      message: `Appointment reminder sent to ${booking.customer.email}.`,
+      message: `Terminerinnerung an ${booking.customer.email} gesendet.`,
       customerId: booking.customer.id,
       messageId: message.id,
       metadata: { bookingId: booking.id, offsetId: input.offsetId, subject },
@@ -317,7 +326,7 @@ async function sendAppointmentReminder(input: {
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Failed to send appointment reminder.";
+            : "Terminerinnerung konnte nicht gesendet werden.";
 
     await prisma.message.update({
       where: { id: message.id },
@@ -329,7 +338,7 @@ async function sendAppointmentReminder(input: {
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.APPOINTMENT,
       level: ActivityLogLevel.ERROR,
-      message: `Appointment reminder failed for ${booking.customer.email}: ${errorMessage}`,
+      message: `Terminerinnerung fehlgeschlagen für ${booking.customer.email}: ${errorMessage}`,
       customerId: booking.customer.id,
       messageId: message.id,
       metadata: { bookingId: booking.id, offsetId: input.offsetId, subject },
@@ -356,7 +365,7 @@ export async function processAppointmentReminders() {
       businessId: config.businessId,
       type: ActivityLogType.CRONJOB,
       subType: ActivityLogSubType.APPOINTMENT,
-      message: "Appointment reminder cron checked settings.",
+      message: "Terminerinnerungs-Cronjob: Einstellungen geprüft.",
       metadata: { offsets: config.offsets.length },
     });
 
@@ -387,6 +396,7 @@ export async function processAppointmentReminders() {
           offsetId: offset.id,
           subject: config.subject,
           bodyText: config.bodyText,
+          bodyHtml: config.bodyHtml ?? undefined,
         });
 
         if (result.ok) {
@@ -411,7 +421,7 @@ export async function processAppointmentReminders() {
       type: ActivityLogType.CRONJOB,
       subType: ActivityLogSubType.APPOINTMENT,
       level: failed > 0 ? ActivityLogLevel.WARNING : ActivityLogLevel.INFO,
-      message: `Appointment reminder cron processed: due ${due}, sent ${sent}, failed ${failed}.`,
+      message: `Terminerinnerungs-Cronjob abgeschlossen: fällig ${due}, gesendet ${sent}, fehlgeschlagen ${failed}.`,
       metadata: summary,
     })),
   );

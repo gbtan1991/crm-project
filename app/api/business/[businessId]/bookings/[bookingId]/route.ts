@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const booking = await getBookingForBusiness(businessId, bookingId);
     if (!booking) {
-      return NextResponse.json({ error: "Appointment not found." }, { status: 404 });
+      return NextResponse.json({ error: "Termin nicht gefunden." }, { status: 404 });
     }
 
     return NextResponse.json({ booking });
@@ -29,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/bookings/:id][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load appointment." },
+      { error: "Termin konnte nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const parsed = bookingUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -56,7 +56,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
 
     if (!booking) {
-      return NextResponse.json({ error: "Appointment not found." }, { status: 404 });
+      return NextResponse.json({ error: "Termin nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in booking) {
@@ -73,7 +73,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     console.error("[business/bookings/:id][PATCH]", error);
     return NextResponse.json(
-      { error: "Failed to update appointment." },
+      { error: "Termin konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }
@@ -86,7 +86,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     const result = await deleteBookingForBusiness(businessId, bookingId);
     if (!result) {
-      return NextResponse.json({ error: "Appointment not found." }, { status: 404 });
+      return NextResponse.json({ error: "Termin nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in result) {
@@ -103,7 +103,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/bookings/:id][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to delete appointment." },
+      { error: "Termin konnte nicht gelöscht werden." },
       { status: 500 },
     );
   }

@@ -203,7 +203,7 @@ export async function createBusiness(
     select: { id: true },
   });
   if (existingUser) {
-    return { ok: false, error: "A user with that email already exists." };
+    return { ok: false, error: "Ein Benutzer mit dieser E-Mail existiert bereits." };
   }
 
   const slug = await generateUniqueSlug(input.name);
@@ -244,7 +244,7 @@ export async function updateBusiness(
     select: { id: true, ownerId: true },
   });
   if (!business) {
-    return { ok: false, error: "Business not found." };
+    return { ok: false, error: "Unternehmen nicht gefunden." };
   }
 
   const ownerId = business.ownerId;
@@ -254,7 +254,7 @@ export async function updateBusiness(
     select: { id: true },
   });
   if (emailOwner && emailOwner.id !== ownerId) {
-    return { ok: false, error: "A user with that email already exists." };
+    return { ok: false, error: "Ein Benutzer mit dieser E-Mail existiert bereits." };
   }
 
   await prisma.$transaction(async (tx) => {
@@ -284,7 +284,7 @@ export async function deleteBusiness(
     select: { id: true },
   });
   if (!existing) {
-    return { ok: false, error: "Business not found." };
+    return { ok: false, error: "Unternehmen nicht gefunden." };
   }
 
   // BusinessConfig, Subscription and Users cascade via schema relations.
@@ -306,7 +306,7 @@ export async function createAdmin(input: {
     select: { id: true },
   });
   if (existing) {
-    return { ok: false, error: "A user with that email already exists." };
+    return { ok: false, error: "Ein Benutzer mit dieser E-Mail existiert bereits." };
   }
 
   const hashedPassword = await hash(input.password, BCRYPT_COST);
@@ -328,7 +328,7 @@ export async function deleteUser(
   currentUserId: string,
 ): Promise<MutateBusinessResult> {
   if (id === currentUserId) {
-    return { ok: false, error: "You cannot delete your own account." };
+    return { ok: false, error: "Sie können Ihr eigenes Konto nicht löschen." };
   }
 
   const user = await prisma.user.findUnique({
@@ -336,13 +336,13 @@ export async function deleteUser(
     select: { id: true, role: true },
   });
   if (!user) {
-    return { ok: false, error: "User not found." };
+    return { ok: false, error: "Benutzer nicht gefunden." };
   }
 
   if (user.role === Role.ADMIN) {
     const adminCount = await prisma.user.count({ where: { role: Role.ADMIN } });
     if (adminCount <= 1) {
-      return { ok: false, error: "Cannot delete the last admin." };
+      return { ok: false, error: "Der letzte Administrator kann nicht gelöscht werden." };
     }
   }
 

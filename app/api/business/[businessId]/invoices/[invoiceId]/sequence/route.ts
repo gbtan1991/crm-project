@@ -17,7 +17,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = startInvoiceSequenceSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -39,7 +39,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id/sequence][POST]", error);
     return NextResponse.json(
-      { error: "Failed to start invoice sequence." },
+      { error: "Rechnungssequenz konnte nicht gestartet werden." },
       { status: 500 },
     );
   }

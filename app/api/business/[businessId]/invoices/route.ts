@@ -31,7 +31,7 @@ export async function GET(request: Request, context: RouteContext) {
     }
     console.error("[business/invoices][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load invoices." },
+      { error: "Rechnungen konnten nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = invoiceWriteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -54,7 +54,7 @@ export async function POST(request: Request, context: RouteContext) {
     const invoice = await createInvoiceForBusiness(businessId, parsed.data);
     if (!invoice) {
       return NextResponse.json(
-        { error: "Customer or invoice template not found." },
+        { error: "Kunde oder Rechnungsvorlage nicht gefunden." },
         { status: 404 },
       );
     }
@@ -70,7 +70,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[business/invoices][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create invoice." },
+      { error: "Rechnung konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

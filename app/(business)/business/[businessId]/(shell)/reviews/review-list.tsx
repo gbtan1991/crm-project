@@ -50,6 +50,7 @@ import type { CustomerOption } from "@/lib/customers";
 import type { ReviewStatus } from "@/lib/generated/prisma/client";
 import { buildReviewRequestEmailContent } from "@/lib/review-email-content";
 import type { ReviewListRow } from "@/lib/reviews";
+import type { ReviewStatsPeriod } from "@/lib/validation/review";
 import { cn } from "@/lib/utils";
 
 type ReviewStats = {
@@ -74,12 +75,21 @@ type ReviewListProps = {
   currentPage: number;
   currentStatus: string | null;
   currentSort: "newest" | "oldest";
+  currentPeriod: ReviewStatsPeriod;
+};
+
+const REVIEW_PERIOD_LABELS: Record<ReviewStatsPeriod, string> = {
+  all: "Gesamter Zeitraum",
+  this_month: "Dieser Monat",
+  last_month: "Letzter Monat",
+  last_3_months: "Letzte 3 Monate",
+  last_12_months: "Letzte 12 Monate",
 };
 
 const STATUS_LABELS: Record<ReviewStatus, string> = {
-  REQUESTED: "Requested",
-  RECEIVED: "Received",
-  DECLINED: "Declined",
+  REQUESTED: "Angefragt",
+  RECEIVED: "Erhalten",
+  DECLINED: "Abgelehnt",
 };
 
 function StatusBadge({ status }: { status: ReviewStatus }) {
@@ -119,16 +129,16 @@ function GoogleReviewSettingsCard({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to save Google review link.");
+        throw new Error(data.error ?? "Google-Bewertungslink konnte nicht gespeichert werden.");
       }
 
       setGoogleReviewUrl(data.googleReviewUrl ?? "");
-      toast.success("Google review link saved.");
+      toast.success("Google-Bewertungslink gespeichert.");
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to save Google review link.",
+          : "Google-Bewertungslink konnte nicht gespeichert werden.",
       );
     } finally {
       setSaving(false);
@@ -141,9 +151,9 @@ function GoogleReviewSettingsCard({
     }
     try {
       await navigator.clipboard.writeText(googleReviewUrl.trim());
-      toast.success("Google review link copied.");
+      toast.success("Google-Bewertungslink kopiert.");
     } catch {
-      toast.error("Failed to copy Google review link.");
+      toast.error("Google-Bewertungslink konnte nicht kopiert werden.");
     }
   }
 
@@ -153,14 +163,14 @@ function GoogleReviewSettingsCard({
         <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold">Google Business Profile</h2>
+              <h2 className="font-semibold">Google Unternehmensprofil</h2>
               <Badge variant={googleReviewUrl ? "default" : "outline"}>
-                {googleReviewUrl ? "Configured" : "Not configured"}
+                {googleReviewUrl ? "Konfiguriert" : "Nicht konfiguriert"}
               </Badge>
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Add your Google review URL to send 4 and 5 star reviewers toward
-              Google after they submit internal feedback.
+              Hinterlegen Sie Ihre Google-Bewertungs-URL, um Bewerter mit 4 und 5 Sternen nach
+              internem Feedback zu Google zu leiten.
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
@@ -212,7 +222,7 @@ function GoogleReviewSettingsCard({
             disabled={saving}
             className="md:w-[120px]"
           >
-            {saving ? <Loader2 className="size-4 animate-spin" /> : "Save"}
+            {saving ? <Loader2 className="size-4 animate-spin" /> : "Speichern"}
           </Button>
         </div>
       </CardContent>
@@ -289,6 +299,7 @@ function ReviewRequestDialog({
   );
   const [subject, setSubject] = useState(defaultContent.subject);
   const [bodyText, setBodyText] = useState(defaultContent.bodyText);
+  const [bodyHtml, setBodyHtml] = useState(defaultContent.bodyHtml);
   const [requestReason, setRequestReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -301,6 +312,7 @@ function ReviewRequestDialog({
       setDeliveryMode(activeReviewSequence && !isUpdate ? "SEQUENCE" : "DIRECT");
       setSubject(defaultContent.subject);
       setBodyText(defaultContent.bodyText);
+      setBodyHtml(defaultContent.bodyHtml);
       setRequestReason("");
     }
   }
@@ -310,7 +322,7 @@ function ReviewRequestDialog({
     setError(null);
 
     if (!isUpdate && !customerId) {
-      setError("Select a customer.");
+      setError("Wählen Sie einen Kunden aus.");
       return;
     }
 
@@ -329,6 +341,7 @@ function ReviewRequestDialog({
                   action: "requestUpdate",
                   subject,
                   bodyText,
+                  bodyHtml,
                   requestReason,
                 }
               : {
@@ -336,6 +349,7 @@ function ReviewRequestDialog({
                   deliveryMode,
                   subject,
                   bodyText,
+                  bodyHtml,
                   requestReason,
                 },
           ),
@@ -344,11 +358,11 @@ function ReviewRequestDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to send review request.");
+        throw new Error(data.error ?? "Bewertungsanfrage konnte nicht gesendet werden.");
       }
 
       toast.success(
-        isUpdate ? "Review update request sent." : "Review request sent.",
+        isUpdate ? "Anfrage zur Bewertungsaktualisierung gesendet." : "Bewertungsanfrage gesendet.",
       );
       setOpen(false);
       router.refresh();
@@ -356,7 +370,7 @@ function ReviewRequestDialog({
       const message =
         submitError instanceof Error
           ? submitError.message
-          : "Failed to send review request.";
+          : "Bewertungsanfrage konnte nicht gesendet werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -371,7 +385,7 @@ function ReviewRequestDialog({
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
           <DialogHeader>
             <DialogTitle>
-              {isUpdate ? "Request review update" : "Request a review"}
+              {isUpdate ? "Bewertungsaktualisierung anfragen" : "Bewertung anfragen"}
             </DialogTitle>
             <DialogDescription>
               The customer receives an email with their private review page.
@@ -387,16 +401,16 @@ function ReviewRequestDialog({
           {isUpdate ? (
             <div className="rounded-lg bg-muted p-3 text-sm">
               <p className="font-medium">
-                {review ? formatCustomerName(review.customer) : "Customer"}
+                {review ? formatCustomerName(review.customer) : "Kunde"}
               </p>
               <p className="text-muted-foreground">{review?.customer.email}</p>
             </div>
           ) : (
             <div className="space-y-2">
-              <Label htmlFor="review-customer">Customer</Label>
+              <Label htmlFor="review-customer">Kunde</Label>
               <Select value={customerId} onValueChange={setCustomerId}>
                 <SelectTrigger id="review-customer">
-                  <SelectValue placeholder="Select customer" />
+                  <SelectValue placeholder="Kunde auswählen" />
                 </SelectTrigger>
                 <SelectContent>
                   {customers.map((customer) => (
@@ -411,7 +425,7 @@ function ReviewRequestDialog({
 
           {!isUpdate ? (
             <div className="space-y-2">
-              <Label>Delivery</Label>
+              <Label>Zustellung</Label>
               <Select
                 value={deliveryMode}
                 onValueChange={(value) =>
@@ -422,7 +436,7 @@ function ReviewRequestDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="DIRECT">Send now</SelectItem>
+                  <SelectItem value="DIRECT">Jetzt senden</SelectItem>
                   {activeReviewSequence ? (
                     <SelectItem value="SEQUENCE">
                       Use active sequence ({activeReviewSequence.name})
@@ -441,7 +455,7 @@ function ReviewRequestDialog({
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="review-reason">Internal reason (optional)</Label>
+            <Label htmlFor="review-reason">Interner Grund (optional)</Label>
             <Input
               id="review-reason"
               value={requestReason}
@@ -453,7 +467,7 @@ function ReviewRequestDialog({
           {deliveryMode === "DIRECT" || isUpdate ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="review-subject">Email subject</Label>
+                <Label htmlFor="review-subject">E-Mail-Betreff</Label>
                 <Input
                   id="review-subject"
                   value={subject}
@@ -463,17 +477,35 @@ function ReviewRequestDialog({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="review-body">Email body</Label>
+                <Label htmlFor="review-body-html">HTML-Text</Label>
+                <Textarea
+                  id="review-body-html"
+                  value={bodyHtml}
+                  onChange={(event) => setBodyHtml(event.target.value)}
+                  rows={12}
+                  className="font-mono text-xs"
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Bearbeiten Sie das HTML direkt. Verwenden Sie {"{{link}}"} für die Bewertungs-URL,
+                  z. B.{" "}
+                  <code className="rounded bg-muted px-1">
+                    &lt;a href=&quot;{"{{link}}"}&quot;&gt;Leave a review&lt;/a&gt;
+                  </code>
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="review-body">Klartext-Fallback</Label>
                 <Textarea
                   id="review-body"
                   value={bodyText}
                   onChange={(event) => setBodyText(event.target.value)}
-                  rows={9}
+                  rows={6}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use {"{{link}}"} where the public review link should appear.
-                  If it is missing, the link is added automatically.
+                  Used by email clients that do not render HTML.
                 </p>
               </div>
             </>
@@ -486,18 +518,18 @@ function ReviewRequestDialog({
               onClick={() => setOpen(false)}
               disabled={submitting}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={submitting || customers.length === 0}>
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Sending…
+                  Wird gesendet …
                 </>
               ) : (
                 deliveryMode === "SEQUENCE" && !isUpdate
-                  ? "Start sequence"
-                  : "Send request"
+                  ? "Sequenz starten"
+                  : "Anfrage senden"
               )}
             </Button>
           </DialogFooter>
@@ -520,6 +552,7 @@ export function ReviewList({
   currentPage,
   currentStatus,
   currentSort,
+  currentPeriod,
 }: ReviewListProps) {
   const router = useRouter();
   const basePath = businessReviewsPath(businessId);
@@ -530,10 +563,13 @@ export function ReviewList({
       "page" in overrides ? overrides.page : String(currentPage);
     const status = "status" in overrides ? overrides.status : currentStatus;
     const sort = "sort" in overrides ? overrides.sort : currentSort;
+    const period =
+      "period" in overrides ? overrides.period : currentPeriod;
 
     if (page && page !== "1") params.set("page", page);
     if (status) params.set("status", status);
     if (sort && sort !== "newest") params.set("sort", sort);
+    if (period && period !== "all") params.set("period", period);
     const qs = params.toString();
     return qs ? `${basePath}?${qs}` : basePath;
   }
@@ -550,20 +586,20 @@ export function ReviewList({
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? "Failed to decline review.");
+      toast.error(data.error ?? "Bewertung konnte nicht abgelehnt werden.");
       return;
     }
 
-    toast.success("Review declined.");
+    toast.success("Bewertung abgelehnt.");
     router.refresh();
   }
 
   async function handleCopy(reviewId: string) {
     try {
       await navigator.clipboard.writeText(reviewUrl(reviewId));
-      toast.success("Review link copied.");
+      toast.success("Bewertungslink kopiert.");
     } catch {
-      toast.error("Failed to copy review link.");
+      toast.error("Bewertungslink konnte nicht kopiert werden.");
     }
   }
 
@@ -588,10 +624,32 @@ export function ReviewList({
         initialGoogleReviewUrl={initialGoogleReviewUrl}
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-semibold">Analysen</h2>
+          <Select
+            value={currentPeriod}
+            onValueChange={(value) => {
+              router.push(buildHref({ period: value, page: "1" }));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[160px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(REVIEW_PERIOD_LABELS).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Average rating</p>
+            <p className="text-sm text-muted-foreground">Durchschnittsbewertung</p>
             <div className="mt-2 flex items-center gap-2">
               <p className="font-heading text-3xl font-bold">
                 {stats.avgRating ? stats.avgRating.toFixed(1) : "—"}
@@ -604,7 +662,7 @@ export function ReviewList({
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Reviews received</p>
+            <p className="text-sm text-muted-foreground">Erhaltene Bewertungen</p>
             <p className="mt-2 font-heading text-3xl font-bold">
               {stats.received}
             </p>
@@ -615,7 +673,7 @@ export function ReviewList({
         </Card>
         <Card>
           <CardContent className="p-5">
-            <p className="text-sm text-muted-foreground">Latest review</p>
+            <p className="text-sm text-muted-foreground">Neueste Bewertung</p>
             {stats.latest ? (
               <div className="mt-2 space-y-1">
                 {stats.latest.rating ? (
@@ -632,11 +690,12 @@ export function ReviewList({
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {total} review{total !== 1 ? "s" : ""} total
+          {total} Bewertung{total !== 1 ? "en" : ""} gesamt
         </p>
         <div className="flex items-center gap-2">
           <Select
@@ -648,13 +707,13 @@ export function ReviewList({
             }}
           >
             <SelectTrigger className="h-8 w-[130px] text-xs">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder="Alle Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="REQUESTED">Requested</SelectItem>
-              <SelectItem value="RECEIVED">Received</SelectItem>
-              <SelectItem value="DECLINED">Declined</SelectItem>
+              <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="REQUESTED">Angefragt</SelectItem>
+              <SelectItem value="RECEIVED">Erhalten</SelectItem>
+              <SelectItem value="DECLINED">Abgelehnt</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -667,8 +726,8 @@ export function ReviewList({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest first</SelectItem>
-              <SelectItem value="oldest">Oldest first</SelectItem>
+              <SelectItem value="newest">Neueste zuerst</SelectItem>
+              <SelectItem value="oldest">Älteste zuerst</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -678,12 +737,12 @@ export function ReviewList({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Customer</TableHead>
+              <TableHead>Kunde</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Rating</TableHead>
-              <TableHead className="hidden md:table-cell">Requested</TableHead>
-              <TableHead className="hidden lg:table-cell">Reason</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Bewertung</TableHead>
+              <TableHead className="hidden md:table-cell">Angefragt</TableHead>
+              <TableHead className="hidden lg:table-cell">Grund</TableHead>
+              <TableHead className="text-right">Aktionen</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -694,8 +753,8 @@ export function ReviewList({
                   className="py-12 text-center text-sm text-muted-foreground"
                 >
                   {currentStatus
-                    ? `No ${STATUS_LABELS[currentStatus as ReviewStatus].toLowerCase()} reviews yet.`
-                    : "No reviews yet. Request a review from a customer."}
+                    ? `Noch keine ${STATUS_LABELS[currentStatus as ReviewStatus].toLowerCase()} Bewertungen.`
+                    : "Noch keine Bewertungen. Fordern Sie eine Bewertung von einem Kunden an."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -721,8 +780,8 @@ export function ReviewList({
                   </TableCell>
                   <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
                     {review.requestedAt
-                      ? new Date(review.requestedAt).toLocaleDateString("en-US")
-                      : new Date(review.createdAt).toLocaleDateString("en-US")}
+                      ? new Date(review.requestedAt).toLocaleDateString("de-CH")
+                      : new Date(review.createdAt).toLocaleDateString("de-CH")}
                     {review.requestCount > 1 ? ` · ${review.requestCount}x` : ""}
                   </TableCell>
                   <TableCell className="hidden max-w-[240px] truncate text-xs text-muted-foreground lg:table-cell">
@@ -737,7 +796,7 @@ export function ReviewList({
                         onClick={() => void handleCopy(review.id)}
                       >
                         <Copy className="size-3" />
-                        Copy link
+                        Link kopieren
                       </Button>
                       {review.status === "REQUESTED" ? (
                         <Button
@@ -749,7 +808,7 @@ export function ReviewList({
                           }}
                         >
                           <ThumbsDown className="size-3" />
-                          Decline
+                          Ablehnen
                         </Button>
                       ) : review.status === "RECEIVED" ? (
                         <ReviewRequestDialog
@@ -765,7 +824,7 @@ export function ReviewList({
                         </ReviewRequestDialog>
                       ) : (
                         <span className="px-2 text-xs text-muted-foreground">
-                          Declined
+                          Abgelehnt
                         </span>
                       )}
                     </div>
@@ -780,7 +839,7 @@ export function ReviewList({
       {totalPages > 1 ? (
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">
-            Page {currentPage} of {totalPages}
+            Seite {currentPage} von {totalPages}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -792,7 +851,7 @@ export function ReviewList({
               }
             >
               <ChevronLeft className="size-4" />
-              Previous
+              Zurück
             </Button>
             <Button
               variant="outline"
@@ -802,7 +861,7 @@ export function ReviewList({
                 router.push(buildHref({ page: String(currentPage + 1) }))
               }
             >
-              Next
+              Weiter
               <ChevronRight className="size-4" />
             </Button>
           </div>

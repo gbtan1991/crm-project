@@ -53,7 +53,7 @@ export function CustomerFormFields({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor={id("companyName")}>Company</Label>
+        <Label htmlFor={id("companyName")}>Firma</Label>
         <Input
           id={id("companyName")}
           value={values.companyName}
@@ -64,7 +64,7 @@ export function CustomerFormFields({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={id("firstName")}>First name</Label>
+          <Label htmlFor={id("firstName")}>Vorname</Label>
           <Input
             id={id("firstName")}
             value={values.firstName}
@@ -72,7 +72,7 @@ export function CustomerFormFields({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={id("lastName")}>Last name</Label>
+          <Label htmlFor={id("lastName")}>Nachname</Label>
           <Input
             id={id("lastName")}
             value={values.lastName}
@@ -83,7 +83,7 @@ export function CustomerFormFields({
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor={id("email")}>Email *</Label>
+          <Label htmlFor={id("email")}>E-Mail *</Label>
           <Input
             id={id("email")}
             type="email"
@@ -94,7 +94,7 @@ export function CustomerFormFields({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={id("phone")}>Phone</Label>
+          <Label htmlFor={id("phone")}>Telefon</Label>
           <Input
             id={id("phone")}
             value={values.phone}
@@ -105,7 +105,7 @@ export function CustomerFormFields({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={id("address")}>Address</Label>
+        <Label htmlFor={id("address")}>Adresse</Label>
         <Input
           id={id("address")}
           value={values.address}
@@ -115,7 +115,7 @@ export function CustomerFormFields({
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor={id("postalCode")}>Postal code</Label>
+          <Label htmlFor={id("postalCode")}>PLZ</Label>
           <Input
             id={id("postalCode")}
             value={values.postalCode}
@@ -123,7 +123,7 @@ export function CustomerFormFields({
           />
         </div>
         <div className="col-span-2 space-y-2">
-          <Label htmlFor={id("city")}>City</Label>
+          <Label htmlFor={id("city")}>Ort</Label>
           <Input
             id={id("city")}
             value={values.city}
@@ -142,14 +142,14 @@ export function CustomerFormFields({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ACTIVE">Active</SelectItem>
-            <SelectItem value="INACTIVE">Inactive</SelectItem>
+            <SelectItem value="ACTIVE">Aktiv</SelectItem>
+            <SelectItem value="INACTIVE">Inaktiv</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor={id("notes")}>Notes</Label>
+        <Label htmlFor={id("notes")}>Notizen</Label>
         <Textarea
           id={id("notes")}
           value={values.notes}

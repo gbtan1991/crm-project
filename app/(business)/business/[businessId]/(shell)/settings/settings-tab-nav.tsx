@@ -11,8 +11,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const TABS: { id: BusinessSettingsTab; label: string }[] = [
-  { id: "calendar", label: "Calendar" },
-  { id: "general", label: "General" },
+  { id: "calendar", label: "Kalender" },
+  { id: "general", label: "Allgemein" },
 ];
 
 export function SettingsTabNav({ businessId }: { businessId: string }) {

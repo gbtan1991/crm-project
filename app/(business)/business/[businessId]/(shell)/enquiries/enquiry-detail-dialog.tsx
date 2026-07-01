@@ -123,15 +123,15 @@ export function EnquiryDetailDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to update enquiry.");
+        throw new Error(data.error ?? "Anfrage konnte nicht aktualisiert werden.");
       }
 
-      toast.success("Enquiry updated.");
+      toast.success("Anfrage aktualisiert.");
       onOpenChange(false);
       onUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update enquiry.",
+        error instanceof Error ? error.message : "Anfrage konnte nicht aktualisiert werden.",
       );
     } finally {
       setSaving(false);
@@ -152,17 +152,17 @@ export function EnquiryDetailDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to create customer.");
+        throw new Error(data.error ?? "Kunde konnte nicht erstellt werden.");
       }
 
       const customer = data.customer as CustomerOption;
       setLocalCustomers((current) => [customer, ...current]);
       setCustomerId(customer.id);
       setCustomerOpen(false);
-      toast.success("Customer created.");
+      toast.success("Kunde erstellt.");
     } catch (error) {
       setCustomerError(
-        error instanceof Error ? error.message : "Failed to create customer.",
+        error instanceof Error ? error.message : "Kunde konnte nicht erstellt werden.",
       );
     } finally {
       setCustomerSubmitting(false);
@@ -173,16 +173,16 @@ export function EnquiryDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Enquiry details</DialogTitle>
+          <DialogTitle>Anfragedetails</DialogTitle>
           <DialogDescription>
-            {enquiry ? enquiry.formName : "Submitted enquiry"}
+            {enquiry ? enquiry.formName : "Eingereichte Anfrage"}
           </DialogDescription>
         </DialogHeader>
 
         {enquiry ? (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Received {formatEnquiryReceivedAt(enquiry.createdAt, timeZone)}
+              Eingegangen {formatEnquiryReceivedAt(enquiry.createdAt, timeZone)}
             </p>
             <div className="space-y-2">
               <Label>Status</Label>
@@ -207,12 +207,12 @@ export function EnquiryDetailDialog({
 
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
-                <Label>Customer</Label>
+                <Label>Kunde</Label>
                 <Dialog open={customerOpen} onOpenChange={setCustomerOpen}>
                   <DialogTrigger asChild>
                     <Button type="button" variant="outline" size="sm">
                       <Plus className="size-4" />
-                      New customer
+                      Neuer Kunde
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
@@ -221,9 +221,9 @@ export function EnquiryDetailDialog({
                       className="space-y-4"
                     >
                       <DialogHeader>
-                        <DialogTitle>Create customer from enquiry</DialogTitle>
+                        <DialogTitle>Kunde aus Anfrage erstellen</DialogTitle>
                         <DialogDescription>
-                          Review the details before creating the linked
+                          Prüfen Sie die Angaben, bevor Sie den verknüpften
                           customer.
                         </DialogDescription>
                       </DialogHeader>
@@ -244,7 +244,7 @@ export function EnquiryDetailDialog({
                           onClick={() => setCustomerOpen(false)}
                           disabled={customerSubmitting}
                         >
-                          Cancel
+                          Abbrechen
                         </Button>
                         <Button
                           type="submit"
@@ -255,10 +255,10 @@ export function EnquiryDetailDialog({
                           {customerSubmitting ? (
                             <>
                               <Loader2 className="size-4 animate-spin" />
-                              Saving…
+                              Wird gespeichert…
                             </>
                           ) : (
-                            "Create customer"
+                            "Kunde erstellen"
                           )}
                         </Button>
                       </DialogFooter>
@@ -268,10 +268,10 @@ export function EnquiryDetailDialog({
               </div>
               <Select value={customerId} onValueChange={setCustomerId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Link customer" />
+                  <SelectValue placeholder="Kunde verknüpfen" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_CUSTOMER_VALUE}>No customer</SelectItem>
+                  <SelectItem value={NO_CUSTOMER_VALUE}>Kein Kunde</SelectItem>
                   {localCustomers.map((customer) => (
                     <SelectItem key={customer.id} value={customer.id}>
                       {formatCustomerName(customer)} ({customer.email})
@@ -313,10 +313,10 @@ export function EnquiryDetailDialog({
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving…
+                Wird gespeichert…
               </>
             ) : (
-              "Save changes"
+              "Änderungen speichern"
             )}
           </Button>
         </DialogFooter>

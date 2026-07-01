@@ -40,14 +40,14 @@ export function GeneralSettingsForm({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to update settings.");
+        throw new Error(data.error ?? "Einstellungen konnten nicht aktualisiert werden.");
       }
 
-      toast.success("Business settings updated.");
+      toast.success("Unternehmenseinstellungen aktualisiert.");
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update settings.",
+        error instanceof Error ? error.message : "Einstellungen konnten nicht aktualisiert werden.",
       );
     } finally {
       setSaving(false);
@@ -57,12 +57,12 @@ export function GeneralSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>General</CardTitle>
+        <CardTitle>Allgemein</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="business-name">Business name</Label>
+            <Label htmlFor="business-name">Unternehmensname</Label>
             <Input
               id="business-name"
               value={name}
@@ -73,7 +73,7 @@ export function GeneralSettingsForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="business-timezone">Timezone</Label>
+            <Label htmlFor="business-timezone">Zeitzone</Label>
             <Input
               id="business-timezone"
               value={timezone}
@@ -91,10 +91,10 @@ export function GeneralSettingsForm({
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving…
+                Wird gespeichert…
               </>
             ) : (
-              "Save changes"
+              "Änderungen speichern"
             )}
           </Button>
         </form>

@@ -52,17 +52,17 @@ function WebhookCopyButton({ url }: { url: string }) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast.success("Webhook URL copied.");
+      toast.success("Webhook-URL kopiert.");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy URL.");
+      toast.error("URL konnte nicht kopiert werden.");
     }
   }
 
   return (
     <Button type="button" variant="outline" size="sm" onClick={() => void handleCopy()}>
       {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-      Copy webhook
+      Webhook kopieren
     </Button>
   );
 }
@@ -90,15 +90,15 @@ export function FormsListPanel({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete form.");
+        throw new Error(data.error ?? "Formular konnte nicht gelöscht werden.");
       }
 
-      toast.success("Form deleted.");
+      toast.success("Formular gelöscht.");
       setDeleteOpen(null);
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete form.",
+        error instanceof Error ? error.message : "Formular konnte nicht gelöscht werden.",
       );
     } finally {
       setDeletingId(null);
@@ -111,7 +111,7 @@ export function FormsListPanel({
         <Button asChild>
           <Link href={businessNewEnquiryFormPath(businessId)}>
             <Plus className="size-4" />
-            New form
+            Neues Formular
           </Link>
         </Button>
       </div>
@@ -120,14 +120,14 @@ export function FormsListPanel({
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <FileText className="size-8 text-muted-foreground" />
-            <p className="font-medium">No forms yet</p>
+            <p className="font-medium">Noch keine Formulare</p>
             <p className="text-sm text-muted-foreground">
-              Create a form to get a webhook URL for capturing enquiries from
-              your website.
+              Erstellen Sie ein Formular, um eine Webhook-URL für Anfragen von
+              Ihrer Website zu erhalten.
             </p>
             <Button className="mt-2" asChild>
               <Link href={businessNewEnquiryFormPath(businessId)}>
-                Create form
+                Formular erstellen
               </Link>
             </Button>
           </CardContent>
@@ -144,13 +144,13 @@ export function FormsListPanel({
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{form.name}</h3>
                       <Badge variant={form.isActive ? "default" : "secondary"}>
-                        {form.isActive ? "Active" : "Inactive"}
+                        {form.isActive ? "Aktiv" : "Inaktiv"}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {form.fields.length} field
+                      {form.fields.length} Feld
                       {form.fields.length === 1 ? "" : "s"} · {form.enquiryCount}{" "}
-                      enquir{form.enquiryCount === 1 ? "y" : "ies"}
+                      Anfrage{form.enquiryCount === 1 ? "" : "n"}
                     </p>
                     <code className="block break-all rounded-md bg-muted px-3 py-2 text-xs">
                       {webhookUrl}
@@ -160,7 +160,7 @@ export function FormsListPanel({
                     </p>
                     <div className="rounded-lg border bg-muted/40 p-3">
                       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        Sample request body
+                        Beispiel-Anfragekörper
                       </p>
                       <pre className="overflow-x-auto text-xs">
                         {JSON.stringify(samplePayload(form.fields), null, 2)}
@@ -173,7 +173,7 @@ export function FormsListPanel({
                       <Link
                         href={`${businessNewEnquiryFormPath(businessId)}?edit=${form.id}`}
                       >
-                        Edit
+                        Bearbeiten
                       </Link>
                     </Button>
                     <Button
@@ -198,13 +198,13 @@ export function FormsListPanel({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete form?</AlertDialogTitle>
+            <AlertDialogTitle>Formular löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes the form and all enquiries captured by it.
+              Dies löscht das Formular und alle damit erfassten Anfragen dauerhaft.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingId != null}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deletingId != null}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deletingId != null}
@@ -218,10 +218,10 @@ export function FormsListPanel({
               {deletingId ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting…
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete form"
+                "Formular löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -20,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("[business/forms][GET]", error);
-    return NextResponse.json({ error: "Failed to load forms." }, { status: 500 });
+    return NextResponse.json({ error: "Formulare konnten nicht geladen werden." }, { status: 500 });
   }
 }
 
@@ -33,7 +33,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = formWriteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -45,6 +45,6 @@ export async function POST(request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("[business/forms][POST]", error);
-    return NextResponse.json({ error: "Failed to create form." }, { status: 500 });
+    return NextResponse.json({ error: "Formular konnte nicht erstellt werden." }, { status: 500 });
   }
 }

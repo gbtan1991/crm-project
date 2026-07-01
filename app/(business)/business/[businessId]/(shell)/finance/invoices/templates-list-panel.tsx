@@ -88,14 +88,14 @@ export function TemplatesListPanel({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to delete template.");
+        throw new Error(data.error ?? "Vorlage konnte nicht gelöscht werden.");
       }
 
-      toast.success("Template deleted.");
+      toast.success("Vorlage gelöscht.");
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete template.",
+        error instanceof Error ? error.message : "Vorlage konnte nicht gelöscht werden.",
       );
     } finally {
       setDeleting(false);
@@ -115,7 +115,7 @@ export function TemplatesListPanel({
         <Button asChild>
           <Link href={businessInvoiceTemplateEditPath(businessId, "new")}>
             <Plus className="size-4" />
-            New template
+            Neue Vorlage
           </Link>
         </Button>
       </div>
@@ -124,14 +124,14 @@ export function TemplatesListPanel({
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <FileStack className="size-8 text-muted-foreground" />
-            <p className="font-medium">No templates yet</p>
+            <p className="font-medium">Noch keine Vorlagen</p>
             <p className="max-w-md text-sm text-muted-foreground">
               Templates define your services, VAT rate, and default invoice details.
-              Create one for each type of job you bill for.
+              Erstellen Sie eine Vorlage für jede Art von Auftrag, den Sie abrechnen.
             </p>
             <Button className="mt-2" asChild>
               <Link href={businessInvoiceTemplateEditPath(businessId, "new")}>
-                Create template
+                Vorlage erstellen
               </Link>
             </Button>
           </CardContent>
@@ -153,7 +153,7 @@ export function TemplatesListPanel({
                         {template.serviceCount === 1 ? "" : "s"}
                       </Badge>
                       <Badge variant="outline">
-                        VAT {template.vatRate}% · {template.currency}
+                        MwSt. {template.vatRate}% · {template.currency}
                       </Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
@@ -173,7 +173,7 @@ export function TemplatesListPanel({
                       )}
                     >
                       <Pencil className="size-4" />
-                      Edit
+                      Bearbeiten
                     </Link>
                   </Button>
                   <Button
@@ -196,14 +196,14 @@ export function TemplatesListPanel({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete template?</AlertDialogTitle>
+            <AlertDialogTitle>Vorlage löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Templates used by existing invoices cannot be deleted. This action
-              cannot be undone.
+              Vorlagen, die von bestehenden Rechnungen verwendet werden, können nicht gelöscht werden. Diese Aktion
+              kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting}
@@ -215,10 +215,10 @@ export function TemplatesListPanel({
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting…
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete template"
+                "Vorlage löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

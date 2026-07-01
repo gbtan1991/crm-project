@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   ExternalLink,
   Globe,
@@ -12,6 +13,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Star,
   Trash2,
   Upload,
   X,
@@ -40,35 +42,50 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { businessReviewsPath } from "@/lib/business-paths";
+import { formatCustomerName } from "@/lib/customer-display";
+import type { ReviewListRow } from "@/lib/reviews";
+import { cn } from "@/lib/utils";
 import type {
   WebsiteOverview,
   WebsiteTicketRow,
 } from "@/lib/website-tickets";
+
+const META_PIXEL_SETUP_URL = "https://www.youtube.com/watch?v=h35eEoI4wm8";
+
+type ReviewStats = {
+  total: number;
+  requested: number;
+  received: number;
+  declined: number;
+  avgRating: number | null;
+  latest: ReviewListRow | null;
+};
 
 type TicketType = WebsiteTicketRow["type"];
 type TicketPriority = WebsiteTicketRow["priority"];
 type TicketStatus = WebsiteTicketRow["status"];
 
 const TYPE_LABELS: Record<TicketType, string> = {
-  UI_CHANGE: "UI change",
-  BUG: "Bug",
-  CONTENT: "Content",
+  UI_CHANGE: "UI-Änderung",
+  BUG: "Fehler",
+  CONTENT: "Inhalt",
   SEO: "SEO",
-  OTHER: "Other",
+  OTHER: "Sonstiges",
 };
 
 const PRIORITY_LABELS: Record<TicketPriority, string> = {
-  LOW: "Low",
-  MEDIUM: "Medium",
-  HIGH: "High",
+  LOW: "Niedrig",
+  MEDIUM: "Mittel",
+  HIGH: "Hoch",
 };
 
 const STATUS_LABELS: Record<TicketStatus, string> = {
-  PENDING: "Pending",
-  IN_PROGRESS: "In progress",
-  NEEDS_INFO: "Needs info",
-  DONE: "Done",
-  REJECTED: "Rejected",
+  PENDING: "Ausstehend",
+  IN_PROGRESS: "In Bearbeitung",
+  NEEDS_INFO: "Informationen benötigt",
+  DONE: "Erledigt",
+  REJECTED: "Abgelehnt",
 };
 
 const STATUS_VARIANTS: Record<
@@ -118,6 +135,31 @@ function formatDate(value: string) {
 
 function statusCount(tickets: WebsiteTicketRow[], status: TicketStatus) {
   return tickets.filter((ticket) => ticket.status === status).length;
+}
+
+function StarRating({
+  rating,
+  size = "sm",
+}: {
+  rating: number;
+  size?: "sm" | "md";
+}) {
+  const className = size === "md" ? "size-5" : "size-3.5";
+  return (
+    <span className="inline-flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={cn(
+            className,
+            star <= rating
+              ? "fill-amber-400 text-amber-400"
+              : "fill-none text-muted-foreground/30",
+          )}
+        />
+      ))}
+    </span>
+  );
 }
 
 function RequirementStatus({
@@ -183,7 +225,7 @@ function WebsiteTicketDialog({
     setError(null);
 
     if (!form.title.trim()) {
-      setError("Title is required.");
+      setError("Titel ist erforderlich.");
       return;
     }
 
@@ -214,15 +256,15 @@ function WebsiteTicketDialog({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to save ticket.");
+        throw new Error(data.error ?? "Ticket konnte nicht gespeichert werden.");
       }
 
-      toast.success(isEdit ? "Website ticket updated." : "Website ticket created.");
+      toast.success(isEdit ? "Website-Ticket aktualisiert." : "Website-Ticket erstellt.");
       onOpenChange(false);
       onSaved();
     } catch (saveError) {
       const message =
-        saveError instanceof Error ? saveError.message : "Failed to save ticket.";
+        saveError instanceof Error ? saveError.message : "Ticket konnte nicht gespeichert werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -235,7 +277,7 @@ function WebsiteTicketDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5">
           <DialogHeader>
-            <DialogTitle>{isEdit ? "Edit website ticket" : "New website ticket"}</DialogTitle>
+            <DialogTitle>{isEdit ? "Website-Ticket bearbeiten" : "Neues Website-Ticket"}</DialogTitle>
             <DialogDescription>
               Describe a website change, bug, or content request for the MeisterFlow team.
             </DialogDescription>
@@ -249,7 +291,7 @@ function WebsiteTicketDialog({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>Typ</Label>
               <Select
                 value={form.type}
                 onValueChange={(value) =>
@@ -263,17 +305,17 @@ function WebsiteTicketDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="UI_CHANGE">UI change</SelectItem>
-                  <SelectItem value="BUG">Bug</SelectItem>
-                  <SelectItem value="CONTENT">Content</SelectItem>
+                  <SelectItem value="UI_CHANGE">UI-Änderung</SelectItem>
+                  <SelectItem value="BUG">Fehler</SelectItem>
+                  <SelectItem value="CONTENT">Inhalt</SelectItem>
                   <SelectItem value="SEO">SEO</SelectItem>
-                  <SelectItem value="OTHER">Other</SelectItem>
+                  <SelectItem value="OTHER">Sonstiges</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label>Priority</Label>
+              <Label>Priorität</Label>
               <Select
                 value={form.priority}
                 onValueChange={(value) =>
@@ -287,28 +329,28 @@ function WebsiteTicketDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
+                  <SelectItem value="LOW">Niedrig</SelectItem>
+                  <SelectItem value="MEDIUM">Mittel</SelectItem>
+                  <SelectItem value="HIGH">Hoch</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website-ticket-title">Title</Label>
+            <Label htmlFor="website-ticket-title">Titel</Label>
             <Input
               id="website-ticket-title"
               value={form.title}
               onChange={(event) =>
                 setForm((current) => ({ ...current, title: event.target.value }))
               }
-              placeholder="e.g. Update homepage hero text"
+              placeholder="z. B. Startseiten-Headline aktualisieren"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="website-ticket-description">Description</Label>
+            <Label htmlFor="website-ticket-description">Beschreibung</Label>
             <Textarea
               id="website-ticket-description"
               value={form.description}
@@ -319,14 +361,14 @@ function WebsiteTicketDialog({
                 }))
               }
               rows={6}
-              placeholder="Describe the requested change or bug as clearly as possible."
+              placeholder="Beschreiben Sie die gewünschte Änderung oder den Fehler so klar wie möglich."
             />
           </div>
 
           {role === "ADMIN" ? (
             <>
               <div className="space-y-2">
-                <Label>Status (admin)</Label>
+                <Label>Status (Admin)</Label>
                 <Select
                   value={form.status ?? ticket?.status ?? "PENDING"}
                   onValueChange={(value) =>
@@ -340,16 +382,16 @@ function WebsiteTicketDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="IN_PROGRESS">In progress</SelectItem>
-                    <SelectItem value="NEEDS_INFO">Needs info</SelectItem>
-                    <SelectItem value="DONE">Done</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    <SelectItem value="PENDING">Ausstehend</SelectItem>
+                    <SelectItem value="IN_PROGRESS">In Bearbeitung</SelectItem>
+                    <SelectItem value="NEEDS_INFO">Informationen benötigt</SelectItem>
+                    <SelectItem value="DONE">Erledigt</SelectItem>
+                    <SelectItem value="REJECTED">Abgelehnt</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="website-ticket-admin-note">Admin note</Label>
+                <Label htmlFor="website-ticket-admin-note">Admin-Notiz</Label>
                 <Textarea
                   id="website-ticket-admin-note"
                   value={form.adminNote}
@@ -360,7 +402,7 @@ function WebsiteTicketDialog({
                     }))
                   }
                   rows={3}
-                  placeholder="Internal notes for the business owner..."
+                  placeholder="Interne Notizen für den Unternehmensinhaber …"
                 />
               </div>
             </>
@@ -368,7 +410,7 @@ function WebsiteTicketDialog({
 
           {ticket?.attachments.length ? (
             <div className="space-y-2">
-              <Label>Existing images</Label>
+              <Label>Vorhandene Bilder</Label>
               <div className="flex flex-wrap gap-3">
                 {ticket.attachments.map((attachment) => (
                   <a
@@ -390,7 +432,7 @@ function WebsiteTicketDialog({
           ) : null}
 
           <div className="space-y-2">
-            <Label>Images (optional)</Label>
+            <Label>Bilder (optional)</Label>
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground hover:bg-muted/40">
               <Upload className="size-4" />
               Upload screenshots or images
@@ -432,16 +474,16 @@ function WebsiteTicketDialog({
               disabled={saving}
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={saving}>
               {saving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Saving…
+                  Wird gespeichert…
                 </>
               ) : (
-                "Save ticket"
+                "Ticket speichern"
               )}
             </Button>
           </DialogFooter>
@@ -456,11 +498,13 @@ export function WebsitePanel({
   role,
   overview,
   tickets,
+  reviewStats,
 }: {
   businessId: string;
   role?: string;
   overview: WebsiteOverview;
   tickets: WebsiteTicketRow[];
+  reviewStats: ReviewStats;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<TicketStatus | "ALL">("ALL");
@@ -499,16 +543,16 @@ export function WebsitePanel({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete ticket.");
+        throw new Error(data.error ?? "Ticket konnte nicht gelöscht werden.");
       }
 
-      toast.success("Website ticket deleted.");
+      toast.success("Website-Ticket gelöscht.");
       refresh();
     } catch (deleteError) {
       toast.error(
         deleteError instanceof Error
           ? deleteError.message
-          : "Failed to delete ticket.",
+          : "Ticket konnte nicht gelöscht werden.",
       );
     } finally {
       setDeletingId(null);
@@ -519,7 +563,7 @@ export function WebsitePanel({
     <Tabs defaultValue="overview" className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="tickets">
             Tickets
             {statusCount(tickets, "PENDING") > 0 ? (
@@ -531,7 +575,7 @@ export function WebsitePanel({
         </TabsList>
         <Button onClick={openCreate}>
           <Plus className="size-4" />
-          New website ticket
+          Neues Website-Ticket
         </Button>
       </div>
 
@@ -539,15 +583,15 @@ export function WebsitePanel({
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Website status</p>
+              <p className="text-sm text-muted-foreground">Website-Status</p>
               <p className="mt-2 font-heading text-2xl font-bold">
-                {overview.domain ? "Online" : "Not set"}
+                {overview.domain ? "Online" : "Nicht gesetzt"}
               </p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Pending tickets</p>
+              <p className="text-sm text-muted-foreground">Ausstehende Tickets</p>
               <p className="mt-2 font-heading text-2xl font-bold">
                 {statusCount(tickets, "PENDING")}
               </p>
@@ -555,7 +599,7 @@ export function WebsitePanel({
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">In progress</p>
+              <p className="text-sm text-muted-foreground">In Bearbeitung</p>
               <p className="mt-2 font-heading text-2xl font-bold">
                 {statusCount(tickets, "IN_PROGRESS")}
               </p>
@@ -563,7 +607,7 @@ export function WebsitePanel({
           </Card>
           <Card>
             <CardContent className="p-5">
-              <p className="text-sm text-muted-foreground">Completed</p>
+              <p className="text-sm text-muted-foreground">Abgeschlossen</p>
               <p className="mt-2 font-heading text-2xl font-bold">
                 {statusCount(tickets, "DONE")}
               </p>
@@ -571,17 +615,72 @@ export function WebsitePanel({
           </Card>
         </div>
 
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-semibold">Bewertungen</h2>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={businessReviewsPath(businessId)}>Alle Bewertungen anzeigen</Link>
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardContent className="p-5">
+                <p className="text-sm text-muted-foreground">Durchschnittsbewertung</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <p className="font-heading text-2xl font-bold">
+                    {reviewStats.avgRating ? reviewStats.avgRating.toFixed(1) : "—"}
+                  </p>
+                  {reviewStats.avgRating ? (
+                    <StarRating rating={Math.round(reviewStats.avgRating)} size="md" />
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5">
+                <p className="text-sm text-muted-foreground">Erhaltene Bewertungen</p>
+                <p className="mt-2 font-heading text-2xl font-bold">
+                  {reviewStats.received}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {reviewStats.requested} requested · {reviewStats.declined} declined
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-5">
+                <p className="text-sm text-muted-foreground">Neueste Bewertung</p>
+                {reviewStats.latest ? (
+                  <div className="mt-2 space-y-1">
+                    {reviewStats.latest.rating ? (
+                      <StarRating rating={reviewStats.latest.rating} />
+                    ) : null}
+                    <p className="line-clamp-2 text-sm">
+                      {reviewStats.latest.content ||
+                        formatCustomerName(reviewStats.latest.customer)}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    No reviews received yet.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Globe className="size-4" />
-                Website requirements
+                Website-Anforderungen
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Website URL</span>
+                <span className="text-muted-foreground">Website-URL</span>
                 {websiteUrl ? (
                   <a
                     href={websiteUrl}
@@ -593,35 +692,47 @@ export function WebsitePanel({
                     <ExternalLink className="size-3" />
                   </a>
                 ) : (
-                  <span className="text-muted-foreground">Not provided</span>
+                  <span className="text-muted-foreground">Nicht angegeben</span>
                 )}
               </div>
               <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Has website</span>
+                <span className="text-muted-foreground">Meta Pixel</span>
+                <a
+                  href={META_PIXEL_SETUP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                >
+                  Setup guide
+                  <ExternalLink className="size-3" />
+                </a>
+              </div>
+              <div className="flex justify-between gap-4 border-b pb-3">
+                <span className="text-muted-foreground">Website vorhanden</span>
                 <RequirementStatus
                   active={overview.hasWebsite}
-                  label={overview.hasWebsite ? "Yes" : "No"}
+                  label={overview.hasWebsite ? "Ja" : "Nein"}
                 />
               </div>
               <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Hosting access</span>
+                <span className="text-muted-foreground">Hosting-Zugang</span>
                 <RequirementStatus
                   active={overview.hostingAccessConfigured}
-                  label={overview.hostingAccessConfigured ? "Provided" : "Missing"}
+                  label={overview.hostingAccessConfigured ? "Vorhanden" : "Fehlt"}
                 />
               </div>
               <div className="flex justify-between gap-4 border-b pb-3">
                 <span className="text-muted-foreground">Google Analytics</span>
                 <RequirementStatus
                   active={overview.hasGoogleAnalytics}
-                  label={overview.hasGoogleAnalytics ? "Configured" : "Not configured"}
+                  label={overview.hasGoogleAnalytics ? "Konfiguriert" : "Nicht konfiguriert"}
                 />
               </div>
               <div className="flex justify-between gap-4">
                 <span className="text-muted-foreground">Search Console</span>
                 <RequirementStatus
                   active={overview.hasSearchConsole}
-                  label={overview.hasSearchConsole ? "Configured" : "Not configured"}
+                  label={overview.hasSearchConsole ? "Konfiguriert" : "Nicht konfiguriert"}
                 />
               </div>
             </CardContent>
@@ -631,21 +742,21 @@ export function WebsitePanel({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <Search className="size-4" />
-                How tickets work
+                So funktionieren Tickets
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
               <p>
-                Create a ticket for website changes, bugs, content updates, SEO
-                work, or anything else the website team should review.
+                Erstellen Sie ein Ticket für Website-Änderungen, Fehler, Inhaltsupdates, SEO-
+                Arbeiten oder alles, was das Website-Team prüfen soll.
               </p>
               <p>
-                You can edit or delete tickets while they are pending. Once an
-                admin starts working on a ticket, it becomes view-only here.
+                Sie können Tickets bearbeiten oder löschen, solange sie ausstehend sind. Sobald ein
+                Admin daran arbeitet, ist es hier nur noch lesbar.
               </p>
               <p>
-                Image attachments are private and only visible to users who can
-                access this business.
+                Bildanhänge sind privat und nur für Benutzer sichtbar, die auf dieses
+                Unternehmen zugreifen können.
               </p>
             </CardContent>
           </Card>
@@ -662,7 +773,7 @@ export function WebsitePanel({
                 variant={filter === item ? "default" : "outline"}
                 onClick={() => setFilter(item)}
               >
-                {item === "ALL" ? "All" : STATUS_LABELS[item]}
+                {item === "ALL" ? "Alle" : STATUS_LABELS[item]}
                 {item !== "ALL" ? (
                   <span className="ml-1 opacity-70">{statusCount(tickets, item)}</span>
                 ) : null}
@@ -713,7 +824,7 @@ export function WebsitePanel({
                         </p>
                       ) : null}
                       <p className="text-xs text-muted-foreground">
-                        Created {formatDate(ticket.createdAt)} · Updated{" "}
+                        Erstellt {formatDate(ticket.createdAt)} · Aktualisiert{" "}
                         {formatDate(ticket.updatedAt)}
                       </p>
                     </div>
@@ -728,7 +839,7 @@ export function WebsitePanel({
                             onClick={() => openEdit(ticket)}
                           >
                             <Pencil className="size-4" />
-                            Edit
+                            Bearbeiten
                           </Button>
                           <Button
                             type="button"
@@ -742,12 +853,12 @@ export function WebsitePanel({
                             ) : (
                               <Trash2 className="size-4" />
                             )}
-                            Delete
+                            Löschen
                           </Button>
                         </>
                       ) : (
                         <span className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
-                          Locked by status
+                          Durch Status gesperrt
                         </span>
                       )}
                     </div>

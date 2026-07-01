@@ -26,7 +26,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
       return NextResponse.json(
-        { error: "Request body must be a JSON object." },
+        { error: "Anfragekörper muss ein JSON-Objekt sein." },
         { status: 400, headers: WEBHOOK_HEADERS },
       );
     }
@@ -48,7 +48,7 @@ export async function POST(request: Request, context: RouteContext) {
   } catch (error) {
     console.error("[webhooks/enquiries/:token][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create enquiry." },
+      { error: "Anfrage konnte nicht erstellt werden." },
       { status: 500, headers: WEBHOOK_HEADERS },
     );
   }

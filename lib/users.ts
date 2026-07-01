@@ -26,12 +26,12 @@ export async function changeUserPassword(
   });
 
   if (!user) {
-    return { ok: false, error: "User not found." };
+    return { ok: false, error: "Benutzer nicht gefunden." };
   }
 
   const validPassword = await compare(input.currentPassword, user.password);
   if (!validPassword) {
-    return { ok: false, error: "Current password is incorrect." };
+    return { ok: false, error: "Aktuelles Passwort ist falsch." };
   }
 
   const nextPassword = await hash(input.newPassword, BCRYPT_COST);

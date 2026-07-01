@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -23,11 +23,24 @@ import { Textarea } from "@/components/ui/textarea";
 import type { ActivityLogRow } from "@/lib/activity-logs";
 import type { SequenceType } from "@/lib/generated/prisma/client";
 import type { SequenceRow } from "@/lib/sequences";
+import {
+  invoiceSequencePreviewVariables,
+  reviewSequencePreviewVariables,
+} from "@/lib/email-preview";
+import {
+  defaultInvoiceSequenceStepHtml,
+  defaultInvoiceSequenceStepText,
+  defaultReviewSequenceStepHtml,
+  defaultReviewSequenceStepText,
+} from "@/lib/email-templates";
+
+import { EmailPreviewDialog } from "./email-preview-dialog";
 
 type StepDraft = {
   key: string;
   subject: string;
   bodyText: string;
+  bodyHtml: string;
   delayAmount: string;
   delayUnit: "MINUTES" | "HOURS" | "DAYS";
 };
@@ -38,33 +51,17 @@ function defaultStep(index = 0, type: SequenceType = "INVOICE"): StepDraft {
     key: `step-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     subject: isReview
       ? index === 0
-        ? "How was your experience with {{businessName}}?"
-        : "Reminder: share your feedback with {{businessName}}"
+        ? "Wie war Ihre Erfahrung mit {{businessName}}?"
+        : "Erinnerung: Teilen Sie Ihr Feedback zu {{businessName}}"
       : index === 0
-        ? "Invoice {{invoiceNumber}} from {{businessName}}"
-        : "Reminder: invoice {{invoiceNumber}} is still open",
+        ? "Rechnung {{invoiceNumber}} von {{businessName}}"
+        : "Erinnerung: Rechnung {{invoiceNumber}} ist noch offen",
     bodyText: isReview
-      ? [
-          "Hello {{customerName}},",
-          "",
-          "We would love to hear about your experience with {{businessName}}.",
-          "",
-          "Please leave your review here: {{reviewLink}}",
-          "",
-          "Thank you.",
-        ].join("\n")
-      : [
-          "Hello {{customerName}},",
-          "",
-          index === 0
-            ? "Please find your invoice attached."
-            : "This is a friendly reminder that invoice {{invoiceNumber}} is still open.",
-          "",
-          "Amount: {{total}}",
-          "Due date: {{dueDate}}",
-          "",
-          "Thank you.",
-        ].join("\n"),
+      ? defaultReviewSequenceStepText(index)
+      : defaultInvoiceSequenceStepText(index),
+    bodyHtml: isReview
+      ? defaultReviewSequenceStepHtml(index)
+      : defaultInvoiceSequenceStepHtml(index),
     delayAmount: index === 0 ? "0" : "3",
     delayUnit: index === 0 ? "MINUTES" : "DAYS",
   };
@@ -76,24 +73,34 @@ function sequenceToDraft(sequence?: SequenceRow) {
     type: sequence?.type ?? "INVOICE",
     isActive: sequence?.isActive ?? true,
     steps:
-      sequence?.steps.map((step) => ({
+      sequence?.steps.map((step, index) => ({
         key: step.id,
         subject: step.subject,
         bodyText: step.bodyText,
+        bodyHtml:
+          step.bodyHtml ??
+          (sequence.type === "REVIEW"
+            ? defaultReviewSequenceStepHtml(index)
+            : defaultInvoiceSequenceStepHtml(index)),
         delayAmount: String(step.delayAmount),
         delayUnit: step.delayUnit,
-      })) ?? [defaultStep(0, sequence?.type ?? "INVOICE"), defaultStep(1, sequence?.type ?? "INVOICE")],
+      })) ?? [
+        defaultStep(0, sequence?.type ?? "INVOICE"),
+        defaultStep(1, sequence?.type ?? "INVOICE"),
+      ],
   };
 }
 
 export function SequencesPanel({
   businessId,
+  businessName,
   sequences,
   logs,
   logPage,
   logTotalPages,
 }: {
   businessId: string;
+  businessName: string;
   sequences: SequenceRow[];
   logs: ActivityLogRow[];
   logPage: number;
@@ -119,6 +126,7 @@ export function SequencesPanel({
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [previewStep, setPreviewStep] = useState<StepDraft | null>(null);
 
   useEffect(() => {
     if (tab !== "logs" || logPage !== 1) {
@@ -131,6 +139,12 @@ export function SequencesPanel({
 
     return () => clearInterval(interval);
   }, [tab, logPage, router]);
+
+  function closeEditor() {
+    setCreating(false);
+    setEditing(null);
+    setError(null);
+  }
 
   function openEditor(sequence?: SequenceRow) {
     const next = sequenceToDraft(sequence);
@@ -159,13 +173,14 @@ export function SequencesPanel({
     setError(null);
 
     if (!name.trim()) {
-      setError("Sequence name is required.");
+      setError("Sequenzname ist erforderlich.");
       return;
     }
 
     const payloadSteps = steps.map((step, index) => ({
       subject: step.subject,
       bodyText: step.bodyText,
+      bodyHtml: step.bodyHtml,
       delayAmount: Number(step.delayAmount),
       delayUnit: step.delayUnit,
       sortOrder: index,
@@ -176,11 +191,12 @@ export function SequencesPanel({
         (step) =>
           !step.subject.trim() ||
           !step.bodyText.trim() ||
+          !step.bodyHtml.trim() ||
           !Number.isFinite(step.delayAmount) ||
           step.delayAmount < 0,
       )
     ) {
-      setError("Each step needs a subject, body, and valid delay.");
+      setError("Jeder Schritt benötigt Betreff, Klartext, HTML-Text und eine gültige Verzögerung.");
       return;
     }
 
@@ -204,16 +220,16 @@ export function SequencesPanel({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to save sequence.");
+        throw new Error(data.error ?? "Sequenz konnte nicht gespeichert werden.");
       }
 
-      toast.success(editing ? "Sequence updated." : "Sequence created.");
+      toast.success(editing ? "Sequenz aktualisiert." : "Sequenz erstellt.");
       setCreating(false);
       setEditing(null);
       router.refresh();
     } catch (saveError) {
       const message =
-        saveError instanceof Error ? saveError.message : "Failed to save sequence.";
+        saveError instanceof Error ? saveError.message : "Sequenz konnte nicht gespeichert werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -231,16 +247,16 @@ export function SequencesPanel({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete sequence.");
+        throw new Error(data.error ?? "Sequenz konnte nicht gelöscht werden.");
       }
 
-      toast.success("Sequence deleted.");
+      toast.success("Sequenz gelöscht.");
       router.refresh();
     } catch (deleteError) {
       toast.error(
         deleteError instanceof Error
           ? deleteError.message
-          : "Failed to delete sequence.",
+          : "Sequenz konnte nicht gelöscht werden.",
       );
     } finally {
       setDeletingId(null);
@@ -251,19 +267,19 @@ export function SequencesPanel({
     <Tabs value={tab} onValueChange={setTab} className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <TabsList>
-          <TabsTrigger value="sequences">Sequences</TabsTrigger>
-          <TabsTrigger value="logs">Logs</TabsTrigger>
+          <TabsTrigger value="sequences">Sequenzen</TabsTrigger>
+          <TabsTrigger value="logs">Protokolle</TabsTrigger>
         </TabsList>
         {tab === "sequences" && !creating ? (
           <Button onClick={() => openEditor()}>
             <Plus className="size-4" />
-            New sequence
+            Neue Sequenz
           </Button>
         ) : null}
         {tab === "logs" ? (
           <Button variant="outline" onClick={() => router.refresh()}>
             <RefreshCw className="size-4" />
-            Refresh logs
+            Protokolle aktualisieren
           </Button>
         ) : null}
       </div>
@@ -271,6 +287,16 @@ export function SequencesPanel({
       <TabsContent value="sequences" className="space-y-6">
         {creating ? (
         <form onSubmit={(event) => void handleSave(event)} className="space-y-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <Button type="button" variant="outline" size="sm" onClick={closeEditor}>
+              <ArrowLeft className="size-4" />
+              Zurück zu Sequenzen
+            </Button>
+            <h2 className="font-semibold">
+              {editing ? `${editing.name} bearbeiten` : "Neue Sequenz"}
+            </h2>
+          </div>
+
           {error ? (
             <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
               {error}
@@ -279,16 +305,16 @@ export function SequencesPanel({
           <Card>
             <CardContent className="grid gap-4 p-5 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="sequence-name">Sequence name</Label>
+                <Label htmlFor="sequence-name">Sequenzname</Label>
                 <Input
                   id="sequence-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  placeholder="Invoice follow-up sequence"
+                  placeholder="Rechnungs-Nachfasssequenz"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Sequence type</Label>
+                <Label>Sequenztyp</Label>
                 <Select
                   value={type}
                   disabled={Boolean(editing)}
@@ -307,15 +333,15 @@ export function SequencesPanel({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="INVOICE">Invoice</SelectItem>
-                    <SelectItem value="REVIEW">Review</SelectItem>
+                    <SelectItem value="INVOICE">Rechnung</SelectItem>
+                    <SelectItem value="REVIEW">Bewertung</SelectItem>
                   </SelectContent>
                 </Select>
                 {typeUnavailable ? (
                   <p className="text-xs text-muted-foreground">
-                    {type.toLowerCase()} type already has an active sequence:{" "}
-                    {activeSequenceForType.name}. You can save this as inactive,
-                    or disable the active sequence first.
+                    Für den Typ {type.toLowerCase()} gibt es bereits eine aktive Sequenz:{" "}
+                    {activeSequenceForType.name}. Sie können diese als inaktiv speichern
+                    oder zuerst die aktive Sequenz deaktivieren.
                   </p>
                 ) : null}
               </div>
@@ -326,12 +352,10 @@ export function SequencesPanel({
                   disabled={typeUnavailable}
                   onChange={(event) => setIsActive(event.target.checked)}
                 />
-                Active default sequence
+                Aktive Standardsequenz
               </label>
               <p className="text-sm text-muted-foreground">
-                Active means this invoice sequence starts automatically for new
-                draft invoices or review requests and is the default sequence on
-                related pages.
+                Aktiv bedeutet: Diese Sequenz startet automatisch für neue Rechnungsentwürfe oder Bewertungsanfragen und ist die Standardsequenz auf den zugehörigen Seiten.
               </p>
             </CardContent>
           </Card>
@@ -342,7 +366,7 @@ export function SequencesPanel({
                 <CardContent className="space-y-4 p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">Email step {index + 1}</h3>
+                      <h3 className="font-semibold">E-Mail-Schritt {index + 1}</h3>
                       <p className="text-xs text-muted-foreground">
                         Delay is counted from sequence start for step 1, and
                         from the previous email for later steps.
@@ -365,7 +389,7 @@ export function SequencesPanel({
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="space-y-2">
-                      <Label>Wait</Label>
+                      <Label>Warten</Label>
                       <Input
                         type="number"
                         min="0"
@@ -389,14 +413,14 @@ export function SequencesPanel({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="MINUTES">Minutes</SelectItem>
-                          <SelectItem value="HOURS">Hours</SelectItem>
-                          <SelectItem value="DAYS">Days</SelectItem>
+                          <SelectItem value="MINUTES">Minuten</SelectItem>
+                          <SelectItem value="HOURS">Stunden</SelectItem>
+                          <SelectItem value="DAYS">Tage</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2 md:col-span-3">
-                      <Label>Subject</Label>
+                      <Label>Betreff</Label>
                       <Input
                         value={step.subject}
                         onChange={(event) =>
@@ -405,14 +429,41 @@ export function SequencesPanel({
                       />
                     </div>
                     <div className="space-y-2 md:col-span-3">
-                      <Label>Body</Label>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <Label>HTML-Text</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPreviewStep(step)}
+                        >
+                          <Eye className="size-4" />
+                          Preview
+                        </Button>
+                      </div>
+                      <Textarea
+                        value={step.bodyHtml}
+                        rows={12}
+                        className="font-mono text-xs"
+                        onChange={(event) =>
+                          updateStep(step.key, { bodyHtml: event.target.value })
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Bearbeiten Sie das HTML direkt. Verwenden Sie Vorlagenvariablen in doppelten
+                        geschweiften Klammern.
+                      </p>
+                      <Label className="pt-2">Klartext-Fallback</Label>
                       <Textarea
                         value={step.bodyText}
-                        rows={8}
+                        rows={6}
                         onChange={(event) =>
                           updateStep(step.key, { bodyText: event.target.value })
                         }
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Used by email clients that do not render HTML.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -421,9 +472,24 @@ export function SequencesPanel({
           </div>
 
           <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
-            Variables: {"{{customerName}}"}, {"{{invoiceNumber}}"},{" "}
-            {"{{invoiceTitle}}"}, {"{{total}}"}, {"{{dueDate}}"},{" "}
-            {"{{issueDate}}"}.
+            {type === "REVIEW" ? (
+              <>
+                Variables: {"{{customerName}}"}, {"{{businessName}}"},{" "}
+                {"{{reviewLink}}"}, {"{{link}}"}.
+                {" "}
+                The HTML body is sent as the main email. The plain text fallback
+                is used only when HTML is not supported.
+              </>
+            ) : (
+              <>
+                Variables: {"{{customerName}}"}, {"{{businessName}}"},{" "}
+                {"{{invoiceNumber}}"}, {"{{invoiceTitle}}"}, {"{{total}}"},{" "}
+                {"{{dueDate}}"}, {"{{issueDate}}"}, {"{{invoiceStatus}}"}.
+                {" "}
+                The HTML body is sent as the main email with the invoice PDF
+                attached.
+              </>
+            )}
           </div>
 
           <div className="flex justify-between gap-3">
@@ -439,21 +505,18 @@ export function SequencesPanel({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setCreating(false);
-                  setEditing(null);
-                }}
+                onClick={closeEditor}
               >
-                Cancel
+                Abbrechen
               </Button>
               <Button type="submit" disabled={saving}>
                 {saving ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Saving…
+                    Wird gespeichert…
                   </>
                 ) : (
-                  "Save sequence"
+                  "Sequenz speichern"
                 )}
               </Button>
             </div>
@@ -461,13 +524,29 @@ export function SequencesPanel({
         </form>
         ) : null}
 
+        <EmailPreviewDialog
+          open={previewStep !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setPreviewStep(null);
+            }
+          }}
+          subject={previewStep?.subject ?? ""}
+          bodyHtml={previewStep?.bodyHtml ?? ""}
+          bodyText={previewStep?.bodyText ?? ""}
+          sampleVariables={
+            type === "REVIEW"
+              ? reviewSequencePreviewVariables(businessName)
+              : invoiceSequencePreviewVariables(businessName)
+          }
+        />
+
         {!creating ? (
         <div className="space-y-3">
           {sequences.length === 0 ? (
             <Card>
               <CardContent className="py-14 text-center text-muted-foreground">
-                No invoice sequences yet. Create one to automate invoice sending
-                and follow-ups.
+                Noch keine Rechnungssequenzen. Erstellen Sie eine, um Rechnungsversand und Nachfassungen zu automatisieren.
               </CardContent>
             </Card>
           ) : (
@@ -478,13 +557,13 @@ export function SequencesPanel({
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold">{sequence.name}</h3>
                       <Badge variant={sequence.isActive ? "default" : "secondary"}>
-                        {sequence.isActive ? "Active" : "Inactive"}
+                        {sequence.isActive ? "Aktiv" : "Inaktiv"}
                       </Badge>
                       <Badge variant="outline">{sequence.type.toLowerCase()}</Badge>
-                      <Badge variant="outline">{sequence.stepCount} steps</Badge>
+                      <Badge variant="outline">{sequence.stepCount} Schritte</Badge>
                     </div>
                     <p className="mt-1 text-sm text-muted-foreground">
-                      {sequence.activeEnrollmentCount} active invoice enrollments
+                      {sequence.activeEnrollmentCount} aktive Rechnungs-Einschreibungen
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -495,7 +574,7 @@ export function SequencesPanel({
                       onClick={() => openEditor(sequence)}
                     >
                       <Pencil className="size-4" />
-                      Edit
+                      Bearbeiten
                     </Button>
                     <Button
                       type="button"
@@ -509,7 +588,7 @@ export function SequencesPanel({
                       ) : (
                         <Trash2 className="size-4" />
                       )}
-                      Delete
+                      Löschen
                     </Button>
                   </div>
                 </CardContent>
@@ -544,8 +623,8 @@ function SequenceLogs({
     return (
       <Card>
         <CardContent className="py-14 text-center text-muted-foreground">
-          No sequence logs yet. Logs will appear when the cron job checks,
-          enrolls invoices, sends emails, or encounters errors.
+          Noch keine Sequenz-Protokolle. Protokolle erscheinen, wenn der Cron-Job prüft,
+          Rechnungen einschreibt, E-Mails sendet oder Fehler auftreten.
         </CardContent>
       </Card>
     );
@@ -577,16 +656,16 @@ function SequenceLogs({
               </div>
               <p className="text-sm font-medium">{log.message}</p>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                {log.invoiceId ? <span>Invoice: {log.invoiceId.slice(0, 8)}</span> : null}
-                {log.reviewId ? <span>Review: {log.reviewId.slice(0, 8)}</span> : null}
-                {log.messageId ? <span>Message: {log.messageId.slice(0, 8)}</span> : null}
+                {log.invoiceId ? <span>Rechnung: {log.invoiceId.slice(0, 8)}</span> : null}
+                {log.reviewId ? <span>Bewertung: {log.reviewId.slice(0, 8)}</span> : null}
+                {log.messageId ? <span>Nachricht: {log.messageId.slice(0, 8)}</span> : null}
                 {log.sequenceEnrollmentId ? (
-                  <span>Enrollment: {log.sequenceEnrollmentId.slice(0, 8)}</span>
+                  <span>Einschreibung: {log.sequenceEnrollmentId.slice(0, 8)}</span>
                 ) : null}
               </div>
             </div>
             <time className="text-xs text-muted-foreground">
-              {new Date(log.createdAt).toLocaleString("en-US")}
+              {new Date(log.createdAt).toLocaleString("de-CH")}
             </time>
           </div>
         ))}
@@ -595,9 +674,9 @@ function SequenceLogs({
       <div className="flex items-center justify-between">
         <Button variant="outline" size="sm" disabled={page <= 1} asChild={page > 1}>
           {page > 1 ? (
-            <Link href={`?logPage=${page - 1}`}>Previous</Link>
+            <Link href={`?logPage=${page - 1}`}>Zurück</Link>
           ) : (
-            <span>Previous</span>
+            <span>Zurück</span>
           )}
         </Button>
         <span className="text-sm text-muted-foreground">
@@ -610,9 +689,9 @@ function SequenceLogs({
           asChild={page < totalPages}
         >
           {page < totalPages ? (
-            <Link href={`?logPage=${page + 1}`}>Next</Link>
+            <Link href={`?logPage=${page + 1}`}>Weiter</Link>
           ) : (
-            <span>Next</span>
+            <span>Weiter</span>
           )}
         </Button>
       </div>

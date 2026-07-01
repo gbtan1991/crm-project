@@ -35,11 +35,12 @@ export default async function SequencesPage({ params, searchParams }: PageProps)
   return (
     <div>
       <PageHeader
-        title="Sequences"
-        subtitle="Create reusable invoice email sequences with delays and variables."
+        title="Sequenzen"
+        subtitle="Erstellen Sie wiederverwendbare Rechnungs-E-Mail-Sequenzen mit Verzögerungen und Variablen."
       />
       <SequencesPanel
         businessId={businessId}
+        businessName={business.name}
         sequences={sequences}
         logs={logs.items}
         logPage={logPage}

@@ -54,11 +54,11 @@ export default async function InvoicesPage({ params, searchParams }: PageProps) 
   return (
     <div>
       <PageHeader
-        title="Invoices"
+        title="Rechnungen"
         subtitle={
           tab === "templates"
-            ? "Manage reusable invoice templates"
-            : "Create, send, and track customer invoices"
+            ? "Wiederverwendbare Rechnungsvorlagen verwalten"
+            : "Kundenrechnungen erstellen, versenden und nachverfolgen"
         }
       />
 

@@ -10,7 +10,7 @@ export async function downloadInvoicePdf(
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new Error(
-      typeof data.error === "string" ? data.error : "Failed to download invoice PDF.",
+      typeof data.error === "string" ? data.error : "Rechnungs-PDF konnte nicht heruntergeladen werden.",
     );
   }
 

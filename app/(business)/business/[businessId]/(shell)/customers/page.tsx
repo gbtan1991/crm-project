@@ -52,8 +52,8 @@ export default async function CustomersPage({ params, searchParams }: PageProps)
   return (
     <div>
       <PageHeader
-        title="Customers"
-        subtitle={`${customers.total} customer${customers.total === 1 ? "" : "s"} in total`}
+        title="Kunden"
+        subtitle={`${customers.total} Kunde${customers.total === 1 ? "" : "n"} insgesamt`}
       >
         <Suspense fallback={null}>
           <CustomersSearch businessId={businessId} />
@@ -66,10 +66,10 @@ export default async function CustomersPage({ params, searchParams }: PageProps)
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <Users className="size-8 text-muted-foreground" />
-            <p className="font-medium">No customers yet</p>
+            <p className="font-medium">Noch keine Kunden</p>
             <p className="text-sm text-muted-foreground">
-              Add a customer manually or connect your calendar to import them
-              from bookings.
+              Fügen Sie manuell einen Kunden hinzu oder verbinden Sie Ihren
+              Kalender, um Kunden aus Terminen zu importieren.
             </p>
           </CardContent>
         </Card>
@@ -96,7 +96,7 @@ export default async function CustomersPage({ params, searchParams }: PageProps)
                           customer.status === "ACTIVE" ? "success" : "outline"
                         }
                       >
-                        {customer.status === "ACTIVE" ? "Active" : "Inactive"}
+                        {customer.status === "ACTIVE" ? "Aktiv" : "Inaktiv"}
                       </Badge>
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">

@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const enquiry = await getEnquiryForBusiness(businessId, enquiryId);
     if (!enquiry) {
-      return NextResponse.json({ error: "Enquiry not found." }, { status: 404 });
+      return NextResponse.json({ error: "Anfrage nicht gefunden." }, { status: 404 });
     }
 
     return NextResponse.json({ enquiry });
@@ -29,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/enquiries/:id][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load enquiry." },
+      { error: "Anfrage konnte nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const parsed = enquiryUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -56,7 +56,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
 
     if (!enquiry) {
-      return NextResponse.json({ error: "Enquiry not found." }, { status: 404 });
+      return NextResponse.json({ error: "Anfrage nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in enquiry) {
@@ -70,7 +70,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     console.error("[business/enquiries/:id][PATCH]", error);
     return NextResponse.json(
-      { error: "Failed to update enquiry." },
+      { error: "Anfrage konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }
@@ -83,7 +83,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     const result = await deleteEnquiryForBusiness(businessId, enquiryId);
     if (!result) {
-      return NextResponse.json({ error: "Enquiry not found." }, { status: 404 });
+      return NextResponse.json({ error: "Anfrage nicht gefunden." }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
@@ -93,7 +93,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/enquiries/:id][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to delete enquiry." },
+      { error: "Anfrage konnte nicht gelöscht werden." },
       { status: 500 },
     );
   }

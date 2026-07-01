@@ -35,10 +35,10 @@ export function InvoicesTabNav({ businessId }: { businessId: string }) {
     <Tabs value={tab} className="mb-6">
       <TabsList>
         <TabsTrigger value="invoices" asChild>
-          <Link href={hrefFor("invoices")}>Invoices</Link>
+          <Link href={hrefFor("invoices")}>Rechnungen</Link>
         </TabsTrigger>
         <TabsTrigger value="templates" asChild>
-          <Link href={hrefFor("templates")}>Templates</Link>
+          <Link href={hrefFor("templates")}>Vorlagen</Link>
         </TabsTrigger>
       </TabsList>
     </Tabs>

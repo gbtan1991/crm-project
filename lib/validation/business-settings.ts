@@ -29,7 +29,7 @@ export const googleReviewSettingsSchema = z.object({
     .trim()
     .refine(
       isGoogleReviewUrl,
-      "Enter a valid Google review URL.",
+      "Geben Sie eine gültige Google-Bewertungs-URL ein.",
     ),
 });
 
@@ -41,8 +41,8 @@ export const businessGeneralSettingsSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Business name must be at least 2 characters."),
-  timezone: z.string().trim().min(1, "Enter a timezone."),
+    .min(2, "Firmenname muss mindestens 2 Zeichen lang sein."),
+  timezone: z.string().trim().min(1, "Geben Sie eine Zeitzone ein."),
 });
 
 export type BusinessGeneralSettingsInput = z.infer<

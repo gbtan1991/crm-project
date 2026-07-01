@@ -46,16 +46,16 @@ export function AddCustomerDialog({ businessId }: { businessId: string }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to create customer.");
+        setError(data.error ?? "Kunde konnte nicht erstellt werden.");
         return;
       }
 
-      toast.success("Customer created.");
+      toast.success("Kunde erstellt.");
       setOpen(false);
       reset();
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setSubmitting(false);
     }
@@ -72,16 +72,16 @@ export function AddCustomerDialog({ businessId }: { businessId: string }) {
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="size-4" />
-          New customer
+          Neuer Kunde
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <form onSubmit={(e) => void handleSubmit(e)}>
           <DialogHeader>
-            <DialogTitle>Add customer</DialogTitle>
+            <DialogTitle>Kunde hinzufügen</DialogTitle>
             <DialogDescription>
-              Create a customer manually. Email is required and must be unique
-              for this business.
+              Erstellen Sie manuell einen Kunden. E-Mail ist erforderlich und muss für
+              dieses Unternehmen eindeutig sein.
             </DialogDescription>
           </DialogHeader>
 
@@ -101,16 +101,16 @@ export function AddCustomerDialog({ businessId }: { businessId: string }) {
               onClick={() => setOpen(false)}
               disabled={submitting}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={submitting || !values.email.trim()}>
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Saving…
+                  Wird gespeichert…
                 </>
               ) : (
-                "Create customer"
+                "Kunde erstellen"
               )}
             </Button>
           </DialogFooter>

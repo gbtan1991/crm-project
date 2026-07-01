@@ -24,10 +24,10 @@ export async function requireAdmin(): Promise<SessionUser> {
   const session = await auth();
 
   if (!session?.user) {
-    throw new ApiAuthError(401, "Authentication required.");
+    throw new ApiAuthError(401, "Anmeldung erforderlich.");
   }
   if (session.user.role !== Role.ADMIN) {
-    throw new ApiAuthError(403, "Admin access required.");
+    throw new ApiAuthError(403, "Admin-Zugriff erforderlich.");
   }
 
   return session.user;
@@ -37,7 +37,7 @@ export async function requireAuthenticatedUser(): Promise<SessionUser> {
   const session = await auth();
 
   if (!session?.user?.id) {
-    throw new ApiAuthError(401, "Authentication required.");
+    throw new ApiAuthError(401, "Anmeldung erforderlich.");
   }
 
   return session.user;
@@ -50,15 +50,15 @@ export async function requireBusinessOwner(businessId: string) {
   const session = await auth();
 
   if (!session?.user) {
-    throw new ApiAuthError(401, "Authentication required.");
+    throw new ApiAuthError(401, "Anmeldung erforderlich.");
   }
   if (session.user.role !== Role.BUSINESS) {
-    throw new ApiAuthError(403, "Business access required.");
+    throw new ApiAuthError(403, "Unternehmenszugriff erforderlich.");
   }
 
   const business = await getBusinessForOwner(businessId, session.user.id);
   if (!business) {
-    throw new ApiAuthError(404, "Business not found.");
+    throw new ApiAuthError(404, "Unternehmen nicht gefunden.");
   }
 
   return { user: session.user, business };
@@ -72,7 +72,7 @@ export async function requireBusinessOwnerOrAdmin(businessId: string) {
   const session = await auth();
 
   if (!session?.user) {
-    throw new ApiAuthError(401, "Authentication required.");
+    throw new ApiAuthError(401, "Anmeldung erforderlich.");
   }
 
   if (session.user.role === Role.ADMIN) {
@@ -80,12 +80,12 @@ export async function requireBusinessOwnerOrAdmin(businessId: string) {
   }
 
   if (session.user.role !== Role.BUSINESS) {
-    throw new ApiAuthError(403, "Admin or business access required.");
+    throw new ApiAuthError(403, "Admin- oder Unternehmenszugriff erforderlich.");
   }
 
   const business = await getBusinessForOwner(businessId, session.user.id);
   if (!business) {
-    throw new ApiAuthError(404, "Business not found.");
+    throw new ApiAuthError(404, "Unternehmen nicht gefunden.");
   }
 
   return { user: session.user, business };

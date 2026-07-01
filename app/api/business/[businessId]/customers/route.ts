@@ -35,7 +35,7 @@ export async function GET(request: Request, context: RouteContext) {
     }
     console.error("[business/customers][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load customers." },
+      { error: "Kunden konnten nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -50,7 +50,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = customerWriteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -75,13 +75,13 @@ export async function POST(request: Request, context: RouteContext) {
       error.code === "P2002"
     ) {
       return NextResponse.json(
-        { error: "A customer with this email already exists." },
+        { error: "Ein Kunde mit dieser E-Mail existiert bereits." },
         { status: 409 },
       );
     }
     console.error("[business/customers][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create customer." },
+      { error: "Kunde konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

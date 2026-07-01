@@ -1,4 +1,6 @@
 import { formatCustomerName } from "@/lib/customer-display";
+import { defaultInvoiceEmailHtml } from "@/lib/email-templates";
+import { wrapEmailContentHtml } from "@/lib/email-html";
 import {
   invoiceStatusLabel,
   type InvoiceStatusValue,
@@ -98,21 +100,32 @@ export function buildInvoiceEmailContent(input: {
   dueDateLabel: string;
   displayStatus: InvoiceStatusValue;
 }) {
-  const subject = `Invoice ${input.invoiceNumber} from ${input.businessName}`;
+  const subject = `Rechnung ${input.invoiceNumber} von ${input.businessName}`;
+  const statusLabel = invoiceStatusLabel(input.displayStatus);
 
   const bodyText = [
-    `Hello ${input.customerName},`,
+    `Guten Tag ${input.customerName},`,
     "",
-    `Please find attached invoice ${input.invoiceNumber} from ${input.businessName}.`,
+    `Anbei finden Sie die Rechnung ${input.invoiceNumber} von ${input.businessName}.`,
     "",
-    `Amount: ${input.totalLabel}`,
-    `Due date: ${input.dueDateLabel}`,
-    `Status: ${invoiceStatusLabel(input.displayStatus)}`,
+    `Betrag: ${input.totalLabel}`,
+    `Fälligkeitsdatum: ${input.dueDateLabel}`,
+    `Status: ${statusLabel}`,
     "",
-    "Thank you for your business.",
+    "Vielen Dank für Ihr Vertrauen.",
   ].join("\n");
 
-  return { subject, bodyText };
+  const bodyHtml = wrapEmailContentHtml(
+    defaultInvoiceEmailHtml()
+      .replaceAll("{{customerName}}", input.customerName)
+      .replaceAll("{{businessName}}", input.businessName)
+      .replaceAll("{{invoiceNumber}}", input.invoiceNumber)
+      .replaceAll("{{total}}", input.totalLabel)
+      .replaceAll("{{dueDate}}", input.dueDateLabel)
+      .replaceAll("{{invoiceStatus}}", statusLabel),
+  );
+
+  return { subject, bodyText, bodyHtml };
 }
 
 export async function getInvoiceEmailContext(
@@ -142,7 +155,7 @@ export async function getInvoiceEmailContext(
     dateStyle: "medium",
   });
 
-  const { subject, bodyText } = buildInvoiceEmailContent({
+  const { subject, bodyText, bodyHtml } = buildInvoiceEmailContent({
     businessName: business.name,
     invoiceNumber: invoice.number,
     customerName,
@@ -156,6 +169,7 @@ export async function getInvoiceEmailContext(
     customerName,
     subject,
     bodyText,
+    bodyHtml,
     toAddress: invoice.customer.email,
   };
 }

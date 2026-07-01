@@ -436,6 +436,7 @@ model AppointmentReminderConfig {
   enabled  Boolean @default(false)
   subject  String  @default("Reminder: {{appointmentTitle}} with {{businessName}}")
   bodyText String  @default("Hello {{customerName}},\n\nThis is a reminder for your appointment with {{businessName}}.\n\nAppointment: {{appointmentTitle}}\nDate: {{appointmentDate}}\nTime: {{appointmentTime}}\n\n{{meetingUrl}}\n\nThank you.") @map("body_text") @db.Text
+  bodyHtml String? @map("body_html") @db.Text
 
   offsets AppointmentReminderOffset[]
 
@@ -622,6 +623,7 @@ model SequenceStep {
   delayUnit   SequenceDelayUnit @default(HOURS) @map("delay_unit")
   subject     String
   bodyText    String            @map("body_text") @db.Text
+  bodyHtml    String?           @map("body_html") @db.Text
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

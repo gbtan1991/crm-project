@@ -44,7 +44,7 @@ export function BusinessUserMenu({
   const initials = getUserInitials(name, email);
   const profilePath = businessProfilePath(businessId);
   const settingsPath = businessSettingsPath(businessId, "calendar");
-  const displayName = name?.trim() || email || "Account";
+  const displayName = name?.trim() || email || "Konto";
 
   return (
     <DropdownMenu>
@@ -54,7 +54,7 @@ export function BusinessUserMenu({
           variant="ghost"
           size="icon"
           className="size-9 rounded-full p-0"
-          aria-label="Open account menu"
+          aria-label="Kontomenü öffnen"
         >
           <span
             className={cn(
@@ -83,13 +83,13 @@ export function BusinessUserMenu({
         <DropdownMenuItem asChild>
           <Link href={profilePath}>
             <User />
-            Profile
+            Profil
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={settingsPath}>
             <Settings />
-            Settings
+            Einstellungen
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -100,7 +100,7 @@ export function BusinessUserMenu({
               className="flex w-full items-center gap-2 text-left"
             >
               <LogOut className="size-4" />
-              Log out
+              Abmelden
             </button>
           </form>
         </DropdownMenuItem>

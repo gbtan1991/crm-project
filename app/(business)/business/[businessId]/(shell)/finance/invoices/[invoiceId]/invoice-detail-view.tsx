@@ -189,17 +189,17 @@ export function InvoiceDetailView({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to update invoice.");
+        throw new Error(data.error ?? "Rechnung konnte nicht aktualisiert werden.");
       }
 
-      toast.success("Invoice updated.");
+      toast.success("Rechnung aktualisiert.");
       setEditing(false);
       router.refresh();
     } catch (saveError) {
       const message =
         saveError instanceof Error
           ? saveError.message
-          : "Failed to update invoice.";
+          : "Rechnung konnte nicht aktualisiert werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -211,12 +211,12 @@ export function InvoiceDetailView({
     setDownloading(true);
     try {
       await downloadInvoicePdf(businessId, invoice.id, invoice.number);
-      toast.success("Invoice PDF downloaded.");
+      toast.success("Rechnungs-PDF heruntergeladen.");
     } catch (downloadError) {
       toast.error(
         downloadError instanceof Error
           ? downloadError.message
-          : "Failed to download invoice PDF.",
+          : "Rechnungs-PDF konnte nicht heruntergeladen werden.",
       );
     } finally {
       setDownloading(false);
@@ -233,17 +233,17 @@ export function InvoiceDetailView({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to delete invoice.");
+        throw new Error(data.error ?? "Rechnung konnte nicht gelöscht werden.");
       }
 
-      toast.success("Invoice deleted.");
+      toast.success("Rechnung gelöscht.");
       router.push(businessInvoicesPath(businessId));
       router.refresh();
     } catch (deleteError) {
       toast.error(
         deleteError instanceof Error
           ? deleteError.message
-          : "Failed to delete invoice.",
+          : "Rechnung konnte nicht gelöscht werden.",
       );
     } finally {
       setDeleting(false);
@@ -265,16 +265,16 @@ export function InvoiceDetailView({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to update invoice status.");
+        throw new Error(data.error ?? "Rechnungsstatus konnte nicht aktualisiert werden.");
       }
 
-      toast.success("Invoice status updated.");
+      toast.success("Rechnungsstatus aktualisiert.");
       router.refresh();
     } catch (statusError) {
       toast.error(
         statusError instanceof Error
           ? statusError.message
-          : "Failed to update invoice status.",
+          : "Rechnungsstatus konnte nicht aktualisiert werden.",
       );
     } finally {
       setStatusChanging(null);
@@ -283,7 +283,7 @@ export function InvoiceDetailView({
 
   async function handleStartSequence() {
     if (!sequenceState.activeSequence) {
-      toast.error("Create an active invoice sequence first.");
+      toast.error("Erstellen Sie zuerst eine aktive Rechnungssequenz.");
       return;
     }
 
@@ -300,16 +300,16 @@ export function InvoiceDetailView({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to start sequence.");
+        throw new Error(data.error ?? "Sequenz konnte nicht gestartet werden.");
       }
 
-      toast.success("Invoice sequence started.");
+      toast.success("Rechnungssequenz gestartet.");
       router.refresh();
     } catch (startError) {
       toast.error(
         startError instanceof Error
           ? startError.message
-          : "Failed to start sequence.",
+          : "Sequenz konnte nicht gestartet werden.",
       );
     } finally {
       setStartingSequence(false);
@@ -323,7 +323,7 @@ export function InvoiceDetailView({
           <Button variant="ghost" size="sm" className="mb-3 -ml-2" asChild>
             <Link href={businessInvoicesPath(businessId)}>
               <ArrowLeft className="size-4" />
-              Back to invoices
+              Zurück zu Rechnungen
             </Link>
           </Button>
           <div className="flex flex-wrap items-center gap-2">
@@ -363,11 +363,11 @@ export function InvoiceDetailView({
             <>
               <Button variant="outline" onClick={startEditing}>
                 <Pencil className="size-4" />
-                Edit draft
+                Entwurf bearbeiten
               </Button>
               <Button onClick={() => setSendOpen(true)}>
                 <Send className="size-4" />
-                Send invoice
+                Rechnung senden
               </Button>
               <Button
                 variant="outline"
@@ -375,7 +375,7 @@ export function InvoiceDetailView({
                 disabled={deleting}
               >
                 <Trash2 className="size-4" />
-                Delete draft
+                Entwurf löschen
               </Button>
             </>
           ) : null}
@@ -390,7 +390,7 @@ export function InvoiceDetailView({
                   {statusChanging === "PAID" ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : null}
-                  Mark paid
+                  Als bezahlt markieren
                 </Button>
               ) : null}
               {isPaid || isCancelled ? (
@@ -414,7 +414,7 @@ export function InvoiceDetailView({
                   {statusChanging === "CANCELLED" ? (
                     <Loader2 className="size-4 animate-spin" />
                   ) : null}
-                  Cancel invoice
+                  Rechnung stornieren
                 </Button>
               ) : null}
             </>
@@ -422,16 +422,16 @@ export function InvoiceDetailView({
           {isDraft && editing ? (
             <>
               <Button variant="outline" onClick={cancelEditing} disabled={saving}>
-                Cancel
+                Abbrechen
               </Button>
               <Button type="submit" form="edit-invoice-form" disabled={saving}>
                 {saving ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Saving…
+                    Wird gespeichert…
                   </>
                 ) : (
-                  "Save changes"
+                  "Änderungen speichern"
                 )}
               </Button>
             </>
@@ -455,11 +455,11 @@ export function InvoiceDetailView({
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Invoice details</CardTitle>
+                  <CardTitle className="text-base">Rechnungsdetails</CardTitle>
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="edit-title">Title (optional)</Label>
+                    <Label htmlFor="edit-title">Titel (optional)</Label>
                     <Input
                       id="edit-title"
                       value={title}
@@ -467,7 +467,7 @@ export function InvoiceDetailView({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-issue-date">Issue date</Label>
+                    <Label htmlFor="edit-issue-date">Rechnungsdatum</Label>
                     <Input
                       id="edit-issue-date"
                       type="date"
@@ -477,7 +477,7 @@ export function InvoiceDetailView({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="edit-due-date">Due date</Label>
+                    <Label htmlFor="edit-due-date">Fälligkeitsdatum</Label>
                     <Input
                       id="edit-due-date"
                       type="date"
@@ -487,7 +487,7 @@ export function InvoiceDetailView({
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="edit-notes">Notes (optional)</Label>
+                    <Label htmlFor="edit-notes">Notizen (optional)</Label>
                     <Textarea
                       id="edit-notes"
                       value={notes}
@@ -500,7 +500,7 @@ export function InvoiceDetailView({
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Line items</CardTitle>
+                  <CardTitle className="text-base">Positionen</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <InvoiceLineItemsEditor
@@ -515,15 +515,15 @@ export function InvoiceDetailView({
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Line items</CardTitle>
+                <CardTitle className="text-base">Positionen</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Units</TableHead>
-                      <TableHead className="text-right">Unit price</TableHead>
+                      <TableHead>Beschreibung</TableHead>
+                      <TableHead className="text-right">Menge</TableHead>
+                      <TableHead className="text-right">Einzelpreis</TableHead>
                       <TableHead className="text-right">Total</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -550,7 +550,7 @@ export function InvoiceDetailView({
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Customer</CardTitle>
+              <CardTitle className="text-base">Kunde</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <Link
@@ -568,11 +568,11 @@ export function InvoiceDetailView({
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Summary</CardTitle>
+              <CardTitle className="text-base">Zusammenfassung</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Issue date</span>
+                <span className="text-muted-foreground">Rechnungsdatum</span>
                 <span>
                   {editing
                     ? issueDate
@@ -580,7 +580,7 @@ export function InvoiceDetailView({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Due date</span>
+                <span className="text-muted-foreground">Fälligkeitsdatum</span>
                 <span>
                   {editing
                     ? dueDate
@@ -589,25 +589,25 @@ export function InvoiceDetailView({
               </div>
               {invoice.sentAt ? (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sent</span>
+                  <span className="text-muted-foreground">Gesendet</span>
                   <span>{formatInvoiceDate(invoice.sentAt, timeZone)}</span>
                 </div>
               ) : null}
               {invoice.paidAt ? (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Paid</span>
+                  <span className="text-muted-foreground">Bezahlt</span>
                   <span>{formatInvoiceDate(invoice.paidAt, timeZone)}</span>
                 </div>
               ) : null}
               {!editing ? (
                 <>
                   <div className="flex justify-between border-t border-border pt-2">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">Zwischensumme</span>
                     <span>{formatMoney(invoice.subtotal, invoice.currency)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">
-                      VAT ({invoice.vatRate}%)
+                      MwSt. ({invoice.vatRate}%)
                     </span>
                     <span>{formatMoney(invoice.vatAmount, invoice.currency)}</span>
                   </div>
@@ -627,13 +627,13 @@ export function InvoiceDetailView({
           {!editing ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Sequence</CardTitle>
+                <CardTitle className="text-base">Sequenz</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
                 {sequenceState.enrollment ? (
                   <div className="space-y-2">
                     <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">Sequence</span>
+                      <span className="text-muted-foreground">Sequenz</span>
                       <span className="text-right font-medium">
                         {sequenceState.enrollment.sequence.name}
                       </span>
@@ -645,14 +645,14 @@ export function InvoiceDetailView({
                       </Badge>
                     </div>
                     <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">Next step</span>
+                      <span className="text-muted-foreground">Nächster Schritt</span>
                       <span className="text-right">
                         {sequenceState.enrollment.nextRunAt
                           ? formatInvoiceDate(
                               sequenceState.enrollment.nextRunAt,
                               timeZone,
                             )
-                          : "No pending step"}
+                          : "Kein ausstehender Schritt"}
                       </span>
                     </div>
                     {sequenceState.enrollment.lastError ? (
@@ -670,7 +670,7 @@ export function InvoiceDetailView({
                             {sequenceState.activeSequence.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Active default invoice sequence ·{" "}
+                            Aktive Standard-Rechnungssequenz ·{" "}
                             {sequenceState.activeSequence.stepCount} steps
                           </p>
                         </div>
@@ -690,14 +690,14 @@ export function InvoiceDetailView({
                       </>
                     ) : (
                       <p className="text-muted-foreground">
-                        Create an active invoice sequence before starting one on
-                        this invoice.
+                        Erstellen Sie eine aktive Rechnungssequenz, bevor Sie eine auf
+                        dieser Rechnung starten.
                       </p>
                     )}
                   </div>
                 ) : (
                   <p className="text-muted-foreground">
-                    Sequences can only be started on draft or open invoices.
+                    Sequenzen können nur für Entwurfs- oder offene Rechnungen gestartet werden.
                   </p>
                 )}
               </CardContent>
@@ -707,7 +707,7 @@ export function InvoiceDetailView({
           {!editing && invoice.notes ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Notes</CardTitle>
+                <CardTitle className="text-base">Notizen</CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground">
                 {invoice.notes}
@@ -729,14 +729,14 @@ export function InvoiceDetailView({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete draft invoice?</AlertDialogTitle>
+            <AlertDialogTitle>Rechnungsentwurf löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes invoice <strong>{invoice.number}</strong>.
-              This cannot be undone.
+              Dies löscht die Rechnung dauerhaft <strong>{invoice.number}</strong>.
+              Dies kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting}
@@ -748,10 +748,10 @@ export function InvoiceDetailView({
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting…
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete invoice"
+                "Rechnung löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

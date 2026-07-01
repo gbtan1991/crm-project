@@ -3,6 +3,7 @@ type OutlookSendInput = {
   to: string;
   subject: string;
   bodyText: string;
+  bodyHtml?: string;
   attachments?: Array<{
     filename: string;
     contentType: string;
@@ -23,6 +24,7 @@ export class OutlookSendError extends Error {
 export async function sendOutlookMessage(
   input: OutlookSendInput,
 ): Promise<string> {
+  const bodyHtml = input.bodyHtml?.trim();
   const response = await fetch("https://graph.microsoft.com/v1.0/me/sendMail", {
     method: "POST",
     headers: {
@@ -33,8 +35,8 @@ export async function sendOutlookMessage(
       message: {
         subject: input.subject,
         body: {
-          contentType: "Text",
-          content: input.bodyText,
+          contentType: bodyHtml ? "HTML" : "Text",
+          content: bodyHtml || input.bodyText,
         },
         toRecipients: [
           {

@@ -12,7 +12,7 @@ export function StepCard({
   onNext,
   onBack,
   onSkip,
-  nextLabel = "Continue",
+  nextLabel = "Weiter",
   nextDisabled = false,
   saving = false,
   allowSkip = false,
@@ -56,7 +56,7 @@ export function StepCard({
           {onBack ? (
             <Button type="button" variant="outline" onClick={onBack}>
               <ChevronLeft className="size-4" />
-              Back
+              Zurück
             </Button>
           ) : null}
         </div>
@@ -69,7 +69,7 @@ export function StepCard({
               onClick={onSkip}
               disabled={saving}
             >
-              Skip
+              Überspringen
             </Button>
           ) : null}
           <Button
@@ -78,7 +78,7 @@ export function StepCard({
             disabled={nextDisabled || saving}
             className="min-w-[120px]"
           >
-            {saving ? "Saving…" : nextLabel}
+            {saving ? "Wird gespeichert…" : nextLabel}
             {!saving ? <ChevronRight className="size-4" /> : null}
           </Button>
         </div>

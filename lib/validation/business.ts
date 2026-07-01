@@ -6,26 +6,26 @@ export const SUBSCRIPTION_PLANS = ["BASIC"] as const;
 export const SUBSCRIPTION_STATUSES = ["ACTIVE", "PAUSED", "CANCELED"] as const;
 
 export const createBusinessSchema = z.object({
-  name: z.string().trim().min(2, "Business name must be at least 2 characters."),
-  ownerName: z.string().trim().min(2, "Owner name must be at least 2 characters."),
+  name: z.string().trim().min(2, "Firmenname muss mindestens 2 Zeichen lang sein."),
+  ownerName: z.string().trim().min(2, "Name des Inhabers muss mindestens 2 Zeichen lang sein."),
   ownerEmail: z
     .string()
     .trim()
-    .email("Enter a valid email address.")
+    .email("Geben Sie eine gültige E-Mail-Adresse ein.")
     .transform((value) => value.toLowerCase()),
   ownerPassword: z
     .string()
-    .min(8, "Password must be at least 8 characters."),
+    .min(8, "Passwort muss mindestens 8 Zeichen lang sein."),
 });
 
 export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
 
 export const updateBusinessSchema = z.object({
-  name: z.string().trim().min(2, "Business name must be at least 2 characters."),
+  name: z.string().trim().min(2, "Firmenname muss mindestens 2 Zeichen lang sein."),
   ownerEmail: z
     .string()
     .trim()
-    .email("Enter a valid email address.")
+    .email("Geben Sie eine gültige E-Mail-Adresse ein.")
     .transform((value) => value.toLowerCase()),
   plan: z.enum(SUBSCRIPTION_PLANS),
   status: z.enum(SUBSCRIPTION_STATUSES),

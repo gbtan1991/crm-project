@@ -24,7 +24,7 @@ export async function GET(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid query parameters." },
+        { error: "Ungültige Abfrageparameter." },
         { status: 400 },
       );
     }
@@ -40,7 +40,7 @@ export async function GET(
     }
     console.error("[business/reviews][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load reviews." },
+      { error: "Bewertungen konnten nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -59,7 +59,7 @@ export async function POST(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -94,11 +94,12 @@ export async function POST(
       {
         subject: parsed.data.subject ?? "",
         bodyText: parsed.data.bodyText ?? "",
+        bodyHtml: parsed.data.bodyHtml,
       },
     );
 
     if (!emailResult) {
-      return NextResponse.json({ error: "Review not found." }, { status: 404 });
+      return NextResponse.json({ error: "Bewertung nicht gefunden." }, { status: 404 });
     }
 
     if (!emailResult.ok) {
@@ -121,7 +122,7 @@ export async function POST(
     }
     console.error("[business/reviews][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create review." },
+      { error: "Bewertung konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

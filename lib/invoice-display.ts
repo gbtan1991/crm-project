@@ -8,15 +8,15 @@ export type InvoiceStatusValue =
 export function invoiceStatusLabel(status: InvoiceStatusValue): string {
   switch (status) {
     case "DRAFT":
-      return "Draft";
+      return "Entwurf";
     case "OPEN":
-      return "Open";
+      return "Offen";
     case "PAID":
-      return "Paid";
+      return "Bezahlt";
     case "OVERDUE":
-      return "Overdue";
+      return "Überfällig";
     case "CANCELLED":
-      return "Cancelled";
+      return "Storniert";
     default:
       return status;
   }
@@ -45,7 +45,7 @@ export function formatInvoiceDate(
   value: string,
   timeZone?: string,
 ): string {
-  return new Date(value).toLocaleDateString(undefined, {
+  return new Date(value).toLocaleDateString("de-CH", {
     timeZone,
     dateStyle: "medium",
   });

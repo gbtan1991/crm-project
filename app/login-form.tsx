@@ -63,10 +63,10 @@ export function LoginForm() {
       return (
         <form action={requestAction} className="space-y-4">
           <div className="space-y-1">
-            <h2 className="font-heading text-lg font-semibold">Reset password</h2>
+            <h2 className="font-heading text-lg font-semibold">Passwort zurücksetzen</h2>
             <p className="text-sm text-muted-foreground">
-              Enter your account email and we&apos;ll send a verification code
-              from your connected Google or Outlook mailbox.
+              Geben Sie Ihre Konto-E-Mail ein. Wir senden einen Bestätigungscode
+              über Ihr verbundenes Google- oder Outlook-Postfach.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export function LoginForm() {
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="reset-email">Email</Label>
+            <Label htmlFor="reset-email">E-Mail</Label>
             <div className="relative">
               <Mail
                 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -94,7 +94,7 @@ export function LoginForm() {
                 type="email"
                 autoComplete="email"
                 autoFocus
-                placeholder="you@example.com"
+                placeholder="sie@beispiel.ch"
                 className="h-12 pl-10"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -111,10 +111,10 @@ export function LoginForm() {
             {requestPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Sending code…
+                Code wird gesendet…
               </>
             ) : (
-              "Send verification code"
+              "Bestätigungscode senden"
             )}
           </Button>
 
@@ -125,7 +125,7 @@ export function LoginForm() {
             onClick={backToLogin}
           >
             <ArrowLeft className="size-4" />
-            Back to login
+            Zurück zur Anmeldung
           </Button>
         </form>
       );
@@ -147,10 +147,10 @@ export function LoginForm() {
     return (
       <form action={resetAction} className="space-y-4">
         <div className="space-y-1">
-          <h2 className="font-heading text-lg font-semibold">Choose a new password</h2>
+          <h2 className="font-heading text-lg font-semibold">Neues Passwort wählen</h2>
           <p className="text-sm text-muted-foreground">
-            Your verification code has been accepted. Set a new password to finish
-            and log in.
+            Ihr Bestätigungscode wurde akzeptiert. Legen Sie ein neues Passwort fest,
+            um den Vorgang abzuschliessen und sich anzumelden.
           </p>
         </div>
 
@@ -164,7 +164,7 @@ export function LoginForm() {
         <input type="hidden" name="otp" value={otp} />
 
         <div className="space-y-2">
-          <Label htmlFor="new-password">New password</Label>
+          <Label htmlFor="new-password">Neues Passwort</Label>
           <div className="relative">
             <Lock
               className="absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground"
@@ -184,7 +184,7 @@ export function LoginForm() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="confirm-password">Confirm new password</Label>
+          <Label htmlFor="confirm-password">Neues Passwort bestätigen</Label>
           <div className="relative">
             <Lock
               className="absolute left-3 top-1/2 z-10 size-4 -translate-y-1/2 text-muted-foreground"
@@ -210,10 +210,10 @@ export function LoginForm() {
           {resetPending ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Resetting password…
+              Passwort wird zurückgesetzt…
             </>
           ) : (
-            "Reset password and log in"
+            "Passwort zurücksetzen und anmelden"
           )}
         </Button>
 
@@ -224,7 +224,7 @@ export function LoginForm() {
           onClick={() => setForgotStep("otp")}
         >
           <ArrowLeft className="size-4" />
-          Back
+          Zurück
         </Button>
       </form>
     );
@@ -239,7 +239,7 @@ export function LoginForm() {
       ) : null}
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">E-Mail</Label>
         <div className="relative">
           <Mail
             className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
@@ -251,7 +251,7 @@ export function LoginForm() {
             type="email"
             autoComplete="email"
             autoFocus
-            placeholder="you@example.com"
+            placeholder="sie@beispiel.ch"
             className="h-12 pl-10"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
@@ -262,13 +262,13 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password">Passwort</Label>
           <button
             type="button"
             className="text-sm font-medium text-primary hover:underline"
             onClick={openForgotPassword}
           >
-            Forgot password?
+            Passwort vergessen?
           </button>
         </div>
         <div className="relative">
@@ -291,10 +291,10 @@ export function LoginForm() {
         {loginPending ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            Logging in...
+            Anmeldung läuft…
           </>
         ) : (
-          "Log in"
+          "Anmelden"
         )}
       </Button>
     </form>
@@ -334,9 +334,9 @@ function VerifyOtpStep({
   return (
     <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
       <div className="space-y-1">
-        <h2 className="font-heading text-lg font-semibold">Enter verification code</h2>
+        <h2 className="font-heading text-lg font-semibold">Bestätigungscode eingeben</h2>
         <p className="text-sm text-muted-foreground">
-          We sent a 6-digit code to <strong>{email}</strong>.
+          Wir haben einen 6-stelligen Code an <strong>{email}</strong> gesendet.
         </p>
       </div>
 
@@ -349,7 +349,7 @@ function VerifyOtpStep({
       <input type="hidden" name="email" value={email} />
 
       <div className="space-y-2">
-        <Label htmlFor="reset-otp">Verification code</Label>
+        <Label htmlFor="reset-otp">Bestätigungscode</Label>
         <Input
           id="reset-otp"
           name="otp"
@@ -370,16 +370,16 @@ function VerifyOtpStep({
         {pending ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            Verifying…
+            Wird überprüft…
           </>
         ) : (
-          "Continue"
+          "Weiter"
         )}
       </Button>
 
       <Button type="button" variant="ghost" className="w-full" onClick={onBack}>
         <ArrowLeft className="size-4" />
-        Back
+        Zurück
       </Button>
     </form>
   );

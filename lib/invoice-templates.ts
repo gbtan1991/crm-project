@@ -171,7 +171,7 @@ export async function updateInvoiceTemplateForBusiness(
     (service) => service.id && !existingServiceIds.has(service.id),
   );
   if (invalidIncomingService) {
-    return { error: "Template service not found." as const };
+    return { error: "Vorlagenleistung nicht gefunden." as const };
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -251,7 +251,7 @@ export async function deleteInvoiceTemplateForBusiness(
   }
 
   if (template._count.invoices > 0) {
-    return { error: "Templates linked to invoices cannot be deleted." as const };
+    return { error: "Mit Rechnungen verknüpfte Vorlagen können nicht gelöscht werden." as const };
   }
 
   await prisma.invoiceTemplate.delete({ where: { id: templateId } });

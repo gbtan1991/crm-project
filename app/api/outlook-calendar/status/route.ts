@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
     if (!businessId) {
       return NextResponse.json(
-        { error: "businessId is required." },
+        { error: "businessId ist erforderlich." },
         { status: 400 },
       );
     }
@@ -24,6 +24,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("[outlook-calendar/status][GET]", error);
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
+    return NextResponse.json({ error: "Es ist ein Fehler aufgetreten." }, { status: 500 });
   }
 }

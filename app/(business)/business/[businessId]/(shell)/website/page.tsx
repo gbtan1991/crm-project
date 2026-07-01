@@ -4,6 +4,7 @@ import { PageHeader } from "@/app/(business)/business/page-header";
 import { WebsitePanel } from "@/app/(business)/business/[businessId]/(shell)/website/website-panel";
 import { auth } from "@/auth";
 import { getBusinessForViewer } from "@/lib/business-context";
+import { getReviewStats } from "@/lib/reviews";
 import { listWebsiteTicketsForBusiness } from "@/lib/website-tickets";
 
 type PageProps = {
@@ -23,7 +24,11 @@ export default async function WebsitePage({ params }: PageProps) {
     notFound();
   }
 
-  const result = await listWebsiteTicketsForBusiness(businessId);
+  const timeZone = business.config?.timezone ?? "UTC";
+  const [result, reviewStats] = await Promise.all([
+    listWebsiteTicketsForBusiness(businessId),
+    getReviewStats(businessId, { period: "all", timeZone }),
+  ]);
   if (!result) {
     notFound();
   }
@@ -31,14 +36,15 @@ export default async function WebsitePage({ params }: PageProps) {
   return (
     <div>
       <PageHeader
-        title="Website"
-        subtitle="Review website requirements and request website changes."
+        title="Webseite"
+        subtitle="Website-Anforderungen prüfen und Änderungen anfragen."
       />
       <WebsitePanel
         businessId={businessId}
         role={session.user.role}
         overview={result.overview}
         tickets={result.tickets}
+        reviewStats={reviewStats}
       />
     </div>
   );

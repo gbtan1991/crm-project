@@ -14,8 +14,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const TABS: { id: BusinessProfileTab; label: string }[] = [
-  { id: "details", label: "Profile details" },
-  { id: "password", label: "Change password" },
+  { id: "details", label: "Profildetails" },
+  { id: "password", label: "Passwort ändern" },
 ];
 
 export function ProfileTabNav({ businessId }: { businessId: string }) {

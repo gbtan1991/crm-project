@@ -16,7 +16,7 @@ import { listUsersForAdmin } from "@/lib/businesses";
 import { parsePageParam } from "@/lib/pagination";
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("de-CH", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -37,10 +37,10 @@ export default async function AdminUsersPage({
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold tracking-tight">
-            Users
+            Benutzer
           </h1>
           <p className="mt-1 text-muted-foreground">
-            All platform and business users.
+            Alle Plattform- und Geschäftsbenutzer.
           </p>
         </div>
         <AddUserDialog />
@@ -52,11 +52,11 @@ export default async function AdminUsersPage({
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-6">Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Businesses</TableHead>
-                <TableHead>Created</TableHead>
-                <TableHead className="pr-6 text-right">Actions</TableHead>
+                <TableHead>E-Mail</TableHead>
+                <TableHead>Rolle</TableHead>
+                <TableHead>Unternehmen</TableHead>
+                <TableHead>Erstellt</TableHead>
+                <TableHead className="pr-6 text-right">Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -66,7 +66,7 @@ export default async function AdminUsersPage({
                     {user.name ?? "—"}
                     {user.id === currentUserId ? (
                       <span className="ml-2 text-xs text-muted-foreground">
-                        (you)
+                        (Sie)
                       </span>
                     ) : null}
                   </TableCell>

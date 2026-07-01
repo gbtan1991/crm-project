@@ -150,7 +150,7 @@ export function CreateInvoiceForm({
     setError(null);
 
     if (!customerId) {
-      setError("Select a customer.");
+      setError("Bitte wählen Sie einen Kunden aus.");
       return;
     }
 
@@ -181,17 +181,17 @@ export function CreateInvoiceForm({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to create invoice.");
+        throw new Error(data.error ?? "Rechnung konnte nicht erstellt werden.");
       }
 
-      toast.success("Invoice draft created.");
+      toast.success("Rechnungsentwurf erstellt.");
       router.push(businessInvoicePath(businessId, data.invoice.id));
       router.refresh();
     } catch (submitError) {
       const message =
         submitError instanceof Error
           ? submitError.message
-          : "Failed to create invoice.";
+          : "Rechnung konnte nicht erstellt werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -202,13 +202,13 @@ export function CreateInvoiceForm({
   return (
     <form onSubmit={(event) => void handleSubmit(event)} className="space-y-6">
       <PageHeader
-        title="New invoice"
-        subtitle="Select a template and customer, then adjust line items if needed."
+        title="Neue Rechnung"
+        subtitle="Wählen Sie eine Vorlage und einen Kunden, und passen Sie die Positionen bei Bedarf an."
       >
         <Button variant="outline" asChild>
           <Link href={businessInvoicesPath(businessId)}>
             <ArrowLeft className="size-4" />
-            Back
+            Zurück
           </Link>
         </Button>
       </PageHeader>
@@ -221,14 +221,14 @@ export function CreateInvoiceForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Invoice details</CardTitle>
+          <CardTitle className="text-base">Rechnungsdetails</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="template">Template</Label>
+            <Label htmlFor="template">Vorlage</Label>
             <Select value={templateId} onValueChange={handleTemplateChange}>
               <SelectTrigger id="template">
-                <SelectValue placeholder="Select template" />
+                <SelectValue placeholder="Vorlage wählen" />
               </SelectTrigger>
               <SelectContent>
                 {templates.map((template) => (
@@ -240,10 +240,10 @@ export function CreateInvoiceForm({
             </Select>
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="customer">Customer</Label>
+            <Label htmlFor="customer">Kunde</Label>
             <Select value={customerId} onValueChange={setCustomerId}>
               <SelectTrigger id="customer">
-                <SelectValue placeholder="Select customer" />
+                <SelectValue placeholder="Kunde wählen" />
               </SelectTrigger>
               <SelectContent>
                 {customers.map((customer) => (
@@ -255,16 +255,16 @@ export function CreateInvoiceForm({
             </Select>
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="title">Title (optional)</Label>
+            <Label htmlFor="title">Titel (optional)</Label>
             <Input
               id="title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Prefilled from template"
+              placeholder="Aus Vorlage vorausgefüllt"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="issueDate">Issue date</Label>
+            <Label htmlFor="issueDate">Rechnungsdatum</Label>
             <Input
               id="issueDate"
               type="date"
@@ -274,7 +274,7 @@ export function CreateInvoiceForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dueDate">Due date</Label>
+            <Label htmlFor="dueDate">Fälligkeitsdatum</Label>
             <Input
               id="dueDate"
               type="date"
@@ -284,7 +284,7 @@ export function CreateInvoiceForm({
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="notes">Notes (optional)</Label>
+            <Label htmlFor="notes">Notizen (optional)</Label>
             <Textarea
               id="notes"
               value={notes}
@@ -297,7 +297,7 @@ export function CreateInvoiceForm({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Line items</CardTitle>
+          <CardTitle className="text-base">Positionen</CardTitle>
         </CardHeader>
         <CardContent>
           <InvoiceLineItemsEditor
@@ -311,18 +311,18 @@ export function CreateInvoiceForm({
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" asChild>
-          <Link href={businessInvoicesPath(businessId)}>Cancel</Link>
+          <Link href={businessInvoicesPath(businessId)}>Abbrechen</Link>
         </Button>
         <Button type="submit" disabled={submitting || customers.length === 0}>
           {submitting ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Saving draft…
+              Entwurf wird gespeichert…
             </>
           ) : (
             <>
               <Plus className="size-4" />
-              Save draft
+              Entwurf speichern
             </>
           )}
         </Button>

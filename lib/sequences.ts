@@ -19,11 +19,12 @@ import { GmailSendError, sendGmailMessage } from "@/lib/google-mail/send";
 import { GoogleCalendarOAuth } from "@/lib/google-calendar/oauth";
 import { ensureInboxForBusiness } from "@/lib/inbox";
 import { buildInvoicePdfForBusiness, getInvoiceEmailContext } from "@/lib/invoice-email";
-import { formatInvoiceDate } from "@/lib/invoice-display";
+import { formatInvoiceDate, invoiceStatusLabel } from "@/lib/invoice-display";
 import { formatMoney } from "@/lib/invoice-money";
 import { sendReviewRequestEmailForBusiness } from "@/lib/messages/send-review-request-email";
 import { OutlookCalendarOAuth } from "@/lib/outlook-calendar/oauth";
 import { OutlookSendError, sendOutlookMessage } from "@/lib/outlook-mail/send";
+import { wrapEmailContentHtml, buildEmailHtmlFromPlainText } from "@/lib/email-html";
 import { prisma } from "@/lib/prisma";
 import type { SequenceWriteInput } from "@/lib/validation/sequence";
 
@@ -33,6 +34,7 @@ export type SequenceStepRow = {
   id: string;
   subject: string;
   bodyText: string;
+  bodyHtml: string | null;
   delayAmount: number;
   delayUnit: SequenceDelayUnit;
   sortOrder: number;
@@ -70,6 +72,7 @@ function serializeSequence(sequence: SequenceTemplate & {
     id: string;
     subject: string;
     bodyText: string;
+    bodyHtml: string | null;
     delayAmount: number;
     delayUnit: SequenceDelayUnit;
     sortOrder: number;
@@ -83,6 +86,7 @@ function serializeSequence(sequence: SequenceTemplate & {
       id: step.id,
       subject: step.subject,
       bodyText: step.bodyText,
+      bodyHtml: step.bodyHtml,
       delayAmount: step.delayAmount,
       delayUnit: step.delayUnit,
       sortOrder: step.sortOrder,
@@ -127,6 +131,7 @@ function renderInvoiceVariables(
     total: formatMoney(invoice.total, invoice.currency),
     dueDate: formatInvoiceDate(invoice.dueDate),
     issueDate: formatInvoiceDate(invoice.issueDate),
+    invoiceStatus: invoiceStatusLabel(invoice.displayStatus),
     businessName: context.subject.replace(/^Invoice .* from /, "") || "",
   };
 
@@ -164,6 +169,7 @@ async function sendInvoiceSequenceEmail(input: {
   invoiceId: string;
   subject: string;
   bodyText: string;
+  bodyHtml?: string;
   sequenceId: string;
   enrollmentId: string;
   stepId: string;
@@ -184,13 +190,13 @@ async function sendInvoiceSequenceEmail(input: {
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
       level: ActivityLogLevel.ERROR,
-      message: "Sequence email failed: invoice not found.",
+      message: "Sequenz-E-Mail fehlgeschlagen: Rechnung nicht gefunden.",
       invoiceId: input.invoiceId,
       sequenceId: input.sequenceId,
       sequenceEnrollmentId: input.enrollmentId,
       metadata: { stepId: input.stepId },
     });
-    return { ok: false as const, error: "Invoice not found." };
+    return { ok: false as const, error: "Rechnung nicht gefunden." };
   }
   if (!connection?.connectedAt || !connection.accountEmail) {
     await createActivityLog({
@@ -198,13 +204,13 @@ async function sendInvoiceSequenceEmail(input: {
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
       level: ActivityLogLevel.ERROR,
-      message: "Sequence email failed: no connected Google or Outlook mailbox.",
+      message: "Sequenz-E-Mail fehlgeschlagen: kein verbundenes Google- oder Outlook-Postfach.",
       invoiceId: input.invoiceId,
       sequenceId: input.sequenceId,
       sequenceEnrollmentId: input.enrollmentId,
       metadata: { stepId: input.stepId, to: emailContext.toAddress },
     });
-    return { ok: false as const, error: "Connect Google or Outlook to send emails." };
+    return { ok: false as const, error: "Verbinden Sie Google oder Outlook, um E-Mails zu senden." };
   }
   if (
     connection.provider !== CalendarProvider.GOOGLE &&
@@ -215,17 +221,20 @@ async function sendInvoiceSequenceEmail(input: {
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
       level: ActivityLogLevel.ERROR,
-      message: "Sequence email failed: connected provider cannot send invoice emails.",
+      message: "Sequenz-E-Mail fehlgeschlagen: verbundener Anbieter kann keine Rechnungs-E-Mails senden.",
       invoiceId: input.invoiceId,
       sequenceId: input.sequenceId,
       sequenceEnrollmentId: input.enrollmentId,
       metadata: { stepId: input.stepId, provider: connection.provider },
     });
-    return { ok: false as const, error: "Sequence email requires Google or Outlook." };
+    return { ok: false as const, error: "Sequenz-E-Mails erfordern Google oder Outlook." };
   }
 
   const subject = renderInvoiceVariables(input.subject, emailContext);
   const bodyText = renderInvoiceVariables(input.bodyText, emailContext);
+  const bodyHtml = input.bodyHtml
+    ? wrapEmailContentHtml(renderInvoiceVariables(input.bodyHtml, emailContext))
+    : buildEmailHtmlFromPlainText(bodyText);
   const attachment = {
     filename: pdfResult.filename,
     contentType: "application/pdf",
@@ -246,6 +255,7 @@ async function sendInvoiceSequenceEmail(input: {
       toAddress: emailContext.toAddress,
       subject,
       bodyText,
+      bodyHtml,
       customerId: emailContext.invoice.customer.id,
       invoiceId: input.invoiceId,
       metadata: {
@@ -262,7 +272,7 @@ async function sendInvoiceSequenceEmail(input: {
     businessId: input.businessId,
     type: ActivityLogType.EMAIL,
     subType: ActivityLogSubType.SEQUENCE,
-    message: `Sequence email queued for ${emailContext.toAddress}.`,
+    message: `Sequenz-E-Mail für ${emailContext.toAddress} in Warteschlange.`,
     invoiceId: input.invoiceId,
     customerId: emailContext.invoice.customer.id,
     messageId: message.id,
@@ -280,6 +290,7 @@ async function sendInvoiceSequenceEmail(input: {
             to: emailContext.toAddress,
             subject,
             bodyText,
+            bodyHtml,
             attachments: [attachment],
           })
         : await sendOutlookMessage({
@@ -287,6 +298,7 @@ async function sendInvoiceSequenceEmail(input: {
             to: emailContext.toAddress,
             subject,
             bodyText,
+            bodyHtml,
             attachments: [attachment],
           });
 
@@ -299,7 +311,7 @@ async function sendInvoiceSequenceEmail(input: {
       businessId: input.businessId,
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
-      message: `Sequence email sent to ${emailContext.toAddress}.`,
+      message: `Sequenz-E-Mail an ${emailContext.toAddress} gesendet.`,
       invoiceId: input.invoiceId,
       customerId: emailContext.invoice.customer.id,
       messageId: message.id,
@@ -322,7 +334,7 @@ async function sendInvoiceSequenceEmail(input: {
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Failed to send sequence email.";
+            : "Sequenz-E-Mail konnte nicht gesendet werden.";
 
     await prisma.message.update({
       where: { id: message.id },
@@ -334,7 +346,7 @@ async function sendInvoiceSequenceEmail(input: {
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
       level: ActivityLogLevel.ERROR,
-      message: `Sequence email failed for ${emailContext.toAddress}: ${errorMessage}`,
+      message: `Sequenz-E-Mail an ${emailContext.toAddress} fehlgeschlagen: ${errorMessage}`,
       invoiceId: input.invoiceId,
       customerId: emailContext.invoice.customer.id,
       messageId: message.id,
@@ -393,7 +405,7 @@ export async function createSequenceForBusiness(
     });
     if (conflict) {
       return {
-        error: `${input.type.toLowerCase()} sequence "${conflict.name}" is already active. Disable it before activating another ${input.type.toLowerCase()} sequence.` as const,
+        error: `${input.type === "INVOICE" ? "Rechnungs" : "Bewertungs"}sequenz «${conflict.name}» ist bereits aktiv. Deaktivieren Sie sie, bevor Sie eine weitere ${input.type === "INVOICE" ? "Rechnungs" : "Bewertungs"}sequenz aktivieren.` as const,
       };
     }
   }
@@ -409,6 +421,7 @@ export async function createSequenceForBusiness(
         create: input.steps.map((step, index) => ({
           subject: step.subject.trim(),
           bodyText: step.bodyText.trim(),
+          bodyHtml: step.bodyHtml?.trim() || null,
           delayAmount: step.delayAmount,
           delayUnit: step.delayUnit,
           sortOrder: step.sortOrder ?? index,
@@ -446,7 +459,7 @@ export async function updateSequenceForBusiness(
     });
     if (conflict) {
       return {
-        error: `${input.type.toLowerCase()} sequence "${conflict.name}" is already active. Disable it before activating another ${input.type.toLowerCase()} sequence.` as const,
+        error: `${input.type === "INVOICE" ? "Rechnungs" : "Bewertungs"}sequenz «${conflict.name}» ist bereits aktiv. Deaktivieren Sie sie, bevor Sie eine weitere ${input.type === "INVOICE" ? "Rechnungs" : "Bewertungs"}sequenz aktivieren.` as const,
       };
     }
   }
@@ -464,6 +477,7 @@ export async function updateSequenceForBusiness(
           create: input.steps.map((step, index) => ({
             subject: step.subject.trim(),
             bodyText: step.bodyText.trim(),
+            bodyHtml: step.bodyHtml?.trim() || null,
             delayAmount: step.delayAmount,
             delayUnit: step.delayUnit,
             sortOrder: step.sortOrder ?? index,
@@ -494,7 +508,7 @@ export async function deleteSequenceForBusiness(
   }
 
   if (existing._count.enrollments > 0) {
-    return { error: "Sequences with invoice enrollments cannot be deleted." as const };
+    return { error: "Sequenzen mit Rechnungs-Einschreibungen können nicht gelöscht werden." as const };
   }
 
   await prisma.sequenceTemplate.delete({ where: { id: sequenceId } });
@@ -586,17 +600,17 @@ export async function startInvoiceSequenceForBusiness(
   ]);
 
   if (!invoice) {
-    return { error: "Invoice not found." as const };
+    return { error: "Rechnung nicht gefunden." as const };
   }
   if (!sequence) {
-    return { error: "Active invoice sequence not found." as const };
+    return { error: "Aktive Rechnungssequenz nicht gefunden." as const };
   }
   if (sequence.steps.length === 0) {
-    return { error: "Sequence has no email steps." as const };
+    return { error: "Sequenz hat keine E-Mail-Schritte." as const };
   }
   if (invoice.status !== "DRAFT" && invoice.status !== "OPEN") {
     return {
-      error: "Only draft or open invoices can start an invoice sequence." as const,
+      error: "Nur Entwürfe oder offene Rechnungen können eine Rechnungssequenz starten." as const,
     };
   }
 
@@ -624,7 +638,7 @@ export async function startInvoiceSequenceForBusiness(
   });
 
   if (!enrollment) {
-    return { error: "This invoice already has a sequence." as const };
+    return { error: "Diese Rechnung hat bereits eine Sequenz." as const };
   }
 
   console.info(
@@ -634,7 +648,7 @@ export async function startInvoiceSequenceForBusiness(
     businessId,
     type: ActivityLogType.SEQUENCE,
     subType: ActivityLogSubType.INVOICE,
-    message: `Invoice enrolled in sequence "${sequence.name}".`,
+    message: `Rechnung in Sequenz «${sequence.name}» eingeschrieben.`,
     invoiceId,
     sequenceId: sequence.id,
     sequenceEnrollmentId: enrollment.id,
@@ -663,16 +677,16 @@ export async function startReviewSequenceForBusiness(
   ]);
 
   if (!review) {
-    return { error: "Review not found." as const };
+    return { error: "Bewertung nicht gefunden." as const };
   }
   if (!sequence) {
-    return { error: "Active review sequence not found." as const };
+    return { error: "Aktive Bewertungssequenz nicht gefunden." as const };
   }
   if (sequence.steps.length === 0) {
-    return { error: "Review sequence has no email steps." as const };
+    return { error: "Bewertungssequenz hat keine E-Mail-Schritte." as const };
   }
   if (review.status !== ReviewStatus.REQUESTED) {
-    return { error: "Only requested reviews can start a sequence." as const };
+    return { error: "Nur angefragte Bewertungen können eine Sequenz starten." as const };
   }
 
   const firstStep = sequence.steps[0];
@@ -701,14 +715,14 @@ export async function startReviewSequenceForBusiness(
     });
 
   if (!enrollment) {
-    return { error: "This review already has a sequence." as const };
+    return { error: "Diese Bewertung hat bereits eine Sequenz." as const };
   }
 
   await createActivityLog({
     businessId,
     type: ActivityLogType.SEQUENCE,
     subType: ActivityLogSubType.REVIEW,
-    message: `Review enrolled in sequence "${sequence.name}".`,
+    message: `Bewertung in Sequenz «${sequence.name}» eingeschrieben.`,
     reviewId,
     sequenceId: sequence.id,
     sequenceEnrollmentId: enrollment.id,
@@ -743,6 +757,7 @@ type ReviewEnrollmentForProcessing = {
       id: string;
       subject: string;
       bodyText: string;
+      bodyHtml: string | null;
       delayAmount: number;
       delayUnit: SequenceDelayUnit;
     }>;
@@ -755,7 +770,7 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       where: { id: enrollment.id },
       data: {
         status: SequenceEnrollmentStatus.FAILED,
-        lastError: "Review no longer exists.",
+        lastError: "Bewertung existiert nicht mehr.",
       },
     });
     await createActivityLog({
@@ -763,11 +778,11 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.REVIEW,
       level: ActivityLogLevel.ERROR,
-      message: "Review sequence failed because the review no longer exists.",
+      message: "Bewertungssequenz fehlgeschlagen: Bewertung existiert nicht mehr.",
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { failed: true, reason: "Review no longer exists." };
+    return { failed: true, reason: "Bewertung existiert nicht mehr." };
   }
 
   if (
@@ -786,12 +801,12 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       businessId: enrollment.businessId,
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.REVIEW,
-      message: `Review sequence stopped because review is ${enrollment.review.status.toLowerCase()}.`,
+      message: `Bewertungssequenz gestoppt, da Bewertung ${enrollment.review.status.toLowerCase()} ist.`,
       reviewId: enrollment.review.id,
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { completed: true, reason: "Review completed or declined." };
+    return { completed: true, reason: "Bewertung abgeschlossen oder abgelehnt." };
   }
 
   const step = enrollment.sequence.steps[enrollment.currentStepIndex];
@@ -808,12 +823,12 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       businessId: enrollment.businessId,
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.REVIEW,
-      message: "Review sequence completed. No more email steps remain.",
+      message: "Bewertungssequenz abgeschlossen. Keine weiteren E-Mail-Schritte.",
       reviewId: enrollment.review.id,
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { completed: true, reason: "No more steps." };
+    return { completed: true, reason: "Keine weiteren Schritte." };
   }
 
   const context = {
@@ -823,12 +838,15 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
   };
   const subject = renderReviewVariables(step.subject, context);
   const bodyText = renderReviewVariables(step.bodyText, context);
+  const bodyHtml = step.bodyHtml
+    ? renderReviewVariables(step.bodyHtml, context)
+    : undefined;
 
   await createActivityLog({
     businessId: enrollment.businessId,
     type: ActivityLogType.SEQUENCE,
     subType: ActivityLogSubType.REVIEW,
-    message: `Processing review sequence step ${enrollment.currentStepIndex + 1} of ${enrollment.sequence.steps.length}.`,
+    message: `Bewertungssequenz Schritt ${enrollment.currentStepIndex + 1} von ${enrollment.sequence.steps.length} wird verarbeitet.`,
     reviewId: enrollment.review.id,
     sequenceId: enrollment.sequenceId,
     sequenceEnrollmentId: enrollment.id,
@@ -838,7 +856,7 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
   const sendResult = await sendReviewRequestEmailForBusiness(
     enrollment.businessId,
     enrollment.review.id,
-    { subject, bodyText },
+    { subject, bodyText, bodyHtml },
   );
 
   if (!sendResult) {
@@ -846,10 +864,10 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       where: { id: enrollment.id },
       data: {
         status: SequenceEnrollmentStatus.FAILED,
-        lastError: "Review not found.",
+        lastError: "Bewertung nicht gefunden.",
       },
     });
-    return { failed: true, reason: "Review not found." };
+    return { failed: true, reason: "Bewertung nicht gefunden." };
   }
 
   if (!sendResult.ok) {
@@ -865,7 +883,7 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
       level: ActivityLogLevel.ERROR,
-      message: `Review sequence email failed for ${enrollment.review.customer.email}: ${sendResult.error}`,
+      message: `Bewertungssequenz-E-Mail an ${enrollment.review.customer.email} fehlgeschlagen: ${sendResult.error}`,
       reviewId: enrollment.review.id,
       customerId: enrollment.review.customer.id,
       sequenceId: enrollment.sequenceId,
@@ -901,7 +919,7 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
       businessId: enrollment.businessId,
       type: ActivityLogType.EMAIL,
       subType: ActivityLogSubType.SEQUENCE,
-      message: `Review sequence email sent to ${enrollment.review.customer.email}.`,
+      message: `Bewertungssequenz-E-Mail an ${enrollment.review.customer.email} gesendet.`,
       reviewId: enrollment.review.id,
       customerId: enrollment.review.customer.id,
       messageId: sendResult.messageId,
@@ -956,7 +974,7 @@ async function processEnrollment(enrollmentId: string) {
   });
 
   if (!enrollment || enrollment.status !== SequenceEnrollmentStatus.ACTIVE) {
-    return { skipped: true, reason: "Enrollment no longer active." };
+    return { skipped: true, reason: "Einschreibung nicht mehr aktiv." };
   }
   if (enrollment.sequence.type === "REVIEW") {
     return processReviewEnrollment(enrollment);
@@ -967,7 +985,7 @@ async function processEnrollment(enrollmentId: string) {
       where: { id: enrollment.id },
       data: {
         status: SequenceEnrollmentStatus.FAILED,
-        lastError: "Invoice no longer exists.",
+        lastError: "Rechnung existiert nicht mehr.",
       },
     });
     await createActivityLog({
@@ -975,11 +993,11 @@ async function processEnrollment(enrollmentId: string) {
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.INVOICE,
       level: ActivityLogLevel.ERROR,
-      message: "Sequence failed because the invoice no longer exists.",
+      message: "Sequenz fehlgeschlagen: Rechnung existiert nicht mehr.",
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { failed: true, reason: "Invoice no longer exists." };
+    return { failed: true, reason: "Rechnung existiert nicht mehr." };
   }
   if (enrollment.invoice.status === "PAID" || enrollment.invoice.status === "CANCELLED") {
     await prisma.sequenceEnrollment.update({
@@ -994,12 +1012,12 @@ async function processEnrollment(enrollmentId: string) {
       businessId: enrollment.businessId,
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.INVOICE,
-      message: `Sequence stopped because invoice is ${enrollment.invoice.status.toLowerCase()}.`,
+      message: `Sequenz gestoppt, da Rechnung ${enrollment.invoice.status.toLowerCase()} ist.`,
       invoiceId: enrollment.invoice.id,
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { completed: true, reason: "Invoice is paid or cancelled." };
+    return { completed: true, reason: "Rechnung ist bezahlt oder storniert." };
   }
   if (
     enrollment.invoice.status !== "DRAFT" &&
@@ -1017,12 +1035,12 @@ async function processEnrollment(enrollmentId: string) {
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.INVOICE,
       level: ActivityLogLevel.ERROR,
-      message: `Sequence failed because invoice status is ${enrollment.invoice.status}.`,
+      message: `Sequenz fehlgeschlagen wegen Rechnungsstatus ${enrollment.invoice.status}.`,
       invoiceId: enrollment.invoice.id,
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { failed: true, reason: "Unsupported invoice status." };
+    return { failed: true, reason: "Nicht unterstützter Rechnungsstatus." };
   }
 
   const step = enrollment.sequence.steps[enrollment.currentStepIndex];
@@ -1039,12 +1057,12 @@ async function processEnrollment(enrollmentId: string) {
       businessId: enrollment.businessId,
       type: ActivityLogType.SEQUENCE,
       subType: ActivityLogSubType.INVOICE,
-      message: "Sequence completed. No more email steps remain.",
+      message: "Sequenz abgeschlossen. Keine weiteren E-Mail-Schritte.",
       invoiceId: enrollment.invoice.id,
       sequenceId: enrollment.sequenceId,
       sequenceEnrollmentId: enrollment.id,
     });
-    return { completed: true, reason: "No more steps." };
+    return { completed: true, reason: "Keine weiteren Schritte." };
   }
 
   console.info(
@@ -1054,7 +1072,7 @@ async function processEnrollment(enrollmentId: string) {
     businessId: enrollment.businessId,
     type: ActivityLogType.SEQUENCE,
     subType: ActivityLogSubType.INVOICE,
-    message: `Processing sequence step ${enrollment.currentStepIndex + 1} of ${enrollment.sequence.steps.length}.`,
+    message: `Sequenz Schritt ${enrollment.currentStepIndex + 1} von ${enrollment.sequence.steps.length} wird verarbeitet.`,
     invoiceId: enrollment.invoice.id,
     sequenceId: enrollment.sequenceId,
     sequenceEnrollmentId: enrollment.id,
@@ -1068,6 +1086,7 @@ async function processEnrollment(enrollmentId: string) {
     stepId: step.id,
     subject: step.subject,
     bodyText: step.bodyText,
+    bodyHtml: step.bodyHtml ?? undefined,
   });
 
   if (!sendResult.ok) {
@@ -1170,7 +1189,7 @@ export async function processDueSequences() {
       businessId: item.businessId,
       type: ActivityLogType.CRONJOB,
       subType: ActivityLogSubType.SEQUENCE,
-      message: `Sequence cron checked for due enrollments. Due now: ${
+      message: `Sequenz-Cron: fällige Einschreibungen geprüft. Jetzt fällig: ${
         due.filter((enrollment) => enrollment.businessId === item.businessId).length
       }.`,
       metadata: { due: due.length },
@@ -1201,7 +1220,7 @@ export async function processDueSequences() {
       businessId,
       type: ActivityLogType.CRONJOB,
       subType: ActivityLogSubType.SEQUENCE,
-      message: `Sequence cron processed due enrollments: sent ${sent}, completed ${completed}, failed ${failed}, skipped ${skipped}.`,
+      message: `Sequenz-Cron: fällige Einschreibungen verarbeitet — gesendet ${sent}, abgeschlossen ${completed}, fehlgeschlagen ${failed}, übersprungen ${skipped}.`,
       metadata: summary,
       level: failed > 0 ? ActivityLogLevel.WARNING : ActivityLogLevel.INFO,
     })),

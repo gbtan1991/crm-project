@@ -82,7 +82,7 @@ function activityForInvoice(
     return {
       id: `paid-${invoice.id}`,
       kind: "paid",
-      title: `Invoice paid – ${customerName}`,
+      title: `Rechnung bezahlt – ${customerName}`,
       occurredAt: (invoice.paidAt ?? invoice.updatedAt).toISOString(),
       href,
     };
@@ -92,7 +92,7 @@ function activityForInvoice(
     return {
       id: `overdue-${invoice.id}`,
       kind: "overdue",
-      title: `Invoice overdue – ${invoice.number}`,
+      title: `Rechnung überfällig – ${invoice.number}`,
       occurredAt: invoice.dueDate.toISOString(),
       href,
     };
@@ -102,7 +102,7 @@ function activityForInvoice(
     return {
       id: `sent-${invoice.id}`,
       kind: "sent",
-      title: `Invoice sent – ${customerName}`,
+      title: `Rechnung gesendet – ${customerName}`,
       occurredAt: invoice.sentAt.toISOString(),
       href,
     };
@@ -112,7 +112,7 @@ function activityForInvoice(
     return {
       id: `draft-${invoice.id}`,
       kind: "draft",
-      title: `Draft created – ${customerName}`,
+      title: `Entwurf erstellt – ${customerName}`,
       occurredAt: invoice.createdAt.toISOString(),
       href,
     };
@@ -121,7 +121,7 @@ function activityForInvoice(
   return {
     id: `issued-${invoice.id}`,
     kind: "issued",
-    title: `Invoice issued – ${customerName}`,
+    title: `Rechnung ausgestellt – ${customerName}`,
     occurredAt: invoice.updatedAt.toISOString(),
     href,
   };

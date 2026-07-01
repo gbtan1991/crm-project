@@ -46,16 +46,16 @@ export function PublicReviewForm({
     }
     try {
       await navigator.clipboard.writeText(reviewText);
-      toast.success("Review copied.");
+      toast.success("Bewertung kopiert.");
     } catch {
-      toast.error("Failed to copy review.");
+      toast.error("Bewertung konnte nicht kopiert werden.");
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rating === 0) {
-      setError("Please select a rating.");
+      setError("Bitte wählen Sie eine Bewertung aus.");
       return;
     }
 
@@ -71,7 +71,7 @@ export function PublicReviewForm({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to submit review.");
+        throw new Error(data.error ?? "Bewertung konnte nicht gesendet werden.");
       }
 
       setStatus("RECEIVED");
@@ -80,7 +80,7 @@ export function PublicReviewForm({
         window.open(googleReviewUrl, "_blank", "noopener,noreferrer");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Etwas ist schiefgelaufen.");
     } finally {
       setSubmitting(false);
     }
@@ -98,10 +98,10 @@ export function PublicReviewForm({
         </div>
         <div>
           <h2 className="mb-1 font-heading text-lg font-bold">
-            Thank you, {customerName}!
+            Vielen Dank, {customerName}!
           </h2>
           <p className="text-sm text-muted-foreground">
-            Your review has been submitted.
+            Ihre Bewertung wurde übermittelt.
           </p>
         </div>
 
@@ -126,9 +126,9 @@ export function PublicReviewForm({
         ) : null}
 
         <p className="text-xs text-muted-foreground">
-          Reviewed{" "}
+          Bewertet am{" "}
           {respondedAt
-            ? new Date(respondedAt).toLocaleDateString("en-US", {
+            ? new Date(respondedAt).toLocaleDateString("de-CH", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -139,10 +139,10 @@ export function PublicReviewForm({
         {showGoogleCta ? (
           <div className="space-y-3 rounded-xl border bg-primary/5 p-4">
             <div>
-              <h3 className="font-medium">Share this on Google?</h3>
+              <h3 className="font-medium">Auf Google teilen?</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                Copy your review, then open the Google review page and paste it
-                there.
+                Kopieren Sie Ihre Bewertung, öffnen Sie dann die Google-Bewertungsseite
+                und fügen Sie sie dort ein.
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
@@ -153,7 +153,7 @@ export function PublicReviewForm({
                 disabled={!displayContent}
               >
                 <Copy className="size-4" />
-                Copy review
+                Bewertung kopieren
               </Button>
               <Button asChild>
                 <a
@@ -162,7 +162,7 @@ export function PublicReviewForm({
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="size-4" />
-                  Open Google review page
+                  Google-Bewertungsseite öffnen
                 </a>
               </Button>
             </div>
@@ -180,10 +180,10 @@ export function PublicReviewForm({
         </div>
         <div>
           <h2 className="mb-1 font-heading text-lg font-bold">
-            No problem, {customerName}!
+            Kein Problem, {customerName}!
           </h2>
           <p className="text-sm text-muted-foreground">
-            This review request has been declined.
+            Diese Bewertungsanfrage wurde abgelehnt.
           </p>
         </div>
       </div>
@@ -194,11 +194,11 @@ export function PublicReviewForm({
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
       {bookingTitle ? (
         <div className="rounded-lg bg-muted p-3 text-center">
-          <p className="text-xs text-muted-foreground">Booking</p>
+          <p className="text-xs text-muted-foreground">Termin</p>
           <p className="text-sm font-medium">{bookingTitle}</p>
           {bookingDate ? (
             <p className="text-xs text-muted-foreground">
-              {new Date(bookingDate).toLocaleDateString("en-US", {
+              {new Date(bookingDate).toLocaleDateString("de-CH", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
@@ -209,7 +209,7 @@ export function PublicReviewForm({
       ) : null}
 
       <div className="text-center">
-        <p className="mb-2 text-sm font-medium">Rate your experience</p>
+        <p className="mb-2 text-sm font-medium">Bewerten Sie Ihre Erfahrung</p>
         <div className="flex justify-center gap-1">
           {[1, 2, 3, 4, 5].map((star) => {
             const filled = star <= (hoveredStar || rating);
@@ -221,7 +221,7 @@ export function PublicReviewForm({
                 onMouseEnter={() => setHoveredStar(star)}
                 onMouseLeave={() => setHoveredStar(0)}
                 onClick={() => setRating(star)}
-                aria-label={`${star} star${star !== 1 ? "s" : ""}`}
+                aria-label={`${star} Stern${star !== 1 ? "e" : ""}`}
               >
                 <Star
                   className={cn(
@@ -237,11 +237,11 @@ export function PublicReviewForm({
         </div>
         {rating > 0 && (
           <p className="mt-1 text-xs text-muted-foreground">
-            {rating === 1 && "Poor"}
-            {rating === 2 && "Fair"}
-            {rating === 3 && "Good"}
-            {rating === 4 && "Very good"}
-            {rating === 5 && "Excellent"}
+            {rating === 1 && "Schlecht"}
+            {rating === 2 && "Ausreichend"}
+            {rating === 3 && "Gut"}
+            {rating === 4 && "Sehr gut"}
+            {rating === 5 && "Ausgezeichnet"}
           </p>
         )}
       </div>
@@ -251,12 +251,12 @@ export function PublicReviewForm({
           htmlFor="review-content"
           className="mb-1.5 block text-sm font-medium"
         >
-          Your review{" "}
+          Ihre Bewertung{" "}
           <span className="text-muted-foreground">(optional)</span>
         </label>
         <Textarea
           id="review-content"
-          placeholder="Tell us about your experience..."
+          placeholder="Erzählen Sie uns von Ihrer Erfahrung..."
           value={content}
           onChange={(e) => setContent(e.target.value)}
           maxLength={1000}
@@ -283,10 +283,10 @@ export function PublicReviewForm({
         {submitting ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            Submitting…
+            Wird gesendet…
           </>
         ) : (
-          "Submit review"
+          "Bewertung absenden"
         )}
       </Button>
     </form>

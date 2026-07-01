@@ -48,7 +48,7 @@ export function InvoicesListPanel({
       <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <p className="text-sm text-muted-foreground">
-            {invoices.total} invoice{invoices.total === 1 ? "" : "s"} total
+            {invoices.total} Rechnung{invoices.total === 1 ? "" : "en"} gesamt
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -57,7 +57,7 @@ export function InvoicesListPanel({
             <Button asChild>
               <Link href={businessNewInvoicePath(businessId)}>
                 <Plus className="size-4" />
-                New invoice
+                Neue Rechnung
               </Link>
             </Button>
           ) : null}
@@ -68,7 +68,7 @@ export function InvoicesListPanel({
         <Card className="mb-6 border-primary/20 bg-primary/5">
           <CardContent className="flex items-center justify-between p-5">
             <div>
-              <p className="text-sm text-muted-foreground">Open amount</p>
+              <p className="text-sm text-muted-foreground">Offener Betrag</p>
               <p className="font-heading text-2xl font-bold">
                 {formatMoney(invoices.openTotal)}
               </p>
@@ -82,14 +82,14 @@ export function InvoicesListPanel({
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <FileText className="size-8 text-muted-foreground" />
-            <p className="font-medium">Create a template first</p>
+            <p className="font-medium">Zuerst eine Vorlage erstellen</p>
             <p className="text-sm text-muted-foreground">
-              Set up at least one invoice template with your services and defaults
-              before creating invoices.
+              Setzen Sie mindestens eine Rechnungsvorlage mit Ihren Leistungen und Standardwerten auf,
+              bevor Sie Rechnungen erstellen.
             </p>
             <Button className="mt-2" asChild>
               <Link href={businessInvoiceTemplatesPath(businessId)}>
-                Go to templates
+                Zu Vorlagen
               </Link>
             </Button>
           </CardContent>
@@ -98,12 +98,12 @@ export function InvoicesListPanel({
         <Card>
           <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <FileText className="size-8 text-muted-foreground" />
-            <p className="font-medium">No invoices yet</p>
+            <p className="font-medium">Noch keine Rechnungen</p>
             <p className="text-sm text-muted-foreground">
               Pick a template, choose a customer, and adjust line items as needed.
             </p>
             <Button className="mt-2" asChild>
-              <Link href={businessNewInvoicePath(businessId)}>Create invoice</Link>
+              <Link href={businessNewInvoicePath(businessId)}>Rechnung erstellen</Link>
             </Button>
           </CardContent>
         </Card>

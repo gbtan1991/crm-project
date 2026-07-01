@@ -26,7 +26,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoice-templates][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load invoice templates." },
+      { error: "Rechnungsvorlagen konnten nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -41,7 +41,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = invoiceTemplateWriteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -61,13 +61,13 @@ export async function POST(request: Request, context: RouteContext) {
       error.code === "P2002"
     ) {
       return NextResponse.json(
-        { error: "A template with this name already exists." },
+        { error: "Eine Vorlage mit diesem Namen existiert bereits." },
         { status: 409 },
       );
     }
     console.error("[business/invoice-templates][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create invoice template." },
+      { error: "Rechnungsvorlage konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

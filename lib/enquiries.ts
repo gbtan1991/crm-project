@@ -144,7 +144,7 @@ export async function createEnquiryFromWebhook(
   });
 
   if (!form) {
-    return { error: "Form not found or inactive." as const };
+    return { error: "Formular nicht gefunden oder inaktiv." as const };
   }
 
   const schema = buildEnquiryPayloadSchema(form.fields);
@@ -152,7 +152,7 @@ export async function createEnquiryFromWebhook(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Invalid enquiry payload.",
+      error: parsed.error.issues[0]?.message ?? "Ungültige Anfragedaten.",
     } as const;
   }
 
@@ -199,7 +199,7 @@ export async function createEnquiryForBusiness(
   });
 
   if (!form) {
-    return { error: "Form not found or inactive." as const };
+    return { error: "Formular nicht gefunden oder inaktiv." as const };
   }
 
   const schema = buildEnquiryPayloadSchema(form.fields);
@@ -207,7 +207,7 @@ export async function createEnquiryForBusiness(
 
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Invalid enquiry data.",
+      error: parsed.error.issues[0]?.message ?? "Ungültige Anfragedaten.",
     } as const;
   }
 
@@ -261,7 +261,7 @@ export async function updateEnquiryForBusiness(
       select: { id: true },
     });
     if (!customer) {
-      return { error: "Customer not found." as const };
+      return { error: "Kunde nicht gefunden." as const };
     }
   }
 

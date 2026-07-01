@@ -27,7 +27,7 @@ export function CustomersSearch({ businessId }: { businessId: string }) {
       <Input
         name="q"
         defaultValue={q}
-        placeholder="Search customers…"
+        placeholder="Kunden suchen…"
         className="bg-card pl-9"
       />
     </form>

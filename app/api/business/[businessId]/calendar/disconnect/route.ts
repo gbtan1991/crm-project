@@ -21,7 +21,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/calendar/disconnect][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to disconnect calendar." },
+      { error: "Kalender konnte nicht getrennt werden." },
       { status: 500 },
     );
   }

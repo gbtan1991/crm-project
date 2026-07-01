@@ -4,6 +4,7 @@ import {
   MessagePurpose,
   MessageStatus,
 } from "@/lib/generated/prisma/client";
+import { buildEmailHtmlFromPlainText, wrapEmailContentHtml } from "@/lib/email-html";
 import {
   buildInvoicePdfForBusiness,
   getInvoiceEmailContext,
@@ -43,7 +44,7 @@ export async function sendInvoiceEmailForBusiness(
   }
 
   if (existing.status !== "DRAFT") {
-    return { ok: false, error: "Only draft invoices can be sent." };
+    return { ok: false, error: "Nur Rechnungsentwürfe können versendet werden." };
   }
 
   const connection = await prisma.calendarConnection.findUnique({
@@ -58,7 +59,7 @@ export async function sendInvoiceEmailForBusiness(
   if (!connection?.connectedAt || !connection.accountEmail) {
     return {
       ok: false,
-      error: "Connect Google or Outlook to send invoices by email.",
+      error: "Verbinden Sie Google oder Outlook, um Rechnungen per E-Mail zu senden.",
     };
   }
 
@@ -68,7 +69,7 @@ export async function sendInvoiceEmailForBusiness(
   ) {
     return {
       ok: false,
-      error: "Invoice email sending requires a Google or Outlook connection.",
+      error: "Rechnungsversand per E-Mail erfordert eine Google- oder Outlook-Verbindung.",
     };
   }
 
@@ -81,6 +82,10 @@ export async function sendInvoiceEmailForBusiness(
   if (!emailContext || !pdfResult) {
     return null;
   }
+
+  const bodyHtml = email.bodyHtml?.trim()
+    ? wrapEmailContentHtml(email.bodyHtml)
+    : buildEmailHtmlFromPlainText(email.bodyText);
 
   const message = await prisma.message.create({
     data: {
@@ -96,6 +101,7 @@ export async function sendInvoiceEmailForBusiness(
       toAddress: emailContext.toAddress,
       subject: email.subject,
       bodyText: email.bodyText,
+      bodyHtml,
       customerId: emailContext.invoice.customer.id,
       invoiceId,
       metadata: {
@@ -119,6 +125,7 @@ export async function sendInvoiceEmailForBusiness(
             to: emailContext.toAddress,
             subject: email.subject,
             bodyText: email.bodyText,
+            bodyHtml,
             attachments: [attachment],
           })
         : await sendOutlookMessage({
@@ -126,6 +133,7 @@ export async function sendInvoiceEmailForBusiness(
             to: emailContext.toAddress,
             subject: email.subject,
             bodyText: email.bodyText,
+            bodyHtml,
             attachments: [attachment],
           });
 
@@ -151,7 +159,7 @@ export async function sendInvoiceEmailForBusiness(
 
     const invoice = await getInvoiceForBusiness(businessId, invoiceId);
     if (!invoice) {
-      return { ok: false, error: "Invoice not found after sending." };
+      return { ok: false, error: "Rechnung nach dem Versand nicht gefunden." };
     }
 
     return {
@@ -167,7 +175,7 @@ export async function sendInvoiceEmailForBusiness(
         ? error.message
         : error instanceof Error
           ? error.message
-          : "Failed to send invoice email.";
+          : "Rechnungs-E-Mail konnte nicht gesendet werden.";
 
     await prisma.message.update({
       where: { id: message.id },

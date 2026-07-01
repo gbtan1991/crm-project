@@ -15,7 +15,7 @@ export async function GET() {
     }
     console.error("[admin/businesses][GET]", error);
     return NextResponse.json(
-      { error: "Something went wrong." },
+      { error: "Es ist ein Fehler aufgetreten." },
       { status: 500 },
     );
   }
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const parsed = createBusinessSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     }
     console.error("[admin/businesses][POST]", error);
     return NextResponse.json(
-      { error: "Something went wrong." },
+      { error: "Es ist ein Fehler aufgetreten." },
       { status: 500 },
     );
   }

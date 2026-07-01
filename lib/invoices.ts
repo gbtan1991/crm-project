@@ -442,7 +442,7 @@ export async function createInvoiceForBusiness(
   );
   if (invalidServiceIds.length > 0) {
     return {
-      error: "One or more line items reference an invalid template service." as const,
+      error: "Eine oder mehrere Positionen verweisen auf eine ungültige Vorlagenleistung." as const,
     };
   }
 
@@ -498,7 +498,7 @@ export async function createInvoiceForBusiness(
     }
   }
 
-  return { error: "Failed to allocate invoice number. Please try again." as const };
+  return { error: "Rechnungsnummer konnte nicht vergeben werden. Bitte versuchen Sie es erneut." as const };
 }
 
 export async function updateInvoiceForBusiness(
@@ -525,7 +525,7 @@ export async function updateInvoiceForBusiness(
     input.lineItems !== undefined;
 
   if (hasStatusChange && hasDraftEdits) {
-    return { error: "Update invoice details and status separately." as const };
+    return { error: "Aktualisieren Sie Rechnungsdetails und Status getrennt." as const };
   }
 
   if (hasStatusChange) {
@@ -533,7 +533,7 @@ export async function updateInvoiceForBusiness(
   }
 
   if (existing.status !== "DRAFT") {
-    return { error: "Only draft invoices can be edited." as const };
+    return { error: "Nur Rechnungsentwürfe können bearbeitet werden." as const };
   }
 
   const nextIssueDate = input.issueDate
@@ -543,7 +543,7 @@ export async function updateInvoiceForBusiness(
     ? parseInvoiceDate(input.dueDate)
     : existing.dueDate;
   if (nextDueDate < nextIssueDate) {
-    return { error: "Due date cannot be before issue date." as const };
+    return { error: "Fälligkeitsdatum darf nicht vor dem Rechnungsdatum liegen." as const };
   }
 
   const vatRate = decimalToNumber(existing.vatRate);
@@ -563,7 +563,7 @@ export async function updateInvoiceForBusiness(
         (item) => item.templateServiceId,
       );
       if (hasTemplateServiceId) {
-        return { error: "Line items cannot reference template services." as const };
+        return { error: "Positionen dürfen nicht auf Vorlagenleistungen verweisen." as const };
       }
     } else {
       const services = await prisma.invoiceTemplateService.findMany({
@@ -577,7 +577,7 @@ export async function updateInvoiceForBusiness(
       if (invalidServiceIds.length > 0) {
         return {
           error:
-            "One or more line items reference an invalid template service." as const,
+            "Eine oder mehrere Positionen verweisen auf eine ungültige Vorlagenleistung." as const,
         };
       }
     }
@@ -589,7 +589,7 @@ export async function updateInvoiceForBusiness(
       select: { id: true },
     });
     if (!customer) {
-      return { error: "Customer not found." as const };
+      return { error: "Kunde nicht gefunden." as const };
     }
   }
 
@@ -641,7 +641,7 @@ export async function updateInvoiceStatusForBusiness(
   status: InvoiceStatus | undefined,
 ) {
   if (!status) {
-    return { error: "Status is required." as const };
+    return { error: "Status ist erforderlich." as const };
   }
 
   const existing = await prisma.invoice.findFirst({
@@ -666,7 +666,7 @@ export async function updateInvoiceStatusForBusiness(
 
   if (status === "OVERDUE") {
     return {
-      error: "Overdue is calculated automatically from open invoices." as const,
+      error: "Überfällig wird automatisch aus offenen Rechnungen berechnet." as const,
     };
   }
 
@@ -681,7 +681,7 @@ export async function updateInvoiceStatusForBusiness(
     (current === "CANCELLED" && status === "OPEN");
 
   if (!allowed) {
-    return { error: `Cannot change invoice from ${current} to ${status}.` };
+    return { error: `Rechnungsstatus kann nicht von ${current} auf ${status} geändert werden.` };
   }
 
   const paidAt = status === "PAID" ? new Date() : null;

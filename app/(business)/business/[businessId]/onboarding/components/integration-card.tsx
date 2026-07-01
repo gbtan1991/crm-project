@@ -40,13 +40,13 @@ export function IntegrationCard({
           <p className="text-sm font-semibold text-foreground">{name}</p>
           {comingSoon ? (
             <span className="rounded-full border border-amber-200 bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-              Coming soon
+              Demnächst
             </span>
           ) : null}
           {connected ? (
             <span className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
               <Check className="size-3" />
-              Connected
+              Verbunden
             </span>
           ) : null}
         </div>

@@ -40,33 +40,33 @@ export function TablePagination({
   return (
     <div className="flex items-center justify-between gap-4 px-2 py-1">
       <p className="text-sm text-muted-foreground">
-        Page {page} of {totalPages} · {total} total
+        Seite {page} von {totalPages} · {total} insgesamt
       </p>
       <div className="flex items-center gap-2">
         {hasPrev ? (
           <Button asChild variant="outline" size="sm">
             <Link href={buildPageHref(basePath, page - 1, preserveQuery)}>
               <ChevronLeft className="size-4" />
-              Previous
+              Zurück
             </Link>
           </Button>
         ) : (
           <Button variant="outline" size="sm" disabled>
             <ChevronLeft className="size-4" />
-            Previous
+            Zurück
           </Button>
         )}
 
         {hasNext ? (
           <Button asChild variant="outline" size="sm">
             <Link href={buildPageHref(basePath, page + 1, preserveQuery)}>
-              Next
+              Weiter
               <ChevronRight className="size-4" />
             </Link>
           </Button>
         ) : (
           <Button variant="outline" size="sm" disabled>
-            Next
+            Weiter
             <ChevronRight className="size-4" />
           </Button>
         )}

@@ -7,6 +7,7 @@ export type InvoiceEmailCompose = {
   toAddress: string;
   subject: string;
   bodyText: string;
+  bodyHtml: string;
   attachment: {
     filename: string;
     downloadPath: string;
@@ -33,7 +34,7 @@ export async function getInvoiceEmailCompose(
   }
 
   if (existing.status !== "DRAFT") {
-    return { ok: false, error: "Only draft invoices can be sent." };
+    return { ok: false, error: "Nur Rechnungsentwürfe können versendet werden." };
   }
 
   const connection = await prisma.calendarConnection.findUnique({
@@ -48,7 +49,7 @@ export async function getInvoiceEmailCompose(
   if (!connection?.connectedAt || !connection.accountEmail) {
     return {
       ok: false,
-      error: "Connect Google or Outlook to send invoices by email.",
+      error: "Verbinden Sie Google oder Outlook, um Rechnungen per E-Mail zu senden.",
     };
   }
 
@@ -58,7 +59,7 @@ export async function getInvoiceEmailCompose(
   ) {
     return {
       ok: false,
-      error: "Invoice email sending requires a Google or Outlook connection.",
+      error: "Rechnungsversand per E-Mail erfordert eine Google- oder Outlook-Verbindung.",
     };
   }
 
@@ -76,6 +77,7 @@ export async function getInvoiceEmailCompose(
       toAddress: emailContext.toAddress,
       subject: emailContext.subject,
       bodyText: emailContext.bodyText,
+      bodyHtml: emailContext.bodyHtml,
       attachment: {
         filename,
         downloadPath: `/api/business/${businessId}/invoices/${invoiceId}/pdf`,

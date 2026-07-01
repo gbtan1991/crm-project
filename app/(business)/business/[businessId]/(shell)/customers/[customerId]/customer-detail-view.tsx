@@ -162,15 +162,15 @@ export function CustomerDetailView({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to update customer.");
+        setError(data.error ?? "Kunde konnte nicht aktualisiert werden.");
         return;
       }
 
-      toast.success("Customer updated.");
+      toast.success("Kunde aktualisiert.");
       setEditOpen(false);
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setSubmitting(false);
     }
@@ -186,15 +186,15 @@ export function CustomerDetailView({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        toast.error(data.error ?? "Failed to delete customer.");
+        toast.error(data.error ?? "Kunde konnte nicht gelöscht werden.");
         return;
       }
 
-      toast.success("Customer deleted.");
+      toast.success("Kunde gelöscht.");
       router.push(businessCustomersPath(businessId));
       router.refresh();
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setDeleting(false);
     }
@@ -208,12 +208,12 @@ export function CustomerDetailView({
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="size-4" />
-          Back to customer overview
+          Zurück zur Kundenübersicht
         </Link>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" asChild>
             <Link href={businessNewInvoicePath(businessId, customer.id)}>
-              New invoice
+              Neue Rechnung
             </Link>
           </Button>
           <Button
@@ -227,7 +227,7 @@ export function CustomerDetailView({
             }}
           >
             <Pencil className="size-4" />
-            Edit
+            Bearbeiten
           </Button>
           <Button
             type="button"
@@ -237,7 +237,7 @@ export function CustomerDetailView({
             onClick={() => {
               if (customer.invoiceCount > 0) {
                 toast.error(
-                  "This customer has invoices and cannot be deleted. Set them inactive instead.",
+                  "Dieser Kunde hat Rechnungen und kann nicht gelöscht werden. Setzen Sie ihn stattdessen auf inaktiv.",
                 );
                 return;
               }
@@ -245,7 +245,7 @@ export function CustomerDetailView({
             }}
           >
             <Trash2 className="size-4" />
-            Delete
+            Löschen
           </Button>
         </div>
       </div>
@@ -260,10 +260,10 @@ export function CustomerDetailView({
               {displayName}
             </h1>
             <Badge variant={customer.status === "ACTIVE" ? "success" : "outline"}>
-              {customer.status === "ACTIVE" ? "Active" : "Inactive"}
+              {customer.status === "ACTIVE" ? "Aktiv" : "Inaktiv"}
             </Badge>
             {customer.source === "CALENDAR" ? (
-              <Badge variant="secondary">From calendar</Badge>
+              <Badge variant="secondary">Aus Kalender</Badge>
             ) : null}
           </div>
           <p className="mt-0.5 text-sm text-muted-foreground">
@@ -315,7 +315,7 @@ export function CustomerDetailView({
                 {customer.notes}
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground">No notes yet.</p>
+              <p className="text-sm text-muted-foreground">Noch keine Notizen.</p>
             )}
           </Card>
 
@@ -328,7 +328,7 @@ export function CustomerDetailView({
               {formatMoney(customer.salesVolume)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {customer.paidInvoiceCount} paid invoice
+              {customer.paidInvoiceCount} bezahlte Rechnung
               {customer.paidInvoiceCount === 1 ? "" : "s"}
             </p>
           </Card>
@@ -337,14 +337,14 @@ export function CustomerDetailView({
         <div className="lg:col-span-2">
           <Card className="p-5">
             <div className="mb-5 flex items-center justify-between gap-3">
-              <h2 className="font-heading text-sm font-bold">Activity timeline</h2>
+              <h2 className="font-heading text-sm font-bold">Aktivitätsverlauf</h2>
               <span className="text-xs text-muted-foreground">
-                {timelineEvents.length} event{timelineEvents.length === 1 ? "" : "s"}
+                {timelineEvents.length} Ereignis{timelineEvents.length === 1 ? "" : "se"}
               </span>
             </div>
             <CustomerActivityTimeline events={timelineEvents} timeZone={timeZone} />
             <p className="mt-6 text-xs text-muted-foreground">
-              Inquiries, offers, and reviews will appear here once those modules
+              Anfragen, Angebote und Bewertungen erscheinen hier, sobald diese Module
               are added.
             </p>
           </Card>
@@ -355,9 +355,9 @@ export function CustomerDetailView({
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <form onSubmit={(e) => void handleUpdate(e)}>
             <DialogHeader>
-              <DialogTitle>Edit customer</DialogTitle>
+              <DialogTitle>Kunde bearbeiten</DialogTitle>
               <DialogDescription>
-                Update contact details for {displayName}.
+                Kontaktdaten für {displayName} aktualisieren.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
@@ -379,16 +379,16 @@ export function CustomerDetailView({
                 onClick={() => setEditOpen(false)}
                 disabled={submitting}
               >
-                Cancel
+                Abbrechen
               </Button>
               <Button type="submit" disabled={submitting || !values.email.trim()}>
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Saving…
+                    Wird gespeichert…
                   </>
                 ) : (
-                  "Save changes"
+                  "Änderungen speichern"
                 )}
               </Button>
             </DialogFooter>
@@ -399,9 +399,9 @@ export function CustomerDetailView({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete customer?</AlertDialogTitle>
+            <AlertDialogTitle>Kunde löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes <strong>{displayName}</strong>
+              Dies löscht dauerhaft <strong>{displayName}</strong>
               {customer.bookingCount > 0 ? (
                 <>
                   {" "}
@@ -415,7 +415,7 @@ export function CustomerDetailView({
               {customer.invoiceCount > 0 ? (
                 <>
                   {" "}
-                  This customer also has{" "}
+                  Dieser Kunde hat auch{" "}
                   <strong>
                     {customer.invoiceCount} invoice
                     {customer.invoiceCount === 1 ? "" : "s"}
@@ -428,7 +428,7 @@ export function CustomerDetailView({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting || customer.invoiceCount > 0}
@@ -440,10 +440,10 @@ export function CustomerDetailView({
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting…
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete customer"
+                "Kunde löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

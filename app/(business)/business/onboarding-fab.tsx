@@ -31,7 +31,7 @@ export function OnboardingFab({
         <Link href={onboardingPath}>
           <Sparkles className="size-4" />
           <span className="max-w-[9rem] text-left text-sm leading-tight">
-            Complete setup
+            Einrichtung abschliessen
           </span>
         </Link>
       </Button>

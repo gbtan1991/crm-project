@@ -45,8 +45,8 @@ export default async function EnquiriesPage({ params, searchParams }: PageProps)
     return (
       <div>
         <PageHeader
-          title="Enquiries"
-          subtitle="Capture leads from your website with webhook forms"
+          title="Anfragen"
+          subtitle="Erfassen Sie Leads von Ihrer Website mit Webhook-Formularen"
         />
         <EnquiriesTabNav businessId={businessId} />
         <FormsListPanel
@@ -70,8 +70,8 @@ export default async function EnquiriesPage({ params, searchParams }: PageProps)
   return (
     <div>
       <PageHeader
-        title="Enquiries"
-        subtitle={`${enquiries.length} total · ${newCount} new · ${forms.length} form${forms.length === 1 ? "" : "s"}`}
+        title="Anfragen"
+        subtitle={`${enquiries.length} insgesamt · ${newCount} neu · ${forms.length} Formular${forms.length === 1 ? "" : "e"}`}
       >
         <EnquiriesStatusFilter businessId={businessId} current={status} />
         <AddEnquiryDialog businessId={businessId} forms={forms} />

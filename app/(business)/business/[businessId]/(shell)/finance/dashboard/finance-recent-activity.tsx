@@ -29,12 +29,12 @@ export function FinanceRecentActivity({
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-base">Recent activity</CardTitle>
+        <CardTitle className="text-base">Letzte Aktivität</CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Invoice activity will show up here once you create or send invoices.
+            Rechnungsaktivität erscheint hier, sobald Sie Rechnungen erstellen oder versenden.
           </p>
         ) : (
           <ul className="space-y-4">

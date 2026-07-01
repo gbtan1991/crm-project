@@ -38,10 +38,10 @@ export function InvoiceRowActions({
     setDownloading(true);
     try {
       await downloadInvoicePdf(businessId, invoice.id, invoice.number);
-      toast.success("Invoice PDF downloaded.");
+      toast.success("Rechnungs-PDF heruntergeladen.");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to download invoice PDF.",
+        error instanceof Error ? error.message : "Rechnungs-PDF konnte nicht heruntergeladen werden.",
       );
     } finally {
       setDownloading(false);
@@ -58,15 +58,15 @@ export function InvoiceRowActions({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete invoice.");
+        throw new Error(data.error ?? "Rechnung konnte nicht gelöscht werden.");
       }
 
-      toast.success("Invoice deleted.");
+      toast.success("Rechnung gelöscht.");
       setDeleteOpen(false);
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete invoice.",
+        error instanceof Error ? error.message : "Rechnung konnte nicht gelöscht werden.",
       );
     } finally {
       setDeleting(false);
@@ -84,7 +84,7 @@ export function InvoiceRowActions({
           variant="ghost"
           size="icon"
           className="size-8"
-          title="Download PDF"
+          title="PDF herunterladen"
           disabled={downloading}
           onClick={() => void handleDownload()}
         >
@@ -100,7 +100,7 @@ export function InvoiceRowActions({
             variant="ghost"
             size="icon"
             className="size-8"
-            title="Send invoice"
+            title="Rechnung senden"
             onClick={() => setSendOpen(true)}
           >
             <Send className="size-4" />
@@ -112,7 +112,7 @@ export function InvoiceRowActions({
             variant="ghost"
             size="icon"
             className="size-8 text-destructive hover:text-destructive"
-            title="Delete draft"
+            title="Entwurf löschen"
             disabled={deleting}
             onClick={() => setDeleteOpen(true)}
           >
@@ -133,14 +133,14 @@ export function InvoiceRowActions({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete draft invoice?</AlertDialogTitle>
+            <AlertDialogTitle>Rechnungsentwurf löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes invoice <strong>{invoice.number}</strong>.
-              This cannot be undone.
+              Dies löscht die Rechnung dauerhaft <strong>{invoice.number}</strong>.
+              Dies kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting}
@@ -152,10 +152,10 @@ export function InvoiceRowActions({
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting…
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete invoice"
+                "Rechnung löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

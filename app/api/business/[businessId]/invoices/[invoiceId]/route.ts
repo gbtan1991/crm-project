@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const invoice = await getInvoiceForBusiness(businessId, invoiceId);
     if (!invoice) {
-      return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+      return NextResponse.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
     }
 
     return NextResponse.json({ invoice });
@@ -29,7 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load invoice." },
+      { error: "Rechnung konnte nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -44,7 +44,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const parsed = invoiceUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -56,7 +56,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     );
 
     if (!result) {
-      return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+      return NextResponse.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in result) {
@@ -70,7 +70,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id][PATCH]", error);
     return NextResponse.json(
-      { error: "Failed to update invoice." },
+      { error: "Rechnung konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }
@@ -87,12 +87,12 @@ export async function DELETE(_request: Request, context: RouteContext) {
     });
 
     if (!existing) {
-      return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+      return NextResponse.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
     }
 
     if (existing.status !== "DRAFT") {
       return NextResponse.json(
-        { error: "Only draft invoices can be deleted." },
+        { error: "Nur Entwurfsrechnungen können gelöscht werden." },
         { status: 400 },
       );
     }
@@ -106,7 +106,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to delete invoice." },
+      { error: "Rechnung konnte nicht gelöscht werden." },
       { status: 500 },
     );
   }

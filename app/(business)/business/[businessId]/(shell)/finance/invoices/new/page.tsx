@@ -39,17 +39,17 @@ export default async function NewInvoicePage({ params, searchParams }: PageProps
     return (
       <div>
         <PageHeader
-          title="New invoice"
-          subtitle="Create at least one template before creating invoices."
+          title="Neue Rechnung"
+          subtitle="Erstellen Sie mindestens eine Vorlage, bevor Sie Rechnungen erstellen."
         />
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
             <p className="text-sm text-muted-foreground">
-              Templates define your services, VAT, and default invoice details.
+              Vorlagen definieren Ihre Leistungen, MwSt. und Standard-Rechnungsdetails.
             </p>
             <Button asChild>
               <Link href={businessInvoiceTemplatesPath(businessId)}>
-                Create a template
+                Vorlage erstellen
               </Link>
             </Button>
           </CardContent>
@@ -62,16 +62,16 @@ export default async function NewInvoicePage({ params, searchParams }: PageProps
     return (
       <div>
         <PageHeader
-          title="New invoice"
-          subtitle="Add a customer before creating invoices."
+          title="Neue Rechnung"
+          subtitle="Fügen Sie zuerst einen Kunden hinzu, bevor Sie Rechnungen erstellen."
         />
         <Card>
           <CardContent className="flex flex-col items-center gap-3 py-16 text-center">
             <p className="text-sm text-muted-foreground">
-              You need at least one customer to create an invoice.
+              Sie benötigen mindestens einen Kunden, um eine Rechnung zu erstellen.
             </p>
             <Button asChild>
-              <Link href={`/business/${businessId}/customers`}>Go to customers</Link>
+              <Link href={`/business/${businessId}/customers`}>Zu Kunden</Link>
             </Button>
           </CardContent>
         </Card>

@@ -32,16 +32,16 @@ export function ProfilePasswordForm() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to change password.");
+        throw new Error(data.error ?? "Passwort konnte nicht geändert werden.");
       }
 
-      toast.success("Password changed.");
+      toast.success("Passwort geändert.");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to change password.",
+        error instanceof Error ? error.message : "Passwort konnte nicht geändert werden.",
       );
     } finally {
       setSaving(false);
@@ -51,12 +51,12 @@ export function ProfilePasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Change password</CardTitle>
+        <CardTitle>Passwort ändern</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="current-password">Current password</Label>
+            <Label htmlFor="current-password">Aktuelles Passwort</Label>
             <PasswordInput
               id="current-password"
               value={currentPassword}
@@ -67,7 +67,7 @@ export function ProfilePasswordForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new-password">New password</Label>
+            <Label htmlFor="new-password">Neues Passwort</Label>
             <PasswordInput
               id="new-password"
               value={newPassword}
@@ -79,7 +79,7 @@ export function ProfilePasswordForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm new password</Label>
+            <Label htmlFor="confirm-password">Neues Passwort bestätigen</Label>
             <PasswordInput
               id="confirm-password"
               value={confirmPassword}
@@ -97,7 +97,7 @@ export function ProfilePasswordForm() {
                 Changing…
               </>
             ) : (
-              "Change password"
+              "Passwort ändern"
             )}
           </Button>
         </form>

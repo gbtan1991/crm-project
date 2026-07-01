@@ -39,7 +39,7 @@ export function CalendarConnectedBadge({
         )}
       >
         <span className="size-1.5 rounded-full bg-muted-foreground/50" />
-        Calendar not connected
+        Kalender nicht verbunden
       </span>
     );
   }
@@ -69,7 +69,7 @@ export function CalendarConnectedBadge({
           {accountEmail}
         </span>
       ) : (
-        <span className="text-emerald-600 dark:text-emerald-500">Connected</span>
+        <span className="text-emerald-600 dark:text-emerald-500">Verbunden</span>
       )}
     </span>
   );

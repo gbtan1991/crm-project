@@ -20,7 +20,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const parsed = sequenceWriteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -31,7 +31,7 @@ export async function PUT(request: Request, context: RouteContext) {
       parsed.data,
     );
     if (!sequence) {
-      return NextResponse.json({ error: "Sequence not found." }, { status: 404 });
+      return NextResponse.json({ error: "Sequenz nicht gefunden." }, { status: 404 });
     }
     if ("error" in sequence) {
       return NextResponse.json({ error: sequence.error }, { status: 400 });
@@ -44,7 +44,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
     console.error("[business/sequences/:id][PUT]", error);
     return NextResponse.json(
-      { error: "Failed to update sequence." },
+      { error: "Sequenz konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }
@@ -57,7 +57,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     const result = await deleteSequenceForBusiness(businessId, sequenceId);
     if (!result) {
-      return NextResponse.json({ error: "Sequence not found." }, { status: 404 });
+      return NextResponse.json({ error: "Sequenz nicht gefunden." }, { status: 404 });
     }
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -70,7 +70,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/sequences/:id][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to delete sequence." },
+      { error: "Sequenz konnte nicht gelöscht werden." },
       { status: 500 },
     );
   }

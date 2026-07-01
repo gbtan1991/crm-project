@@ -61,12 +61,12 @@ export function CalendarConnectPanel({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.authUrl) {
-        onError?.(data.error ?? "Failed to start calendar connection.");
+        onError?.(data.error ?? "Kalenderverbindung konnte nicht gestartet werden.");
         return;
       }
       window.location.href = data.authUrl as string;
     } catch {
-      onError?.("Network error. Please try again.");
+      onError?.("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setConnecting(false);
     }
@@ -116,26 +116,26 @@ export function CalendarConnectPanel({
         {connecting ? (
           <>
             <Loader2 className="size-4 animate-spin" />
-            Redirecting…
+            Weiterleitung…
           </>
         ) : connectedProvider === provider ? (
-          "Already connected"
+          "Bereits verbunden"
         ) : provider === "GOOGLE" ? (
-          "Connect Google Calendar"
+          "Google Calendar verbinden"
         ) : (
-          "Connect Microsoft Outlook"
+          "Microsoft Outlook verbinden"
         )}
       </Button>
 
       <div className="rounded-xl bg-muted/60 p-4">
         <p className="mb-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          MeisterFlow will listen for:
+          MeisterFlow überwacht:
         </p>
         <ul className="space-y-1">
           {[
-            "New bookings",
-            "Rescheduled appointments",
-            "Cancelled appointments",
+            "Neue Buchungen",
+            "Verschobene Termine",
+            "Stornierte Termine",
           ].map((item) => (
             <li
               key={item}
@@ -149,8 +149,8 @@ export function CalendarConnectPanel({
       </div>
 
       <p className="text-center text-xs text-muted-foreground">
-        Connecting {selected.name} will import upcoming appointments from today
-        onward.
+        Durch die Verbindung mit {selected.name} werden kommende Termine ab heute
+        importiert.
       </p>
     </div>
   );

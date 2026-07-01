@@ -47,15 +47,15 @@ export function AddBusinessDialog() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to create business.");
+        setError(data.error ?? "Unternehmen konnte nicht erstellt werden.");
         return;
       }
 
-      toast.success(`Business "${payload.name}" created.`);
+      toast.success(`Unternehmen «${payload.name}» erstellt.`);
       setOpen(false);
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setSubmitting(false);
     }
@@ -72,15 +72,15 @@ export function AddBusinessDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="size-4" />
-          Add business
+          Unternehmen hinzufügen
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add business</DialogTitle>
+          <DialogTitle>Unternehmen hinzufügen</DialogTitle>
           <DialogDescription>
-            Create a new tenant and its first business user. They start on the
-            BASIC plan.
+            Erstellen Sie einen neuen Mandanten und den ersten Geschäftsbenutzer.
+            Sie starten mit dem BASIC-Plan.
           </DialogDescription>
         </DialogHeader>
 
@@ -92,17 +92,17 @@ export function AddBusinessDialog() {
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="name">Business name</Label>
-            <Input id="name" name="name" placeholder="Acme Roofing" required />
+            <Label htmlFor="name">Firmenname</Label>
+            <Input id="name" name="name" placeholder="Acme Dach AG" required />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ownerName">Owner name</Label>
+            <Label htmlFor="ownerName">Name des Inhabers</Label>
             <Input id="ownerName" name="ownerName" placeholder="Jane Doe" required />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ownerEmail">Owner email</Label>
+            <Label htmlFor="ownerEmail">E-Mail des Inhabers</Label>
             <Input
               id="ownerEmail"
               name="ownerEmail"
@@ -113,11 +113,11 @@ export function AddBusinessDialog() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="ownerPassword">Temporary password</Label>
+            <Label htmlFor="ownerPassword">Temporäres Passwort</Label>
             <PasswordInput
               id="ownerPassword"
               name="ownerPassword"
-              placeholder="At least 8 characters"
+              placeholder="Mindestens 8 Zeichen"
               minLength={8}
               required
             />
@@ -128,10 +128,10 @@ export function AddBusinessDialog() {
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Creating...
+                  Wird erstellt…
                 </>
               ) : (
-                "Create business"
+                "Unternehmen erstellen"
               )}
             </Button>
           </DialogFooter>

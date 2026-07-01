@@ -17,7 +17,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     const parsed = googleReviewSettingsSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -41,7 +41,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
     console.error("[business/settings/google-review][PATCH]", error);
     return NextResponse.json(
-      { error: "Failed to update Google review settings." },
+      { error: "Google-Bewertungseinstellungen konnten nicht aktualisiert werden." },
       { status: 500 },
     );
   }

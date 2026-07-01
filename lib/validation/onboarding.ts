@@ -4,14 +4,14 @@ export const CALENDAR_PROVIDERS = ["GOOGLE", "OUTLOOK"] as const;
 
 export const onboardingCompanySchema = z.object({
   step: z.literal(1),
-  name: z.string().trim().min(2, "Business name must be at least 2 characters."),
+  name: z.string().trim().min(2, "Firmenname muss mindestens 2 Zeichen lang sein."),
   contactPerson: z.string().trim().optional(),
   businessEmail: z
     .string()
     .trim()
     .refine(
       (value) => value === "" || z.string().email().safeParse(value).success,
-      "Enter a valid email address.",
+      "Geben Sie eine gültige E-Mail-Adresse ein.",
     )
     .optional(),
   phone: z.string().trim().optional(),
@@ -25,7 +25,7 @@ export const onboardingCompanySchema = z.object({
     .trim()
     .refine(
       (value) => value === "" || z.string().url().safeParse(value).success,
-      "Enter a valid URL.",
+      "Geben Sie eine gültige URL ein.",
     )
     .optional(),
 });

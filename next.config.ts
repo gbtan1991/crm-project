@@ -4,7 +4,7 @@ import "./env/server.mjs";
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  allowedDevOrigins: ['deservedly-underaccommodated-maryrose.ngrok-free.dev'],
+  allowedDevOrigins: ['bring-envious-trivial.ngrok-free.dev'],
 };
 
 export default nextConfig;

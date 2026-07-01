@@ -34,14 +34,14 @@ export function ProfileDetailsForm({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to update profile.");
+        throw new Error(data.error ?? "Profil konnte nicht aktualisiert werden.");
       }
 
-      toast.success("Profile updated.");
+      toast.success("Profil aktualisiert.");
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update profile.",
+        error instanceof Error ? error.message : "Profil konnte nicht aktualisiert werden.",
       );
     } finally {
       setSaving(false);
@@ -51,12 +51,12 @@ export function ProfileDetailsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Profile details</CardTitle>
+        <CardTitle>Profildetails</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="profile-name">Full name</Label>
+            <Label htmlFor="profile-name">Vollständiger Name</Label>
             <Input
               id="profile-name"
               value={name}
@@ -85,10 +85,10 @@ export function ProfileDetailsForm({
             {saving ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving…
+                Wird gespeichert…
               </>
             ) : (
-              "Save changes"
+              "Änderungen speichern"
             )}
           </Button>
         </form>

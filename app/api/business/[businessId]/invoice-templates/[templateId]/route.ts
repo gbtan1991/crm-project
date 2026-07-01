@@ -20,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext) {
 
     const template = await getInvoiceTemplateForBusiness(businessId, templateId);
     if (!template) {
-      return NextResponse.json({ error: "Template not found." }, { status: 404 });
+      return NextResponse.json({ error: "Vorlage nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in template) {
@@ -34,7 +34,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoice-templates/:id][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load invoice template." },
+      { error: "Rechnungsvorlage konnte nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -49,7 +49,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const parsed = invoiceTemplateWriteSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -61,7 +61,7 @@ export async function PUT(request: Request, context: RouteContext) {
     );
 
     if (!template) {
-      return NextResponse.json({ error: "Template not found." }, { status: 404 });
+      return NextResponse.json({ error: "Vorlage nicht gefunden." }, { status: 404 });
     }
 
     return NextResponse.json({ template });
@@ -74,13 +74,13 @@ export async function PUT(request: Request, context: RouteContext) {
       error.code === "P2002"
     ) {
       return NextResponse.json(
-        { error: "A template with this name already exists." },
+        { error: "Eine Vorlage mit diesem Namen existiert bereits." },
         { status: 409 },
       );
     }
     console.error("[business/invoice-templates/:id][PUT]", error);
     return NextResponse.json(
-      { error: "Failed to update invoice template." },
+      { error: "Rechnungsvorlage konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }
@@ -94,7 +94,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     const result = await deleteInvoiceTemplateForBusiness(businessId, templateId);
 
     if (!result) {
-      return NextResponse.json({ error: "Template not found." }, { status: 404 });
+      return NextResponse.json({ error: "Vorlage nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in result) {
@@ -108,7 +108,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoice-templates/:id][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to delete invoice template." },
+      { error: "Rechnungsvorlage konnte nicht gelöscht werden." },
       { status: 500 },
     );
   }

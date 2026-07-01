@@ -22,9 +22,9 @@ export default async function Home() {
             <LogIn className="size-7 text-primary-foreground" aria-hidden="true" />
           </div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-            Welcome back
+            Willkommen zurück
           </h1>
-          <p className="mt-2 text-muted-foreground">Log in to your account</p>
+          <p className="mt-2 text-muted-foreground">Melden Sie sich in Ihrem Konto an</p>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-8 shadow-sm">
@@ -32,7 +32,7 @@ export default async function Home() {
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Access is managed by your administrator.
+          Der Zugang wird von Ihrem Administrator verwaltet.
         </p>
       </div>
     </div>

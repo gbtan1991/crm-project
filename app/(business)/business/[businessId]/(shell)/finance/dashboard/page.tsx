@@ -33,8 +33,8 @@ export default async function FinanceDashboardPage({ params }: PageProps) {
   return (
     <div>
       <PageHeader
-        title="Finances"
-        subtitle={`${stats.invoiceCount} invoice${stats.invoiceCount === 1 ? "" : "s"} · ${formatMoney(stats.outstandingTotal, stats.currency)} outstanding`}
+        title="Finanzen"
+        subtitle={`${stats.invoiceCount} Rechnung${stats.invoiceCount === 1 ? "" : "en"} · ${formatMoney(stats.outstandingTotal, stats.currency)} offen`}
       />
 
       <div className="space-y-6">
@@ -43,7 +43,7 @@ export default async function FinanceDashboardPage({ params }: PageProps) {
         <div className="grid gap-6 xl:grid-cols-3">
           <Card className="xl:col-span-2">
             <CardHeader>
-              <CardTitle className="text-base">Revenue – last 12 months</CardTitle>
+              <CardTitle className="text-base">Umsatz – letzte 12 Monate</CardTitle>
             </CardHeader>
             <CardContent>
               <FinanceRevenueChart

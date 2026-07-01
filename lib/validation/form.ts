@@ -11,17 +11,17 @@ export const FORM_FIELD_TYPES = [
 export const formFieldKeySchema = z
   .string()
   .trim()
-  .min(1, "Field key is required.")
+  .min(1, "Feldschlüssel ist erforderlich.")
   .max(50)
   .regex(
     /^[a-z][a-z0-9_]*$/,
-    "Field key must start with a letter and use lowercase letters, numbers, or underscores.",
+    "Feldschlüssel muss mit einem Buchstaben beginnen und nur Kleinbuchstaben, Zahlen oder Unterstriche enthalten.",
   );
 
 export const formFieldWriteSchema = z.object({
   id: z.string().uuid().optional(),
   key: formFieldKeySchema,
-  label: z.string().trim().min(1, "Field label is required.").max(100),
+  label: z.string().trim().min(1, "Feldbezeichnung ist erforderlich.").max(100),
   type: z.enum(FORM_FIELD_TYPES),
   required: z.boolean().default(false),
   placeholder: z.string().trim().max(200).optional().or(z.literal("")),
@@ -29,14 +29,14 @@ export const formFieldWriteSchema = z.object({
 });
 
 export const formWriteSchema = z.object({
-  name: z.string().trim().min(1, "Form name is required.").max(100),
+  name: z.string().trim().min(1, "Formularname ist erforderlich.").max(100),
   isActive: z.boolean().optional(),
   fields: z
     .array(formFieldWriteSchema)
-    .min(1, "Add at least one field.")
+    .min(1, "Fügen Sie mindestens ein Feld hinzu.")
     .refine(
       (fields) => new Set(fields.map((field) => field.key)).size === fields.length,
-      "Field keys must be unique.",
+      "Feldschlüssel müssen eindeutig sein.",
     ),
 });
 
@@ -46,7 +46,7 @@ export const enquiryUpdateSchema = z.object({
   status: enquiryStatusSchema.optional(),
   customerId: z.string().uuid().nullable().optional(),
 }).refine((value) => value.status !== undefined || value.customerId !== undefined, {
-  message: "Nothing to update.",
+  message: "Nichts zu aktualisieren.",
 });
 
 export const enquiryCreateSchema = z.object({
@@ -73,7 +73,7 @@ export function buildEnquiryPayloadSchema(
 
     switch (field.type) {
       case "EMAIL":
-        schema = z.string().trim().email("Invalid email address.");
+        schema = z.string().trim().email("Ungültige E-Mail-Adresse.");
         break;
       case "PHONE":
         schema = z.string().trim().min(3).max(50);
@@ -109,7 +109,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
   },
   {
     key: "email",
-    label: "Email",
+    label: "E-Mail",
     type: "EMAIL",
     required: true,
     placeholder: "",
@@ -117,7 +117,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
   },
   {
     key: "phone",
-    label: "Phone",
+    label: "Telefon",
     type: "PHONE",
     required: false,
     placeholder: "",
@@ -125,7 +125,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
   },
   {
     key: "description",
-    label: "Description",
+    label: "Beschreibung",
     type: "TEXTAREA",
     required: false,
     placeholder: "",

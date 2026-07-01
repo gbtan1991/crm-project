@@ -43,6 +43,7 @@ export function SendInvoiceDialog({
   const [compose, setCompose] = useState<InvoiceEmailCompose | null>(null);
   const [subject, setSubject] = useState("");
   const [bodyText, setBodyText] = useState("");
+  const [bodyHtml, setBodyHtml] = useState("");
   const loading = open && loadedInvoiceId !== invoiceId;
   const currentLoadError =
     loadError?.invoiceId === invoiceId ? loadError.message : null;
@@ -66,7 +67,7 @@ export function SendInvoiceDialog({
         }
 
         if (!response.ok) {
-          throw new Error(data.error ?? "Failed to load email.");
+          throw new Error(data.error ?? "E-Mail konnte nicht geladen werden.");
         }
 
         const nextCompose = data.compose as InvoiceEmailCompose;
@@ -76,6 +77,7 @@ export function SendInvoiceDialog({
         setError(null);
         setSubject(nextCompose.subject);
         setBodyText(nextCompose.bodyText);
+        setBodyHtml(nextCompose.bodyHtml);
       } catch (loadError) {
         if (!cancelled) {
           setLoadedInvoiceId(invoiceId);
@@ -84,7 +86,7 @@ export function SendInvoiceDialog({
             message:
               loadError instanceof Error
                 ? loadError.message
-                : "Failed to load email.",
+                : "E-Mail konnte nicht geladen werden.",
           });
         }
       }
@@ -106,21 +108,21 @@ export function SendInvoiceDialog({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject, bodyText }),
+          body: JSON.stringify({ subject, bodyText, bodyHtml }),
         },
       );
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to send invoice.");
+        throw new Error(data.error ?? "Rechnung konnte nicht gesendet werden.");
       }
 
-      toast.success("Invoice sent by email.");
+      toast.success("Rechnung per E-Mail gesendet.");
       onOpenChange(false);
       onSent?.();
     } catch (sendError) {
       const message =
-        sendError instanceof Error ? sendError.message : "Failed to send invoice.";
+        sendError instanceof Error ? sendError.message : "Rechnung konnte nicht gesendet werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -132,7 +134,7 @@ export function SendInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Send invoice {invoiceNumber}</DialogTitle>
+          <DialogTitle>Rechnung {invoiceNumber} senden</DialogTitle>
           <DialogDescription>
             Review and edit the email before sending it with the invoice PDF
             attached.
@@ -142,7 +144,7 @@ export function SendInvoiceDialog({
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
-            Loading email…
+            E-Mail wird geladen …
           </div>
         ) : currentLoadError && loadedInvoiceId === invoiceId ? (
           <div className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -152,15 +154,15 @@ export function SendInvoiceDialog({
           <form id="send-invoice-form" onSubmit={(event) => void handleSend(event)}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="send-from">From</Label>
+                <Label htmlFor="send-from">Von</Label>
                 <Input id="send-from" value={compose.fromAddress} readOnly />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="send-to">To</Label>
+                <Label htmlFor="send-to">An</Label>
                 <Input id="send-to" value={compose.toAddress} readOnly />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="send-subject">Subject</Label>
+                <Label htmlFor="send-subject">Betreff</Label>
                 <Input
                   id="send-subject"
                   value={subject}
@@ -169,17 +171,28 @@ export function SendInvoiceDialog({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="send-body">Message</Label>
+                <Label htmlFor="send-body-html">HTML-Text</Label>
                 <Textarea
-                  id="send-body"
-                  value={bodyText}
-                  onChange={(event) => setBodyText(event.target.value)}
-                  rows={10}
+                  id="send-body-html"
+                  value={bodyHtml}
+                  onChange={(event) => setBodyHtml(event.target.value)}
+                  rows={12}
+                  className="font-mono text-xs"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label>Attachment</Label>
+                <Label htmlFor="send-body">Klartext-Fallback</Label>
+                <Textarea
+                  id="send-body"
+                  value={bodyText}
+                  onChange={(event) => setBodyText(event.target.value)}
+                  rows={6}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Anhang</Label>
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
                     <FileText className="size-4" />
@@ -189,7 +202,7 @@ export function SendInvoiceDialog({
                       {compose.attachment.filename}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Invoice PDF
+                      Rechnungs-PDF
                     </p>
                   </div>
                   <Button type="button" variant="outline" size="sm" asChild>
@@ -218,7 +231,7 @@ export function SendInvoiceDialog({
             onClick={() => onOpenChange(false)}
             disabled={sending}
           >
-            Cancel
+            Abbrechen
           </Button>
           <Button
             type="submit"
@@ -228,12 +241,12 @@ export function SendInvoiceDialog({
             {sending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Sending…
+                Wird gesendet…
               </>
             ) : (
               <>
                 <Send className="size-4" />
-                Send email
+                E-Mail senden
               </>
             )}
           </Button>

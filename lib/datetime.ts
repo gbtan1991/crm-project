@@ -1,10 +1,11 @@
-/** UTC instant for midnight at the start of today in an IANA timezone. */
-export function startOfTodayInTimezone(
+/** UTC instant for midnight at the start of a calendar day in an IANA timezone. */
+export function startOfDateInTimezone(
   timeZone: string,
-  ref: Date = new Date(),
+  year: number,
+  month: number,
+  day: number,
 ): Date {
-  const ymd = ref.toLocaleDateString("en-CA", { timeZone });
-  const [year, month, day] = ymd.split("-").map(Number);
+  const ymd = `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
   for (let utcHour = -14; utcHour <= 14; utcHour++) {
     const candidate = new Date(Date.UTC(year, month - 1, day, utcHour, 0, 0));
@@ -21,6 +22,16 @@ export function startOfTodayInTimezone(
   }
 
   return new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
+}
+
+/** UTC instant for midnight at the start of today in an IANA timezone. */
+export function startOfTodayInTimezone(
+  timeZone: string,
+  ref: Date = new Date(),
+): Date {
+  const ymd = ref.toLocaleDateString("en-CA", { timeZone });
+  const [year, month, day] = ymd.split("-").map(Number);
+  return startOfDateInTimezone(timeZone, year, month, day);
 }
 
 export function addYears(date: Date, years: number): Date {

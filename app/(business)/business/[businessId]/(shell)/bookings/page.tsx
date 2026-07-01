@@ -64,8 +64,8 @@ export default async function BookingsPage({ params }: PageProps) {
   return (
     <div>
       <PageHeader
-        title="Appointments"
-        subtitle="Upcoming and past appointments from your calendar and manual entries"
+        title="Termine"
+        subtitle="Anstehende und vergangene Termine aus Ihrem Kalender und manuellen Einträgen"
       >
         <Suspense fallback={null}>
           <BookingsCalendarToolbar
@@ -77,6 +77,7 @@ export default async function BookingsPage({ params }: PageProps) {
 
       <BookingsPanel
         businessId={businessId}
+        businessName={business.name}
         bookings={bookings}
         calendarConnected={isConnected}
         customers={customers}

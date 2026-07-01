@@ -18,18 +18,18 @@ export function BusinessUpcomingBookings({
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Upcoming appointments</CardTitle>
+        <CardTitle className="text-base">Anstehende Termine</CardTitle>
         <Link
           href={businessBookingsPath(businessId)}
           className="text-sm text-primary hover:underline"
         >
-          View all
+          Alle anzeigen
         </Link>
       </CardHeader>
       <CardContent>
         {bookings.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No upcoming appointments scheduled.
+            Keine anstehenden Termine geplant.
           </p>
         ) : (
           <ul className="space-y-3">

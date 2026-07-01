@@ -64,7 +64,7 @@ export function BookingsList({
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
-          No appointments yet. Connect your calendar or create a new appointment.
+          Noch keine Termine. Verbinden Sie Ihren Kalender oder erstellen Sie einen neuen Termin.
         </CardContent>
       </Card>
     );
@@ -156,13 +156,13 @@ function BookingCard({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to update appointment.");
+        throw new Error(data.error ?? "Termin konnte nicht aktualisiert werden.");
       }
 
       onUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update appointment.",
+        error instanceof Error ? error.message : "Termin konnte nicht aktualisiert werden.",
       );
     } finally {
       setUpdating(false);
@@ -179,15 +179,15 @@ function BookingCard({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete appointment.");
+        throw new Error(data.error ?? "Termin konnte nicht gelöscht werden.");
       }
 
-      toast.success("Appointment deleted.");
+      toast.success("Termin gelöscht.");
       setDeleteOpen(false);
       onUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete appointment.",
+        error instanceof Error ? error.message : "Termin konnte nicht gelöscht werden.",
       );
     } finally {
       setDeleting(false);
@@ -280,7 +280,7 @@ function BookingCard({
               variant="ghost"
               size="icon"
               className="size-8"
-              title={booking.remindersEnabled ? "Reminders on" : "Reminders off"}
+              title={booking.remindersEnabled ? "Erinnerungen ein" : "Erinnerungen aus"}
               disabled={updating}
               onClick={() =>
                 void patchBooking({
@@ -317,7 +317,7 @@ function BookingCard({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
-              title="Delete appointment"
+              title="Termin löschen"
               disabled={deleting}
               onClick={() => setDeleteOpen(true)}
             >
@@ -334,14 +334,13 @@ function BookingCard({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete appointment?</AlertDialogTitle>
+            <AlertDialogTitle>Termin löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes <strong>{booking.title}</strong> from your appointment
-              list.
+              Dies entfernt <strong>{booking.title}</strong> aus Ihrer Terminliste.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting}
@@ -350,7 +349,7 @@ function BookingCard({
                 void handleDelete();
               }}
             >
-              Delete
+              Löschen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

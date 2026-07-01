@@ -45,14 +45,14 @@ export function UserRowActions({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error ?? "Failed to delete user.");
+        toast.error(data.error ?? "Benutzer konnte nicht gelöscht werden.");
         return;
       }
-      toast.success(`User "${user.email}" deleted.`);
+      toast.success(`Benutzer «${user.email}» gelöscht.`);
       setDeleteOpen(false);
       router.refresh();
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setDeleting(false);
     }
@@ -64,11 +64,11 @@ export function UserRowActions({
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="size-8">
             <MoreHorizontal className="size-4" />
-            <span className="sr-only">Open actions</span>
+            <span className="sr-only">Aktionen öffnen</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
@@ -80,7 +80,7 @@ export function UserRowActions({
             }}
           >
             <Trash2 className="size-4" />
-            Delete
+            Löschen
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -88,25 +88,25 @@ export function UserRowActions({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+            <AlertDialogTitle>Benutzer löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes <strong>{user.email}</strong>
+              Dies löscht <strong>{user.email}</strong>
               {user.businessCount > 0 ? (
                 <>
                   {" "}
-                  along with{" "}
+                  zusammen mit{" "}
                   <strong>
-                    {user.businessCount} owned business
-                    {user.businessCount === 1 ? "" : "es"}
+                    {user.businessCount}{" "}
+                    {user.businessCount === 1 ? "Unternehmen" : "Unternehmen"}
                   </strong>{" "}
-                  (and their configuration and subscriptions)
+                  (einschliesslich Konfiguration und Abonnements)
                 </>
               ) : null}
-              . This action cannot be undone.
+              . Diese Aktion kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -118,10 +118,10 @@ export function UserRowActions({
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting...
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete"
+                "Löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

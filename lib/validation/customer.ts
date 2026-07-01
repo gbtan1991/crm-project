@@ -6,7 +6,7 @@ export const customerWriteSchema = z.object({
   companyName: z.string().trim().max(200).optional().or(z.literal("")),
   firstName: z.string().trim().max(100).optional().or(z.literal("")),
   lastName: z.string().trim().max(100).optional().or(z.literal("")),
-  email: z.string().trim().email("A valid email is required."),
+  email: z.string().trim().email("Eine gültige E-Mail-Adresse ist erforderlich."),
   phone: z.string().trim().max(50).optional().or(z.literal("")),
   address: z.string().trim().max(300).optional().or(z.literal("")),
   postalCode: z.string().trim().max(20).optional().or(z.literal("")),

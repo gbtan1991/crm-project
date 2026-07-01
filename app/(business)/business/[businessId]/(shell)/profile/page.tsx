@@ -44,8 +44,8 @@ export default async function ProfilePage({ params, searchParams }: PageProps) {
   return (
     <div>
       <PageHeader
-        title="Profile"
-        subtitle="Manage your account details and password."
+        title="Profil"
+        subtitle="Verwalten Sie Ihre Kontodaten und Ihr Passwort."
       />
 
       <Suspense fallback={null}>

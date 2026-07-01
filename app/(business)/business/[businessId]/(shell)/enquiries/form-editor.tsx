@@ -103,15 +103,15 @@ export function FormEditor({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to save form.");
+        throw new Error(data.error ?? "Formular konnte nicht gespeichert werden.");
       }
 
-      toast.success(isEdit ? "Form updated." : "Form created.");
+      toast.success(isEdit ? "Formular aktualisiert." : "Formular erstellt.");
       router.push(businessEnquiryFormsPath(businessId));
       router.refresh();
     } catch (submitError) {
       const message =
-        submitError instanceof Error ? submitError.message : "Failed to save form.";
+        submitError instanceof Error ? submitError.message : "Formular konnte nicht gespeichert werden.";
       setError(message);
     } finally {
       setSaving(false);
@@ -122,11 +122,11 @@ export function FormEditor({
     <form onSubmit={(event) => void handleSubmit(event)} className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Form settings</CardTitle>
+          <CardTitle className="text-base">Formulareinstellungen</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="form-name">Form name</Label>
+            <Label htmlFor="form-name">Formularname</Label>
             <Input
               id="form-name"
               value={name}
@@ -136,9 +136,9 @@ export function FormEditor({
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
-              <p className="text-sm font-medium">Active</p>
+              <p className="text-sm font-medium">Aktiv</p>
               <p className="text-xs text-muted-foreground">
-                Inactive forms reject new webhook submissions.
+                Inaktive Formulare lehnen neue Webhook-Einsendungen ab.
               </p>
             </div>
             <Switch checked={isActive} onCheckedChange={setIsActive} />
@@ -161,7 +161,7 @@ export function FormEditor({
               className="grid gap-4 rounded-lg border border-border p-4 md:grid-cols-2"
             >
               <div className="space-y-2">
-                <Label>Label</Label>
+                <Label>Bezeichnung</Label>
                 <Input
                   value={field.label}
                   onChange={(event) =>
@@ -171,7 +171,7 @@ export function FormEditor({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Key</Label>
+                <Label>Schlüssel</Label>
                 <Input
                   value={field.key}
                   onChange={(event) =>
@@ -181,7 +181,7 @@ export function FormEditor({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Type</Label>
+                <Label>Typ</Label>
                 <Select
                   value={field.type}
                   onValueChange={(value) =>
@@ -203,7 +203,7 @@ export function FormEditor({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Placeholder</Label>
+                <Label>Platzhalter</Label>
                 <Input
                   value={field.placeholder ?? ""}
                   onChange={(event) =>
@@ -219,7 +219,7 @@ export function FormEditor({
                       updateField(index, { required: checked })
                     }
                   />
-                  <span className="text-sm">Required</span>
+                  <span className="text-sm">Pflichtfeld</span>
                 </div>
                 {fields.length > 1 ? (
                   <Button
@@ -247,18 +247,18 @@ export function FormEditor({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" asChild>
-          <Link href={businessEnquiryFormsPath(businessId)}>Cancel</Link>
+          <Link href={businessEnquiryFormsPath(businessId)}>Abbrechen</Link>
         </Button>
         <Button type="submit" disabled={saving}>
           {saving ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Saving…
+              Wird gespeichert…
             </>
           ) : isEdit ? (
-            "Save form"
+            "Formular speichern"
           ) : (
-            "Create form"
+            "Formular erstellen"
           )}
         </Button>
       </div>

@@ -27,15 +27,15 @@ export function effectiveBookingStatus(
 export function bookingStatusLabel(status: BookingDisplayStatus): string {
   switch (status) {
     case "SCHEDULED":
-      return "Planned";
+      return "Geplant";
     case "CONFIRMED":
-      return "Confirmed";
+      return "Bestätigt";
     case "COMPLETED":
-      return "Completed";
+      return "Abgeschlossen";
     case "OVERDUE":
-      return "Overdue";
+      return "Überfällig";
     case "CANCELLED":
-      return "Cancelled";
+      return "Storniert";
     default:
       return status;
   }
@@ -68,10 +68,10 @@ export function formatBookingTime(
   value: Date | string,
   timeZone?: string,
 ): string {
-  return new Date(value).toLocaleTimeString("en-US", {
+  return new Date(value).toLocaleTimeString("de-CH", {
     hour: "2-digit",
     minute: "2-digit",
-    hour12: true,
+    hour12: false,
     timeZone,
   });
 }
@@ -82,7 +82,7 @@ export function formatBookingDayHeading(
 ): string {
   const date = new Date(`${dateKey}T12:00:00Z`);
   return date
-    .toLocaleDateString("en-US", {
+    .toLocaleDateString("de-CH", {
       weekday: "long",
       month: "long",
       day: "numeric",

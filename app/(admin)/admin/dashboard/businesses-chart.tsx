@@ -47,7 +47,7 @@ export function BusinessesChart({ data }: { data: MonthlyDatum[] }) {
         />
         <Bar
           dataKey="count"
-          name="Businesses"
+          name="Unternehmen"
           fill="hsl(var(--chart-1))"
           radius={[6, 6, 0, 0]}
           maxBarSize={48}

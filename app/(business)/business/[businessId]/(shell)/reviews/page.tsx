@@ -12,7 +12,12 @@ import { ReviewList } from "./review-list";
 
 type PageProps = {
   params: Promise<{ businessId: string }>;
-  searchParams: Promise<{ page?: string; status?: string; sort?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    status?: string;
+    sort?: string;
+    period?: string;
+  }>;
 };
 
 export default async function ReviewsPage({
@@ -36,12 +41,16 @@ export default async function ReviewsPage({
     page: rawParams.page ?? "1",
     status: rawParams.status,
     sort: rawParams.sort ?? "newest",
+    period: rawParams.period ?? "all",
   });
-  const query = parsed.success ? parsed.data : { page: 1, limit: 20, sort: "newest" as const };
+  const query = parsed.success
+    ? parsed.data
+    : { page: 1, limit: 20, sort: "newest" as const, period: "all" as const };
+  const timeZone = business.config?.timezone ?? "UTC";
 
   const [result, stats, customers, activeReviewSequence] = await Promise.all([
-    listReviews(businessId, query),
-    getReviewStats(businessId),
+    listReviews(businessId, query, timeZone),
+    getReviewStats(businessId, { period: query.period, timeZone }),
     listCustomerOptionsForBusiness(businessId),
     getActiveReviewSequenceForBusiness(businessId),
   ]);
@@ -49,8 +58,8 @@ export default async function ReviewsPage({
   return (
     <div>
       <PageHeader
-        title="Reviews"
-        subtitle="Manage review requests and see what customers are saying."
+        title="Bewertungen"
+        subtitle="Verwalten Sie Bewertungsanfragen und sehen Sie, was Kunden sagen."
       />
       <ReviewList
         businessId={businessId}
@@ -65,6 +74,7 @@ export default async function ReviewsPage({
         currentPage={query.page}
         currentStatus={query.status ?? null}
         currentSort={query.sort}
+        currentPeriod={query.period}
       />
     </div>
   );

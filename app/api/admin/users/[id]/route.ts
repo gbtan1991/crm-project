@@ -12,7 +12,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
     const result = await deleteUser(id, admin.id);
     if (!result.ok) {
-      const status = result.error === "User not found." ? 404 : 409;
+      const status = result.error === "Benutzer nicht gefunden." ? 404 : 409;
       return NextResponse.json({ error: result.error }, { status });
     }
 
@@ -22,6 +22,6 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("[admin/users/:id][DELETE]", error);
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
+    return NextResponse.json({ error: "Es ist ein Fehler aufgetreten." }, { status: 500 });
   }
 }

@@ -33,7 +33,7 @@ export async function GET(request: Request, context: RouteContext) {
     }
     console.error("[business/enquiries][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load enquiries." },
+      { error: "Anfragen konnten nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -48,7 +48,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = enquiryCreateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -70,7 +70,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[business/enquiries][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create enquiry." },
+      { error: "Anfrage konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

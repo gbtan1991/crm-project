@@ -23,7 +23,7 @@ export async function loginAction(
     });
   } catch (error) {
     if (error instanceof AuthError) {
-      return { error: "Invalid email or password." };
+      return { error: "Ungültige E-Mail oder Passwort." };
     }
     throw error;
   }

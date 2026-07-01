@@ -37,7 +37,7 @@ export async function PUT(request: Request, context: RouteContext) {
     const parsed = websiteTicketWriteSchema.safeParse(fieldsFromFormData(formData));
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -50,14 +50,14 @@ export async function PUT(request: Request, context: RouteContext) {
     });
 
     if (!result) {
-      return NextResponse.json({ error: "Ticket not found." }, { status: 404 });
+      return NextResponse.json({ error: "Ticket nicht gefunden." }, { status: 404 });
     }
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
     if (!("ticket" in result)) {
       return NextResponse.json(
-        { error: "Failed to update website ticket." },
+        { error: "Website-Ticket konnte nicht aktualisiert werden." },
         { status: 500 },
       );
     }
@@ -69,7 +69,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
     console.error("[business/website-tickets/:id][PUT]", error);
     return NextResponse.json(
-      { error: "Failed to update website ticket." },
+      { error: "Website-Ticket konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }
@@ -82,7 +82,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
 
     const result = await deleteWebsiteTicketForBusiness(businessId, ticketId);
     if (!result) {
-      return NextResponse.json({ error: "Ticket not found." }, { status: 404 });
+      return NextResponse.json({ error: "Ticket nicht gefunden." }, { status: 404 });
     }
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -95,7 +95,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
     }
     console.error("[business/website-tickets/:id][DELETE]", error);
     return NextResponse.json(
-      { error: "Failed to delete website ticket." },
+      { error: "Website-Ticket konnte nicht gelöscht werden." },
       { status: 500 },
     );
   }

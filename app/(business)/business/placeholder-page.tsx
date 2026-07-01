@@ -13,7 +13,7 @@ export function PlaceholderPage({
       <PageHeader title={title} subtitle={subtitle} />
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
-          Coming soon.
+          Demnächst verfügbar.
         </CardContent>
       </Card>
     </div>

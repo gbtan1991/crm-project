@@ -11,12 +11,13 @@ export const appointmentReminderOffsetSchema = z.object({
 
 export const appointmentReminderSettingsSchema = z.object({
   enabled: z.boolean().default(false),
-  subject: z.string().trim().min(1, "Subject is required.").max(500),
-  bodyText: z.string().trim().min(1, "Email body is required.").max(20_000),
+  subject: z.string().trim().min(1, "Betreff ist erforderlich.").max(500),
+  bodyText: z.string().trim().min(1, "E-Mail-Text ist erforderlich.").max(20_000),
+  bodyHtml: z.string().trim().min(1, "HTML-Text ist erforderlich.").max(20_000),
   offsets: z
     .array(appointmentReminderOffsetSchema)
-    .min(1, "Add at least one reminder time.")
-    .max(5, "Use up to 5 reminder times."),
+    .min(1, "Fügen Sie mindestens eine Erinnerungszeit hinzu.")
+    .max(5, "Es sind maximal 5 Erinnerungszeiten möglich."),
 });
 
 export type AppointmentReminderSettingsInput = z.infer<

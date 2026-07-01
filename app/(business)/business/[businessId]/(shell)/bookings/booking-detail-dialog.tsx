@@ -68,11 +68,11 @@ export function BookingDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Appointment details</DialogTitle>
+          <DialogTitle>Termindetails</DialogTitle>
           <DialogDescription>
             {booking
               ? `${formatBookingTime(booking.startsAt, timeZone)} · ${booking.title}`
-              : "Review and update this appointment."}
+              : "Termin ansehen und aktualisieren."}
           </DialogDescription>
         </DialogHeader>
 
@@ -157,17 +157,17 @@ function BookingDetailForm({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to update appointment.");
+        throw new Error(data.error ?? "Termin konnte nicht aktualisiert werden.");
       }
 
-      toast.success("Appointment updated.");
+      toast.success("Termin aktualisiert.");
       onOpenChange(false);
       onUpdated?.();
     } catch (saveError) {
       const message =
         saveError instanceof Error
           ? saveError.message
-          : "Failed to update appointment.";
+          : "Termin konnte nicht aktualisiert werden.";
       setError(message);
     } finally {
       setSaving(false);
@@ -188,10 +188,10 @@ function BookingDetailForm({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete appointment.");
+        throw new Error(data.error ?? "Termin konnte nicht gelöscht werden.");
       }
 
-      toast.success("Appointment deleted.");
+      toast.success("Termin gelöscht.");
       setDeleteOpen(false);
       onOpenChange(false);
       onUpdated?.();
@@ -199,7 +199,7 @@ function BookingDetailForm({
       toast.error(
         deleteError instanceof Error
           ? deleteError.message
-          : "Failed to delete appointment.",
+          : "Termin konnte nicht gelöscht werden.",
       );
     } finally {
       setDeleting(false);
@@ -211,12 +211,12 @@ function BookingDetailForm({
       <form onSubmit={(event) => void handleSave(event)} className="space-y-4">
         {bookingNeedsStatusUpdate(booking.status, booking.endsAt) ? (
           <p className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
-            This meeting has ended. Mark it as <strong>Completed</strong> or{" "}
-            <strong>Overdue</strong> so your records stay accurate.
+            Dieser Termin ist beendet. Markieren Sie ihn als <strong>Abgeschlossen</strong> oder{" "}
+            <strong>Überfällig</strong>, damit Ihre Aufzeichnungen korrekt bleiben.
           </p>
         ) : null}
         <div className="space-y-2">
-          <Label htmlFor="detail-title">Title</Label>
+          <Label htmlFor="detail-title">Titel</Label>
           <Input
             id="detail-title"
             value={title}
@@ -227,7 +227,7 @@ function BookingDetailForm({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="detail-start">Starts</Label>
+            <Label htmlFor="detail-start">Beginn</Label>
             <Input
               id="detail-start"
               type="datetime-local"
@@ -237,7 +237,7 @@ function BookingDetailForm({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="detail-end">Ends</Label>
+            <Label htmlFor="detail-end">Ende</Label>
             <Input
               id="detail-end"
               type="datetime-local"
@@ -268,13 +268,13 @@ function BookingDetailForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="detail-customer">Customer</Label>
+          <Label htmlFor="detail-customer">Kunde</Label>
           <Select value={customerId} onValueChange={setCustomerId}>
             <SelectTrigger id="detail-customer">
-              <SelectValue placeholder="Select customer" />
+              <SelectValue placeholder="Kunde auswählen" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NO_CUSTOMER_VALUE}>No customer</SelectItem>
+              <SelectItem value={NO_CUSTOMER_VALUE}>Kein Kunde</SelectItem>
               {customers.map((customer) => (
                 <SelectItem key={customer.id} value={customer.id}>
                   {formatCustomerName(customer)} ({customer.email})
@@ -285,7 +285,7 @@ function BookingDetailForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="detail-location">Location</Label>
+          <Label htmlFor="detail-location">Ort</Label>
           <Input
             id="detail-location"
             value={location}
@@ -295,7 +295,7 @@ function BookingDetailForm({
 
         {booking.meetingUrl ? (
           <div className="space-y-2">
-            <Label>Meeting link</Label>
+            <Label>Meeting-Link</Label>
             <Button type="button" variant="outline" asChild>
               <a href={booking.meetingUrl} target="_blank" rel="noreferrer">
                 <Video className="size-4" />
@@ -307,7 +307,7 @@ function BookingDetailForm({
         ) : null}
 
         <div className="space-y-2">
-          <Label htmlFor="detail-notes">Notes</Label>
+          <Label htmlFor="detail-notes">Notizen</Label>
           <Textarea
             id="detail-notes"
             value={notes}
@@ -318,9 +318,9 @@ function BookingDetailForm({
 
         <div className="flex items-center justify-between rounded-lg border border-border p-3">
           <div>
-            <p className="text-sm font-medium">Reminders</p>
+            <p className="text-sm font-medium">Erinnerungen</p>
             <p className="text-xs text-muted-foreground">
-              Send reminder notifications for this appointment.
+              Erinnerungsbenachrichtigungen für diesen Termin senden.
             </p>
           </div>
           <Switch
@@ -344,7 +344,7 @@ function BookingDetailForm({
             disabled={saving || deleting}
           >
             <Trash2 className="size-4" />
-            Delete
+            Löschen
           </Button>
           <div className="flex gap-2">
             <Button
@@ -353,16 +353,16 @@ function BookingDetailForm({
               onClick={() => onOpenChange(false)}
               disabled={saving}
             >
-              Cancel
+              Abbrechen
             </Button>
             <Button type="submit" disabled={saving}>
               {saving ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Saving…
+                  Wird gespeichert…
                 </>
               ) : (
-                "Save changes"
+                "Änderungen speichern"
               )}
             </Button>
           </div>
@@ -372,14 +372,14 @@ function BookingDetailForm({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete appointment?</AlertDialogTitle>
+            <AlertDialogTitle>Termin löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the appointment from your list. Calendar events are not
-              deleted in Google or Outlook.
+              Dies entfernt den Termin aus Ihrer Liste. Kalenderereignisse werden nicht
+              in Google oder Outlook gelöscht.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting}
@@ -391,10 +391,10 @@ function BookingDetailForm({
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting…
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete appointment"
+                "Termin löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

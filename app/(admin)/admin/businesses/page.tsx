@@ -19,7 +19,7 @@ import { listBusinessesForAdmin } from "@/lib/businesses";
 import { parsePageParam } from "@/lib/pagination";
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-US", {
+  return new Date(iso).toLocaleDateString("de-CH", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -39,10 +39,10 @@ export default async function AdminBusinessesPage({
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-bold tracking-tight">
-            Businesses
+            Unternehmen
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Manage tenant accounts and their subscriptions.
+            Mandantenkonten und deren Abonnements verwalten.
           </p>
         </div>
         <AddBusinessDialog />
@@ -53,21 +53,21 @@ export default async function AdminBusinessesPage({
           {businesses.total === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
               <Building2 className="size-8 text-muted-foreground" />
-              <p className="font-medium">No businesses yet</p>
+              <p className="font-medium">Noch keine Unternehmen</p>
               <p className="text-sm text-muted-foreground">
-                Add your first business to get started.
+                Fügen Sie Ihr erstes Unternehmen hinzu, um zu starten.
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="pl-6">Business</TableHead>
-                  <TableHead>Owner</TableHead>
+                  <TableHead className="pl-6">Unternehmen</TableHead>
+                  <TableHead>Inhaber</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="pr-6 text-right">Actions</TableHead>
+                  <TableHead>Erstellt</TableHead>
+                  <TableHead className="pr-6 text-right">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

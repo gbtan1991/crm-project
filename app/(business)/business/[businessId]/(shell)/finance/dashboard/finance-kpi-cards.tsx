@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 const KPI_CONFIG = [
   {
     key: "monthlyRevenue",
-    label: "Monthly revenue",
+    label: "Monatsumsatz",
     icon: TrendingUp,
     iconClass: "bg-emerald-500/10 text-emerald-600",
     sublabel: null,
@@ -21,25 +21,25 @@ const KPI_CONFIG = [
   },
   {
     key: "openInvoices",
-    label: "Open invoices",
+    label: "Offene Rechnungen",
     icon: Clock,
     iconClass: "bg-sky-500/10 text-sky-600",
     sublabel: (stats: FinanceKpiStats) =>
-      `${stats.openInvoices.count} invoice${stats.openInvoices.count === 1 ? "" : "s"}`,
+      `${stats.openInvoices.count} Rechnung${stats.openInvoices.count === 1 ? "" : "en"}`,
     value: (stats: FinanceKpiStats) => stats.openInvoices.total,
   },
   {
     key: "overdue",
-    label: "Overdue",
+    label: "Überfällig",
     icon: AlertTriangle,
     iconClass: "bg-red-500/10 text-red-600",
     sublabel: (stats: FinanceKpiStats) =>
-      `${stats.overdueInvoices.count} invoice${stats.overdueInvoices.count === 1 ? "" : "s"}`,
+      `${stats.overdueInvoices.count} Rechnung${stats.overdueInvoices.count === 1 ? "" : "en"}`,
     value: (stats: FinanceKpiStats) => stats.overdueInvoices.total,
   },
   {
     key: "totalPaid",
-    label: "Total paid",
+    label: "Gesamt bezahlt",
     icon: CreditCard,
     iconClass: "bg-violet-500/10 text-violet-600",
     sublabel: null,

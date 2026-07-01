@@ -87,7 +87,7 @@ export function generateInvoicePdf(
     [sender.postalCode, sender.city].filter(Boolean).join(" "),
     sender.email,
     sender.phone,
-    sender.taxId ? `Tax ID: ${sender.taxId}` : null,
+    sender.taxId ? `UID: ${sender.taxId}` : null,
   ].filter((line): line is string => Boolean(line));
 
   for (const line of senderLines) {
@@ -102,12 +102,12 @@ export function generateInvoicePdf(
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text("INVOICE", margin, yPos);
+  doc.text("RECHNUNG", margin, yPos);
   yPos += 6;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text(`Number: ${invoice.number}`, margin, yPos);
+  doc.text(`Nummer: ${invoice.number}`, margin, yPos);
   yPos += 4;
 
   if (invoice.title) {
@@ -119,16 +119,16 @@ export function generateInvoicePdf(
   const customerCol = pageWidth / 2;
 
   doc.setFont("helvetica", "bold");
-  doc.text("Invoice details:", invoiceCol, yPos);
-  doc.text("Bill to:", customerCol, yPos);
+  doc.text("Rechnungsdetails:", invoiceCol, yPos);
+  doc.text("Rechnungsempfänger:", customerCol, yPos);
   yPos += 5;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
 
   const invoiceDetails = [
-    `Issue date: ${formatPdfDate(invoice.issueDate)}`,
-    `Due date: ${formatPdfDate(invoice.dueDate)}`,
+    `Rechnungsdatum: ${formatPdfDate(invoice.issueDate)}`,
+    `Fälligkeitsdatum: ${formatPdfDate(invoice.dueDate)}`,
     `Status: ${invoiceStatusLabel(invoice.displayStatus)}`,
   ];
 
@@ -148,9 +148,9 @@ export function generateInvoicePdf(
   yPos += 4;
 
   const columns = [
-    { name: "Description", x: margin, width: 90 },
-    { name: "Qty", x: margin + 95, width: 20 },
-    { name: "Unit price", x: margin + 118, width: 32 },
+    { name: "Beschreibung", x: margin, width: 90 },
+    { name: "Menge", x: margin + 95, width: 20 },
+    { name: "Einzelpreis", x: margin + 118, width: 32 },
     { name: "Total", x: margin + 155, width: 30 },
   ];
 
@@ -169,7 +169,7 @@ export function generateInvoicePdf(
 
   for (const item of invoice.lineItems) {
     const descriptionLines = doc.splitTextToSize(
-      item.description || "Service",
+      item.description || "Dienstleistung",
       columns[0].width - 5,
     );
 
@@ -197,13 +197,13 @@ export function generateInvoicePdf(
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
 
-  doc.text("Subtotal:", summaryX, yPos);
+  doc.text("Zwischensumme:", summaryX, yPos);
   doc.text(formatMoney(invoice.subtotal, invoice.currency), summaryValueX, yPos, {
     align: "right",
   });
   yPos += 4;
 
-  doc.text(`VAT (${invoice.vatRate}%):`, summaryX, yPos);
+  doc.text(`MwSt. (${invoice.vatRate}%):`, summaryX, yPos);
   doc.text(formatMoney(invoice.vatAmount, invoice.currency), summaryValueX, yPos, {
     align: "right",
   });
@@ -220,7 +220,7 @@ export function generateInvoicePdf(
     yPos += 12;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.text("Notes:", margin, yPos);
+    doc.text("Bemerkungen:", margin, yPos);
     yPos += 4;
     doc.setFont("helvetica", "normal");
     const noteLines = doc.splitTextToSize(invoice.notes, contentWidth);

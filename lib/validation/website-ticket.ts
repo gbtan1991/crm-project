@@ -21,7 +21,7 @@ export const WEBSITE_TICKET_STATUSES = [
 export const websiteTicketWriteSchema = z.object({
   type: z.enum(WEBSITE_TICKET_TYPES).default("UI_CHANGE"),
   priority: z.enum(WEBSITE_TICKET_PRIORITIES).default("MEDIUM"),
-  title: z.string().trim().min(1, "Title is required.").max(200),
+  title: z.string().trim().min(1, "Titel ist erforderlich.").max(200),
   description: z.string().trim().max(5000).optional().or(z.literal("")),
   status: z.enum(WEBSITE_TICKET_STATUSES).optional(),
   adminNote: z.string().trim().max(2000).optional().or(z.literal("")),

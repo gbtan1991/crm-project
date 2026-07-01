@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/businesses", label: "Businesses", icon: Building2 },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/businesses", label: "Unternehmen", icon: Building2 },
+  { href: "/admin/users", label: "Benutzer", icon: Users },
 ];
 
 export function AdminNav({ email }: { email?: string | null }) {
@@ -59,7 +59,7 @@ export function AdminNav({ email }: { email?: string | null }) {
           <form action={signOutAction}>
             <Button type="submit" variant="ghost" size="sm">
               <LogOut className="size-4" />
-              Sign out
+              Abmelden
             </Button>
           </form>
         </div>

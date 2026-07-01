@@ -1,12 +1,12 @@
 import { z } from "zod";
 
-const name = z.string().trim().min(2, "Name must be at least 2 characters.");
+const name = z.string().trim().min(2, "Name muss mindestens 2 Zeichen lang sein.");
 const email = z
   .string()
   .trim()
-  .email("Enter a valid email address.")
+  .email("Geben Sie eine gültige E-Mail-Adresse ein.")
   .transform((value) => value.toLowerCase());
-const password = z.string().min(8, "Password must be at least 8 characters.");
+const password = z.string().min(8, "Passwort muss mindestens 8 Zeichen lang sein.");
 
 /**
  * Admins are platform users with no business attached.
@@ -27,7 +27,7 @@ export const createUserSchema = z.discriminatedUnion("role", [
     businessName: z
       .string()
       .trim()
-      .min(2, "Business name must be at least 2 characters."),
+      .min(2, "Firmenname muss mindestens 2 Zeichen lang sein."),
   }),
 ]);
 

@@ -41,8 +41,8 @@ export default async function NewEnquiryFormPage({
   return (
     <div>
       <PageHeader
-        title={form ? `Edit ${form.name}` : "New form"}
-        subtitle="Define the fields your webhook will accept"
+        title={form ? `${form.name} bearbeiten` : "Neues Formular"}
+        subtitle="Definieren Sie die Felder, die Ihr Webhook akzeptiert"
       />
       <FormEditor businessId={businessId} form={form ?? undefined} />
     </div>

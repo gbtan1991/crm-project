@@ -42,20 +42,20 @@ export function ImportCustomersButton({ businessId }: { businessId: string }) {
       };
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to import customers.");
+        throw new Error(data.error ?? "Kunden konnten nicht importiert werden.");
       }
 
       const result = data.result;
       if (!result) {
-        throw new Error("Failed to import customers.");
+        throw new Error("Kunden konnten nicht importiert werden.");
       }
 
       const skipped =
         result.skippedDuplicates + result.skippedEmpty + result.failed;
       toast.success(
         skipped > 0
-          ? `Imported ${result.created} customer${result.created === 1 ? "" : "s"}; skipped ${skipped}.`
-          : `Imported ${result.created} customer${result.created === 1 ? "" : "s"}.`,
+          ? `${result.created} Kunde${result.created === 1 ? "" : "n"} importiert; ${skipped} übersprungen.`
+          : `${result.created} Kunde${result.created === 1 ? "" : "n"} importiert.`,
       );
 
       if (result.errors.length > 0) {
@@ -64,7 +64,7 @@ export function ImportCustomersButton({ businessId }: { businessId: string }) {
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to import customers.",
+        error instanceof Error ? error.message : "Kunden konnten nicht importiert werden.",
       );
     } finally {
       setImporting(false);
@@ -77,7 +77,7 @@ export function ImportCustomersButton({ businessId }: { businessId: string }) {
       <Button variant="outline" size="sm" asChild>
         <a href="/customer-import-template.csv" download>
           <Download className="size-4" />
-          Sample CSV
+          Beispiel-CSV
         </a>
       </Button>
       <Button

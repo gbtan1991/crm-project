@@ -38,14 +38,14 @@ export function BusinessNav({
   const pathname = usePathname();
 
   const tabs = [
-    { segment: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { segment: "customers", label: "Customers", icon: Users },
-    { segment: "enquiries", label: "Enquiries", icon: Inbox },
-    { segment: "bookings", label: "Appointments", icon: CalendarDays },
-    { segment: "finance", label: "Finance", icon: Landmark },
-    { segment: "sequences", label: "Sequences", icon: Workflow },
-    { segment: "reviews", label: "Reviews", icon: Star },
-    { segment: "website", label: "Website", icon: Globe },
+    { segment: "dashboard", label: "Übersicht", icon: LayoutDashboard },
+    { segment: "customers", label: "Kunden", icon: Users },
+    { segment: "enquiries", label: "Anfragen", icon: Inbox },
+    { segment: "bookings", label: "Termine", icon: CalendarDays },
+    { segment: "finance", label: "Finanzen", icon: Landmark },
+    { segment: "sequences", label: "Sequenzen", icon: Workflow },
+    { segment: "reviews", label: "Bewertungen", icon: Star },
+    { segment: "website", label: "Webseite", icon: Globe },
   ];
 
   return (
@@ -65,7 +65,7 @@ export function BusinessNav({
                 className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
                 <ArrowLeft className="size-3" />
-                Back to admin
+                Zurück zum Admin
               </Link>
             ) : null}
           </div>

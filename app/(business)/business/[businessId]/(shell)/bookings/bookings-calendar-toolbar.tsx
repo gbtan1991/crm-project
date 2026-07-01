@@ -69,15 +69,15 @@ export function BookingsCalendarToolbar({
     const oauthError = searchParams.get("error");
 
     if (oauthSuccess === "google") {
-      toast.success("Google Calendar connected.");
+      toast.success("Google Kalender verbunden.");
       router.replace(bookingsPath);
       router.refresh();
     } else if (oauthSuccess === "outlook") {
-      toast.success("Outlook Calendar connected.");
+      toast.success("Outlook Kalender verbunden.");
       router.replace(bookingsPath);
       router.refresh();
     } else if (oauthError) {
-      toast.error("Calendar connection failed. Please try again.");
+      toast.error("Kalenderverbindung fehlgeschlagen. Bitte versuchen Sie es erneut.");
       router.replace(bookingsPath);
     }
   }, [searchParams, router, bookingsPath]);
@@ -92,17 +92,17 @@ export function BookingsCalendarToolbar({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Sync failed.");
+        throw new Error(data.error ?? "Synchronisation fehlgeschlagen.");
       }
 
       const { created = 0, updated = 0, cancelled = 0 } = data.result ?? {};
       toast.success(
-        `Sync complete — ${created} new, ${updated} updated, ${cancelled} cancelled`,
+        `Synchronisation abgeschlossen — ${created} neu, ${updated} aktualisiert, ${cancelled} storniert`,
       );
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Calendar sync failed.",
+        error instanceof Error ? error.message : "Kalendersynchronisation fehlgeschlagen.",
       );
     } finally {
       setSyncing(false);
@@ -126,12 +126,12 @@ export function BookingsCalendarToolbar({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.authUrl) {
-        throw new Error(data.error ?? "Failed to start reconnection.");
+        throw new Error(data.error ?? "Erneute Verbindung konnte nicht gestartet werden.");
       }
       window.location.href = data.authUrl as string;
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Reconnection failed.",
+        error instanceof Error ? error.message : "Erneute Verbindung fehlgeschlagen.",
       );
       setReconnecting(false);
     }
@@ -147,15 +147,15 @@ export function BookingsCalendarToolbar({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Disconnect failed.");
+        throw new Error(data.error ?? "Trennung fehlgeschlagen.");
       }
 
-      toast.success("Calendar disconnected.");
+      toast.success("Kalender getrennt.");
       setDisconnectOpen(false);
       router.refresh();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Disconnect failed.",
+        error instanceof Error ? error.message : "Trennung fehlgeschlagen.",
       );
     } finally {
       setDisconnecting(false);
@@ -186,7 +186,7 @@ export function BookingsCalendarToolbar({
               ) : (
                 <RefreshCw className="size-4" />
               )}
-              Sync calendar
+              Kalender synchronisieren
             </Button>
 
             <Button
@@ -201,7 +201,7 @@ export function BookingsCalendarToolbar({
               ) : (
                 <Link2 className="size-4" />
               )}
-              Reconnect
+              Erneut verbinden
             </Button>
 
             <AlertDialog open={disconnectOpen} onOpenChange={setDisconnectOpen}>
@@ -213,21 +213,21 @@ export function BookingsCalendarToolbar({
                   className="text-destructive hover:text-destructive"
                 >
                   <Unplug className="size-4" />
-                  Disconnect
+                  Trennen
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Disconnect calendar?</AlertDialogTitle>
+                  <AlertDialogTitle>Kalender trennen?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will disconnect your calendar from MeisterFlow and
-                    remove all imported bookings from this workspace. Events in
-                    your Google or Outlook calendar will not be deleted.
+                    Dies trennt Ihren Kalender von MeisterFlow und
+                    entfernt alle importierten Termine aus diesem Arbeitsbereich. Ereignisse in
+                    Ihrem Google- oder Outlook-Kalender werden nicht gelöscht.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel disabled={disconnecting}>
-                    Cancel
+                    Abbrechen
                   </AlertDialogCancel>
                   <AlertDialogAction
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -240,10 +240,10 @@ export function BookingsCalendarToolbar({
                     {disconnecting ? (
                       <>
                         <Loader2 className="size-4 animate-spin" />
-                        Disconnecting…
+                        Wird getrennt…
                       </>
                     ) : (
-                      "Disconnect and clear bookings"
+                      "Trennen und Termine löschen"
                     )}
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -260,7 +260,7 @@ export function BookingsCalendarToolbar({
             }}
           >
             <Plug className="size-4" />
-            Connect calendar
+            Kalender verbinden
           </Button>
         )}
       </div>
@@ -270,11 +270,11 @@ export function BookingsCalendarToolbar({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CalendarDays className="size-5" />
-              Connect calendar
+              Kalender verbinden
             </DialogTitle>
             <DialogDescription>
-              Connect your calendar so MeisterFlow can listen for booking
-              activity and import upcoming appointments.
+              Verbinden Sie Ihren Kalender, damit MeisterFlow Terminaktivitäten
+              erkennt und bevorstehende Termine importieren kann.
             </DialogDescription>
           </DialogHeader>
 

@@ -17,7 +17,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = bookingCreateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -38,7 +38,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[business/bookings][POST]", error);
     return NextResponse.json(
-      { error: "Failed to create appointment." },
+      { error: "Termin konnte nicht erstellt werden." },
       { status: 500 },
     );
   }

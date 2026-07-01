@@ -67,13 +67,13 @@ export function EnquiryCard({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to update enquiry.");
+        throw new Error(data.error ?? "Anfrage konnte nicht aktualisiert werden.");
       }
 
       onUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update enquiry.",
+        error instanceof Error ? error.message : "Anfrage konnte nicht aktualisiert werden.",
       );
     } finally {
       setUpdating(false);
@@ -90,15 +90,15 @@ export function EnquiryCard({
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to delete enquiry.");
+        throw new Error(data.error ?? "Anfrage konnte nicht gelöscht werden.");
       }
 
-      toast.success("Enquiry deleted.");
+      toast.success("Anfrage gelöscht.");
       setDeleteOpen(false);
       onUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete enquiry.",
+        error instanceof Error ? error.message : "Anfrage konnte nicht gelöscht werden.",
       );
     } finally {
       setDeleting(false);
@@ -152,7 +152,7 @@ export function EnquiryCard({
 
             <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5 shrink-0" />
-              Received {formatEnquiryReceivedAt(enquiry.createdAt, timeZone)}
+              Eingegangen {formatEnquiryReceivedAt(enquiry.createdAt, timeZone)}
             </p>
             {enquiry.customer ? (
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -188,7 +188,7 @@ export function EnquiryCard({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
-              title="Delete enquiry"
+              title="Anfrage löschen"
               disabled={deleting}
               onClick={() => setDeleteOpen(true)}
             >
@@ -205,9 +205,9 @@ export function EnquiryCard({
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete enquiry?</AlertDialogTitle>
+            <AlertDialogTitle>Anfrage löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently removes the enquiry from{" "}
+              Dies entfernt die Anfrage dauerhaft aus{" "}
               <strong>{enquiry.formName}</strong>
               {enquiry.title ? (
                 <>
@@ -215,11 +215,11 @@ export function EnquiryCard({
                   submitted by <strong>{enquiry.title}</strong>
                 </>
               ) : null}
-              . This cannot be undone.
+              . Dies kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleting}
@@ -228,7 +228,7 @@ export function EnquiryCard({
                 void handleDelete();
               }}
             >
-              Delete enquiry
+              Anfrage löschen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

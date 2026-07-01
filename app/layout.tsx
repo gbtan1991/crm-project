@@ -23,7 +23,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "MeisterFlow CRM",
-  description: "Multi-tenant booking, automation and invoicing platform",
+  description: "Buchungen, Automatisierung und Rechnungsstellung für Ihr Unternehmen",
 };
 
 export default function RootLayout({
@@ -33,7 +33,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="de"
       className={`${inter.variable} ${plusJakartaSans.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">

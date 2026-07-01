@@ -62,8 +62,8 @@ export default async function SettingsPage({ params, searchParams }: PageProps) 
   return (
     <div>
       <PageHeader
-        title="Settings"
-        subtitle="Manage your business configuration and calendar connection."
+        title="Einstellungen"
+        subtitle="Verwalten Sie Ihre Unternehmenskonfiguration und Kalenderverbindung."
       />
 
       <Suspense fallback={null}>

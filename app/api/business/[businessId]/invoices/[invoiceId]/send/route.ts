@@ -17,7 +17,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const result = await getInvoiceEmailCompose(businessId, invoiceId);
 
     if (!result) {
-      return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+      return NextResponse.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
     }
 
     if (!result.ok) {
@@ -31,7 +31,7 @@ export async function GET(_request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id/send][GET]", error);
     return NextResponse.json(
-      { error: "Failed to load invoice email." },
+      { error: "Rechnungs-E-Mail konnte nicht geladen werden." },
       { status: 500 },
     );
   }
@@ -46,7 +46,7 @@ export async function POST(request: Request, context: RouteContext) {
     const parsed = sendInvoiceEmailSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -58,7 +58,7 @@ export async function POST(request: Request, context: RouteContext) {
     );
 
     if (!result) {
-      return NextResponse.json({ error: "Invoice not found." }, { status: 404 });
+      return NextResponse.json({ error: "Rechnung nicht gefunden." }, { status: 404 });
     }
 
     if ("error" in result) {
@@ -75,7 +75,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[business/invoices/:id/send][POST]", error);
     return NextResponse.json(
-      { error: "Failed to send invoice." },
+      { error: "Rechnung konnte nicht gesendet werden." },
       { status: 500 },
     );
   }

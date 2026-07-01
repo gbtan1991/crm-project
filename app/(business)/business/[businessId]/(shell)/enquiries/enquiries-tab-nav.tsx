@@ -22,7 +22,7 @@ export function EnquiriesTabNav({ businessId }: { businessId: string }) {
             : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
         )}
       >
-        Enquiries
+        Anfragen
       </Link>
       <Link
         href={businessEnquiriesPath(businessId, "forms")}
@@ -33,7 +33,7 @@ export function EnquiriesTabNav({ businessId }: { businessId: string }) {
             : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
         )}
       >
-        Forms
+        Formulare
       </Link>
     </nav>
   );

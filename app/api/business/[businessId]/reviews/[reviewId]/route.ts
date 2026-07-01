@@ -27,7 +27,7 @@ export async function PATCH(
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid action." },
+        { error: "Ungültige Aktion." },
         { status: 400 },
       );
     }
@@ -48,11 +48,12 @@ export async function PATCH(
       {
         subject: parsed.data.subject,
         bodyText: parsed.data.bodyText,
+        bodyHtml: parsed.data.bodyHtml,
       },
     );
 
     if (!emailResult) {
-      return NextResponse.json({ error: "Review not found." }, { status: 404 });
+      return NextResponse.json({ error: "Bewertung nicht gefunden." }, { status: 404 });
     }
 
     if (!emailResult.ok) {
@@ -78,7 +79,7 @@ export async function PATCH(
     }
     console.error("[business/reviews/reviewId][PATCH]", error);
     return NextResponse.json(
-      { error: "Failed to update review." },
+      { error: "Bewertung konnte nicht aktualisiert werden." },
       { status: 500 },
     );
   }

@@ -23,7 +23,7 @@ function PasswordInput({
         type="button"
         onClick={() => setVisible((v) => !v)}
         className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-md"
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? "Passwort verbergen" : "Passwort anzeigen"}
         tabIndex={-1}
       >
         {visible ? (

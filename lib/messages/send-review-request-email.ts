@@ -6,6 +6,7 @@ import {
 } from "@/lib/generated/prisma/client";
 import { env } from "@/env/server.mjs";
 import { formatCustomerName } from "@/lib/customer-display";
+import { buildReviewEmailHtmlFromPlainText, wrapEmailContentHtml } from "@/lib/email-html";
 import { GmailSendError, sendGmailMessage } from "@/lib/google-mail/send";
 import { GoogleCalendarOAuth } from "@/lib/google-calendar/oauth";
 import { ensureInboxForBusiness } from "@/lib/inbox";
@@ -16,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 export type SendReviewRequestEmailInput = {
   subject: string;
   bodyText: string;
+  bodyHtml?: string;
 };
 
 export type SendReviewRequestEmailResult =
@@ -28,7 +30,21 @@ function ensureReviewLink(bodyText: string, reviewUrl: string) {
 
   return rendered.includes(reviewUrl)
     ? rendered
-    : [rendered.trim(), "", `Review link: ${reviewUrl}`].join("\n");
+    : [rendered.trim(), "", `Bewertungslink: ${reviewUrl}`].join("\n");
+}
+
+function ensureReviewLinkHtml(bodyHtml: string, reviewUrl: string) {
+  const rendered = bodyHtml.replaceAll("{{link}}", reviewUrl);
+
+  return rendered.includes(reviewUrl)
+    ? rendered
+    : `${rendered.trim()}\n<p><a href="${reviewUrl}">${reviewUrl}</a></p>`;
+}
+
+function reviewButtonLabel(subject: string) {
+  return /update|aktualisier/i.test(subject)
+    ? "Bewertung aktualisieren"
+    : "Bewertung abgeben";
 }
 
 export async function sendReviewRequestEmailForBusiness(
@@ -69,7 +85,7 @@ export async function sendReviewRequestEmailForBusiness(
   }
 
   if (!connection?.connectedAt || !connection.accountEmail) {
-    return { ok: false, error: "Connect Google or Outlook to send reviews." };
+    return { ok: false, error: "Verbinden Sie Google oder Outlook, um Bewertungsanfragen zu senden." };
   }
 
   if (
@@ -78,12 +94,17 @@ export async function sendReviewRequestEmailForBusiness(
   ) {
     return {
       ok: false,
-      error: "Review requests require a Google or Outlook connection.",
+      error: "Bewertungsanfragen erfordern eine Google- oder Outlook-Verbindung.",
     };
   }
 
   const reviewUrl = `${env.NEXT_PUBLIC_URL}/review/${review.id}`;
   const bodyText = ensureReviewLink(input.bodyText, reviewUrl);
+  const bodyHtml = input.bodyHtml?.trim()
+    ? wrapEmailContentHtml(ensureReviewLinkHtml(input.bodyHtml, reviewUrl))
+    : buildReviewEmailHtmlFromPlainText(bodyText, reviewUrl, {
+        buttonLabel: reviewButtonLabel(input.subject),
+      });
 
   const message = await prisma.message.create({
     data: {
@@ -99,6 +120,7 @@ export async function sendReviewRequestEmailForBusiness(
       toAddress: review.customer.email,
       subject: input.subject,
       bodyText,
+      bodyHtml,
       customerId: review.customer.id,
       metadata: {
         reviewId: review.id,
@@ -118,12 +140,14 @@ export async function sendReviewRequestEmailForBusiness(
             to: review.customer.email,
             subject: input.subject,
             bodyText,
+            bodyHtml,
           })
         : await sendOutlookMessage({
             accessToken: await OutlookCalendarOAuth.getValidAccessToken(businessId),
             to: review.customer.email,
             subject: input.subject,
             bodyText,
+            bodyHtml,
           });
 
     await prisma.message.update({
@@ -144,7 +168,7 @@ export async function sendReviewRequestEmailForBusiness(
           ? error.message
           : error instanceof Error
             ? error.message
-            : "Failed to send review request.";
+            : "Bewertungsanfrage konnte nicht gesendet werden.";
 
     await prisma.message.update({
       where: { id: message.id },

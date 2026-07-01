@@ -89,14 +89,14 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error ?? "Failed to update business.");
+        setError(data.error ?? "Unternehmen konnte nicht aktualisiert werden.");
         return;
       }
-      toast.success("Business updated.");
+      toast.success("Unternehmen aktualisiert.");
       setEditOpen(false);
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setSubmitting(false);
     }
@@ -110,14 +110,14 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error ?? "Failed to delete business.");
+        toast.error(data.error ?? "Unternehmen konnte nicht gelöscht werden.");
         return;
       }
-      toast.success(`Business "${business.name}" deleted.`);
+      toast.success(`Unternehmen «${business.name}» gelöscht.`);
       setDeleteOpen(false);
       router.refresh();
     } catch {
-      toast.error("Network error. Please try again.");
+      toast.error("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setDeleting(false);
     }
@@ -129,11 +129,11 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon" className="size-8">
             <MoreHorizontal className="size-4" />
-            <span className="sr-only">Open actions</span>
+            <span className="sr-only">Aktionen öffnen</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuLabel>Aktionen</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onSelect={(e) => {
@@ -143,7 +143,7 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
             }}
           >
             <Pencil className="size-4" />
-            Update
+            Bearbeiten
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
@@ -153,7 +153,7 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
             }}
           >
             <Trash2 className="size-4" />
-            Delete
+            Löschen
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -161,9 +161,9 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Update business</DialogTitle>
+            <DialogTitle>Unternehmen bearbeiten</DialogTitle>
             <DialogDescription>
-              Edit the business details, owner email, and subscription.
+              Bearbeiten Sie Unternehmensdaten, Inhaber-E-Mail und Abonnement.
             </DialogDescription>
           </DialogHeader>
 
@@ -175,7 +175,7 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
             ) : null}
 
             <div className="space-y-2">
-              <Label htmlFor={`name-${business.id}`}>Business name</Label>
+              <Label htmlFor={`name-${business.id}`}>Firmenname</Label>
               <Input
                 id={`name-${business.id}`}
                 name="name"
@@ -185,7 +185,7 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={`email-${business.id}`}>Owner email</Label>
+              <Label htmlFor={`email-${business.id}`}>E-Mail des Inhabers</Label>
               <Input
                 id={`email-${business.id}`}
                 name="ownerEmail"
@@ -234,10 +234,10 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Saving...
+                    Wird gespeichert…
                   </>
                 ) : (
-                  "Save changes"
+                  "Änderungen speichern"
                 )}
               </Button>
             </DialogFooter>
@@ -248,15 +248,16 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete business?</AlertDialogTitle>
+            <AlertDialogTitle>Unternehmen löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              This permanently deletes <strong>{business.name}</strong>, its
-              configuration, and subscription. The owner account is kept (they
-              may own other businesses). This action cannot be undone.
+              Dies löscht <strong>{business.name}</strong>, die Konfiguration
+              und das Abonnement dauerhaft. Das Inhaberkonto bleibt erhalten (es
+              kann weitere Unternehmen besitzen). Diese Aktion kann nicht
+              rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -268,10 +269,10 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
               {deleting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Deleting...
+                  Wird gelöscht…
                 </>
               ) : (
-                "Delete"
+                "Löschen"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

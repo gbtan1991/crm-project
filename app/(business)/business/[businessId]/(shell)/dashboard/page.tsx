@@ -31,8 +31,8 @@ export default async function BusinessDashboardPage({ params }: PageProps) {
   return (
     <div>
       <PageHeader
-        title="Dashboard"
-        subtitle={`${stats.customers} customers · ${stats.upcomingAppointments} upcoming · ${stats.newEnquiries} new enquiries`}
+        title="Übersicht"
+        subtitle={`${stats.customers} Kunden · ${stats.upcomingAppointments} anstehend · ${stats.newEnquiries} neue Anfragen`}
       />
 
       <div className="space-y-6">

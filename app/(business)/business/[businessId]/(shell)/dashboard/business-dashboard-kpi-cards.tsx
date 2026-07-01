@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 const KPI_CONFIG = [
   {
     key: "customers",
-    label: "Customers",
+    label: "Kunden",
     icon: Users,
     iconClass: "bg-sky-500/10 text-sky-600",
     format: (stats: BusinessKpiStats) => String(stats.customers),
@@ -21,32 +21,32 @@ const KPI_CONFIG = [
   },
   {
     key: "upcomingAppointments",
-    label: "Upcoming appointments",
+    label: "Anstehende Termine",
     icon: CalendarDays,
     iconClass: "bg-violet-500/10 text-violet-600",
     format: (stats: BusinessKpiStats) => String(stats.upcomingAppointments),
     sublabel: (stats: BusinessKpiStats) =>
-      `${stats.appointmentsToday} today`,
+      `${stats.appointmentsToday} heute`,
   },
   {
     key: "openInvoices",
-    label: "Open invoices",
+    label: "Offene Rechnungen",
     icon: FileText,
     iconClass: "bg-amber-500/10 text-amber-600",
     format: (stats: BusinessKpiStats) =>
       formatMoney(stats.openInvoices.total, stats.currency),
     sublabel: (stats: BusinessKpiStats) =>
-      `${stats.openInvoices.count} invoice${stats.openInvoices.count === 1 ? "" : "s"}`,
+      `${stats.openInvoices.count} Rechnung${stats.openInvoices.count === 1 ? "" : "en"}`,
   },
   {
     key: "paidInvoices",
-    label: "Paid invoices",
+    label: "Bezahlte Rechnungen",
     icon: FileText,
     iconClass: "bg-emerald-500/10 text-emerald-600",
     format: (stats: BusinessKpiStats) =>
       formatMoney(stats.paidInvoices.total, stats.currency),
     sublabel: (stats: BusinessKpiStats) =>
-      `${stats.paidInvoices.count} invoice${stats.paidInvoices.count === 1 ? "" : "s"}`,
+      `${stats.paidInvoices.count} Rechnung${stats.paidInvoices.count === 1 ? "" : "en"}`,
   },
   // {
   //   key: "newEnquiries",

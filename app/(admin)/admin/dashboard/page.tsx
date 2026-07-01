@@ -15,22 +15,22 @@ export default async function AdminDashboardPage() {
 
   const cards = [
     {
-      label: "Total businesses",
+      label: "Unternehmen gesamt",
       value: stats.totalBusinesses,
       icon: Building2,
-      description: "Tenants on the platform",
+      description: "Mandanten auf der Plattform",
     },
     {
-      label: "Business users",
+      label: "Geschäftsbenutzer",
       value: stats.totalBusinessUsers,
       icon: Users,
-      description: "Accounts across all tenants",
+      description: "Konten über alle Mandanten",
     },
     {
-      label: "Active subscriptions",
+      label: "Aktive Abonnements",
       value: stats.activeSubscriptions,
       icon: CreditCard,
-      description: "Currently active plans",
+      description: "Derzeit aktive Pläne",
     },
   ];
 
@@ -41,7 +41,7 @@ export default async function AdminDashboardPage() {
           Dashboard
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Overview of platform activity.
+          Übersicht über die Plattformaktivität.
         </p>
       </div>
 
@@ -71,8 +71,8 @@ export default async function AdminDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>New businesses</CardTitle>
-          <CardDescription>Businesses added in the last 6 months</CardDescription>
+          <CardTitle>Neue Unternehmen</CardTitle>
+          <CardDescription>In den letzten 6 Monaten hinzugefügt</CardDescription>
         </CardHeader>
         <CardContent>
           <BusinessesChart data={stats.monthlyBusinesses} />

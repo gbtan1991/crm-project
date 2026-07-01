@@ -14,7 +14,7 @@ export async function GET(
 
     const state = await getOnboardingState(businessId);
     if (!state) {
-      return NextResponse.json({ error: "Business not found." }, { status: 404 });
+      return NextResponse.json({ error: "Unternehmen nicht gefunden." }, { status: 404 });
     }
 
     return NextResponse.json(state);
@@ -23,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("[business/onboarding][GET]", error);
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
+    return NextResponse.json({ error: "Es ist ein Fehler aufgetreten." }, { status: 500 });
   }
 }
 
@@ -39,7 +39,7 @@ export async function PATCH(
     const parsed = onboardingPatchSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: parsed.error.issues[0]?.message ?? "Invalid input." },
+        { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." },
         { status: 400 },
       );
     }
@@ -55,6 +55,6 @@ export async function PATCH(
       return NextResponse.json({ error: error.message }, { status: error.status });
     }
     console.error("[business/onboarding][PATCH]", error);
-    return NextResponse.json({ error: "Something went wrong." }, { status: 500 });
+    return NextResponse.json({ error: "Es ist ein Fehler aufgetreten." }, { status: 500 });
   }
 }

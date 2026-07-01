@@ -1,12 +1,18 @@
-import { ReviewStatus } from "@/lib/generated/prisma/client";
+import { ReviewStatus, type Prisma } from "@/lib/generated/prisma/client";
 import { formatCustomerName } from "@/lib/customer-display";
+import { startOfDateInTimezone } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import type {
   CreateReviewInput,
   ListReviewsInput,
   RequestReviewUpdateInput,
+  ReviewStatsPeriod,
   SubmitReviewInput,
 } from "@/lib/validation/review";
+
+export type { ReviewStatsPeriod };
+
+type ReviewDateRange = { from: Date; to: Date };
 
 type PaginatedResult<T> = { items: T; total: number; totalPages: number };
 
@@ -119,7 +125,7 @@ export async function createReview(
     select: { id: true },
   });
   if (!customer) {
-    return { error: "Customer not found." as const };
+    return { error: "Kunde nicht gefunden." as const };
   }
 
   if (input.bookingId) {
@@ -128,7 +134,7 @@ export async function createReview(
       select: { id: true },
     });
     if (!booking) {
-      return { error: "Booking not found for this customer." as const };
+      return { error: "Termin für diesen Kunden nicht gefunden." as const };
     }
   }
 
@@ -148,14 +154,112 @@ export async function createReview(
   return { review: serializeReview(review) };
 }
 
+export function getReviewStatsPeriodRange(
+  period: ReviewStatsPeriod,
+  timeZone: string,
+  ref = new Date(),
+): ReviewDateRange | null {
+  if (period === "all") {
+    return null;
+  }
+
+  const ymd = ref.toLocaleDateString("en-CA", { timeZone });
+  const [year, month] = ymd.split("-").map(Number);
+  const nextMonth =
+    month === 12
+      ? { year: year + 1, month: 1 }
+      : { year, month: month + 1 };
+  const currentMonthStart = startOfDateInTimezone(timeZone, year, month, 1);
+  const nextMonthStart = startOfDateInTimezone(
+    timeZone,
+    nextMonth.year,
+    nextMonth.month,
+    1,
+  );
+
+  if (period === "this_month") {
+    return { from: currentMonthStart, to: nextMonthStart };
+  }
+
+  if (period === "last_month") {
+    const previousMonth =
+      month === 1
+        ? { year: year - 1, month: 12 }
+        : { year, month: month - 1 };
+    return {
+      from: startOfDateInTimezone(
+        timeZone,
+        previousMonth.year,
+        previousMonth.month,
+        1,
+      ),
+      to: currentMonthStart,
+    };
+  }
+
+  let monthsBack = period === "last_3_months" ? 2 : 11;
+  let fromYear = year;
+  let fromMonth = month - monthsBack;
+  while (fromMonth <= 0) {
+    fromMonth += 12;
+    fromYear -= 1;
+  }
+
+  return {
+    from: startOfDateInTimezone(timeZone, fromYear, fromMonth, 1),
+    to: nextMonthStart,
+  };
+}
+
+function reviewActivityInRangeWhere(
+  range: ReviewDateRange,
+): Prisma.ReviewWhereInput {
+  return {
+    OR: [
+      {
+        status: ReviewStatus.RECEIVED,
+        respondedAt: { gte: range.from, lt: range.to },
+      },
+      {
+        status: ReviewStatus.DECLINED,
+        respondedAt: { gte: range.from, lt: range.to },
+      },
+      {
+        status: ReviewStatus.REQUESTED,
+        requestedAt: { gte: range.from, lt: range.to },
+      },
+      {
+        status: ReviewStatus.REQUESTED,
+        requestedAt: null,
+        createdAt: { gte: range.from, lt: range.to },
+      },
+    ],
+  };
+}
+
+function buildReviewListWhere(
+  businessId: string,
+  input: ListReviewsInput,
+  timeZone: string,
+): Prisma.ReviewWhereInput {
+  const range =
+    input.period === "all"
+      ? null
+      : getReviewStatsPeriodRange(input.period, timeZone);
+
+  return {
+    businessId,
+    ...(input.status ? { status: input.status as ReviewStatus } : {}),
+    ...(range ? reviewActivityInRangeWhere(range) : {}),
+  };
+}
+
 export async function listReviews(
   businessId: string,
   input: ListReviewsInput,
+  timeZone = "UTC",
 ): Promise<PaginatedResult<ReviewListRow[]>> {
-  const where = {
-    businessId,
-    ...(input.status ? { status: input.status as ReviewStatus } : {}),
-  };
+  const where = buildReviewListWhere(businessId, input, timeZone);
 
   const orderBy =
     input.sort === "oldest"
@@ -243,10 +347,10 @@ export async function submitReview(id: string, data: SubmitReviewInput) {
   });
 
   if (!review) {
-    throw new Error("Review not found.");
+    throw new Error("Bewertung nicht gefunden.");
   }
   if (review.status !== ReviewStatus.REQUESTED) {
-    throw new Error("Review has already been submitted.");
+    throw new Error("Bewertung wurde bereits abgegeben.");
   }
 
   return prisma.review.update({
@@ -275,7 +379,7 @@ export async function declineReview(reviewId: string, businessId: string) {
   });
 
   if (!review) {
-    throw new Error("Review not found or already responded to.");
+    throw new Error("Bewertung nicht gefunden oder bereits beantwortet.");
   }
 
   const updated = await prisma.review.update({
@@ -301,10 +405,10 @@ export async function requestReviewUpdate(
   });
 
   if (!existing) {
-    return { error: "Review not found." as const };
+    return { error: "Bewertung nicht gefunden." as const };
   }
   if (existing.status !== ReviewStatus.RECEIVED) {
-    return { error: "Only received reviews can be reopened for updates." as const };
+    return { error: "Nur erhaltene Bewertungen können für Aktualisierungen wieder geöffnet werden." as const };
   }
 
   const review = await prisma.review.update({
@@ -321,21 +425,74 @@ export async function requestReviewUpdate(
   return { review: serializeReview(review) };
 }
 
-export async function getReviewStats(businessId: string) {
+export async function getReviewStats(
+  businessId: string,
+  options?: { period?: ReviewStatsPeriod; timeZone?: string },
+) {
+  const period = options?.period ?? "all";
+  const timeZone = options?.timeZone ?? "UTC";
+  const range = getReviewStatsPeriodRange(period, timeZone);
+  const periodWhere = range ? reviewActivityInRangeWhere(range) : {};
+
   const [total, requested, received, declined, latest] = await Promise.all([
-    prisma.review.count({ where: { businessId } }),
-    prisma.review.count({ where: { businessId, status: ReviewStatus.REQUESTED } }),
-    prisma.review.count({ where: { businessId, status: ReviewStatus.RECEIVED } }),
-    prisma.review.count({ where: { businessId, status: ReviewStatus.DECLINED } }),
+    prisma.review.count({ where: { businessId, ...periodWhere } }),
+    prisma.review.count({
+      where: {
+        businessId,
+        status: ReviewStatus.REQUESTED,
+        ...(range
+          ? {
+              OR: [
+                {
+                  requestedAt: { gte: range.from, lt: range.to },
+                },
+                {
+                  requestedAt: null,
+                  createdAt: { gte: range.from, lt: range.to },
+                },
+              ],
+            }
+          : {}),
+      },
+    }),
+    prisma.review.count({
+      where: {
+        businessId,
+        status: ReviewStatus.RECEIVED,
+        ...(range
+          ? { respondedAt: { gte: range.from, lt: range.to } }
+          : {}),
+      },
+    }),
+    prisma.review.count({
+      where: {
+        businessId,
+        status: ReviewStatus.DECLINED,
+        ...(range
+          ? { respondedAt: { gte: range.from, lt: range.to } }
+          : {}),
+      },
+    }),
     prisma.review.findFirst({
-      where: { businessId, status: ReviewStatus.RECEIVED },
+      where: {
+        businessId,
+        status: ReviewStatus.RECEIVED,
+        ...(range
+          ? { respondedAt: { gte: range.from, lt: range.to } }
+          : {}),
+      },
       orderBy: { respondedAt: "desc" },
       select: reviewListSelect,
     }),
   ]);
 
   const avgRatingResult = await prisma.review.aggregate({
-    where: { businessId, status: ReviewStatus.RECEIVED, rating: { not: null } },
+    where: {
+      businessId,
+      status: ReviewStatus.RECEIVED,
+      rating: { not: null },
+      ...(range ? { respondedAt: { gte: range.from, lt: range.to } } : {}),
+    },
     _avg: { rating: true },
   });
 

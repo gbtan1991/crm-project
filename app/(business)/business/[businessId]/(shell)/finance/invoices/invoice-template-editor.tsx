@@ -111,29 +111,29 @@ export function InvoiceTemplateEditor({
     }));
 
     if (!name.trim()) {
-      setError("Template name is required.");
+      setError("Vorlagenname ist erforderlich.");
       return;
     }
 
     if (payloadServices.length === 0) {
-      setError("Add at least one service.");
+      setError("Fügen Sie mindestens eine Leistung hinzu.");
       return;
     }
 
     for (const service of payloadServices) {
       if (!service.name) {
-        setError("Each service needs a name.");
+        setError("Jede Leistung benötigt einen Namen.");
         return;
       }
       if (!Number.isFinite(service.defaultQuantity) || service.defaultQuantity <= 0) {
-        setError("Each service needs a valid default quantity.");
+        setError("Jede Leistung benötigt eine gültige Standardmenge.");
         return;
       }
       if (
         service.defaultUnitPrice != null &&
         (!Number.isFinite(service.defaultUnitPrice) || service.defaultUnitPrice < 0)
       ) {
-        setError("Default unit prices cannot be negative.");
+        setError("Standard-Einzelpreise dürfen nicht negativ sein.");
         return;
       }
     }
@@ -141,11 +141,11 @@ export function InvoiceTemplateEditor({
     const parsedVat = Number(vatRate);
     const parsedDueDays = Number(dueDays);
     if (!Number.isFinite(parsedVat) || parsedVat < 0 || parsedVat > 100) {
-      setError("VAT rate must be between 0 and 100.");
+      setError("Der MwSt.-Satz muss zwischen 0 und 100 liegen.");
       return;
     }
     if (!Number.isFinite(parsedDueDays) || parsedDueDays < 1 || parsedDueDays > 365) {
-      setError("Due days must be between 1 and 365.");
+      setError("Zahlungsziel muss zwischen 1 und 365 Tagen liegen.");
       return;
     }
 
@@ -171,16 +171,16 @@ export function InvoiceTemplateEditor({
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        throw new Error(data.error ?? "Failed to save template.");
+        throw new Error(data.error ?? "Vorlage konnte nicht gespeichert werden.");
       }
 
-      toast.success(templateId ? "Template updated." : "Template created.");
+      toast.success(templateId ? "Vorlage aktualisiert." : "Vorlage erstellt.");
       onSaved();
     } catch (submitError) {
       const message =
         submitError instanceof Error
           ? submitError.message
-          : "Failed to save template.";
+          : "Vorlage konnte nicht gespeichert werden.";
       setError(message);
       toast.error(message);
     } finally {
@@ -193,24 +193,24 @@ export function InvoiceTemplateEditor({
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h2 className="font-heading text-xl font-bold">
-            {templateId ? "Edit template" : "New template"}
+            {templateId ? "Vorlage bearbeiten" : "Neue Vorlage"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Services, VAT, and defaults used when creating invoices.
+            Leistungen, MwSt. und Standardwerte für neue Rechnungen.
           </p>
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            Abbrechen
           </Button>
           <Button type="submit" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
-                Saving…
+                Wird gespeichert…
               </>
             ) : (
-              "Save template"
+              "Vorlage speichern"
             )}
           </Button>
         </div>
@@ -224,11 +224,11 @@ export function InvoiceTemplateEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Template details</CardTitle>
+          <CardTitle className="text-base">Vorlagendetails</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="templateName">Template name</Label>
+            <Label htmlFor="templateName">Vorlagenname</Label>
             <Input
               id="templateName"
               value={name}
@@ -238,16 +238,16 @@ export function InvoiceTemplateEditor({
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="defaultTitle">Default invoice title (optional)</Label>
+            <Label htmlFor="defaultTitle">Standard-Rechnungstitel (optional)</Label>
             <Input
               id="defaultTitle"
               value={defaultTitle}
               onChange={(event) => setDefaultTitle(event.target.value)}
-              placeholder="Prefilled when creating an invoice"
+              placeholder="Wird beim Erstellen einer Rechnung vorausgefüllt"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="vatRate">VAT rate (%)</Label>
+            <Label htmlFor="vatRate">MwSt.-Satz (%)</Label>
             <Input
               id="vatRate"
               type="number"
@@ -259,7 +259,7 @@ export function InvoiceTemplateEditor({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
+            <Label htmlFor="currency">Währung</Label>
             <Input
               id="currency"
               value={currency}
@@ -268,7 +268,7 @@ export function InvoiceTemplateEditor({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dueDays">Payment terms (days)</Label>
+            <Label htmlFor="dueDays">Zahlungsziel (Tage)</Label>
             <Input
               id="dueDays"
               type="number"
@@ -279,13 +279,13 @@ export function InvoiceTemplateEditor({
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="defaultNotes">Default notes (optional)</Label>
+            <Label htmlFor="defaultNotes">Standardnotizen (optional)</Label>
             <Textarea
               id="defaultNotes"
               value={defaultNotes}
               onChange={(event) => setDefaultNotes(event.target.value)}
               rows={3}
-              placeholder="Prefilled on new invoices from this template"
+              placeholder="Wird auf neuen Rechnungen aus dieser Vorlage vorausgefüllt"
             />
           </div>
         </CardContent>
@@ -324,7 +324,7 @@ export function InvoiceTemplateEditor({
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Service name</Label>
+                  <Label>Leistungsname</Label>
                   <Input
                     value={service.name}
                     onChange={(event) =>
@@ -334,7 +334,7 @@ export function InvoiceTemplateEditor({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Default unit price (optional)</Label>
+                  <Label>Standard-Einzelpreis (optional)</Label>
                   <Input
                     type="number"
                     min="0"
@@ -345,11 +345,11 @@ export function InvoiceTemplateEditor({
                         defaultUnitPrice: event.target.value,
                       })
                     }
-                    placeholder="Suggested price per unit"
+                    placeholder="Empfohlener Preis pro Einheit"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Description</Label>
+                  <Label>Beschreibung</Label>
                   <Textarea
                     value={service.description}
                     onChange={(event) =>
@@ -358,11 +358,11 @@ export function InvoiceTemplateEditor({
                       })
                     }
                     rows={2}
-                    placeholder="Shown on invoice line items"
+                    placeholder="Wird auf Rechnungspositionen angezeigt"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Default quantity</Label>
+                  <Label>Standardmenge</Label>
                   <Input
                     type="number"
                     min="0"

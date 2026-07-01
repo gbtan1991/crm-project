@@ -111,10 +111,10 @@ function serializeTicket(input: {
 async function validateImageFiles(files: File[]) {
   for (const file of files) {
     if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-      return { error: "Only image uploads are supported." as const };
+      return { error: "Es werden nur Bild-Uploads unterstützt." as const };
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      return { error: "Each image must be 5 MB or smaller." as const };
+      return { error: "Jedes Bild darf höchstens 5 MB gross sein." as const };
     }
   }
 
@@ -308,7 +308,7 @@ export async function deleteWebsiteTicketForBusiness(
     return null;
   }
   if (existing.status !== "PENDING") {
-    return { error: "Only pending tickets can be deleted." as const };
+    return { error: "Nur ausstehende Tickets können gelöscht werden." as const };
   }
 
   await prisma.websiteTicket.delete({ where: { id: ticketId } });

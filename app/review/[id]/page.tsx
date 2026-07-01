@@ -30,7 +30,7 @@ export default async function ReviewPage({ params }: PageProps) {
               {review.business.name}
             </h1>
             <p className="text-sm text-muted-foreground">
-              We&apos;d love your feedback
+              Wir freuen uns über Ihr Feedback
             </p>
           </div>
 
@@ -52,7 +52,7 @@ export default async function ReviewPage({ params }: PageProps) {
         </div>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
-          Powered by MeisterFlow
+          Bereitgestellt von MeisterFlow
         </p>
       </div>
     </div>

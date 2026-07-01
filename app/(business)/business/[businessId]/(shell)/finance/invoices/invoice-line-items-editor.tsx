@@ -59,20 +59,20 @@ export function buildInvoiceLineItemPayload(lines: InvoiceLineItemDraft[]) {
 
 export function validateInvoiceLineItems(lines: InvoiceLineItemDraft[]): string | null {
   if (lines.length === 0) {
-    return "Add at least one line item.";
+    return "Fügen Sie mindestens eine Position hinzu.";
   }
 
   for (const line of lines) {
     if (!line.description.trim()) {
-      return "Each line item needs a description.";
+      return "Jede Position benötigt eine Beschreibung.";
     }
     const quantity = Number(line.quantity);
     const unitPrice = Number(line.unitPrice);
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      return "Each line item needs a valid quantity.";
+      return "Jede Position benötigt eine gültige Menge.";
     }
     if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      return "Each line item needs a valid unit price.";
+      return "Jede Position benötigt einen gültigen Einzelpreis.";
     }
   }
 
@@ -163,7 +163,7 @@ export function InvoiceLineItemsEditor({
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <div className="space-y-2 md:col-span-2">
-                  <Label>Description</Label>
+                  <Label>Beschreibung</Label>
                   <Input
                     value={line.description}
                     onChange={(event) =>
@@ -173,7 +173,7 @@ export function InvoiceLineItemsEditor({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Units</Label>
+                  <Label>Menge</Label>
                   <Input
                     type="number"
                     min="0"
@@ -185,7 +185,7 @@ export function InvoiceLineItemsEditor({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Unit price</Label>
+                  <Label>Einzelpreis</Label>
                   <Input
                     type="number"
                     min="0"
@@ -207,11 +207,11 @@ export function InvoiceLineItemsEditor({
 
       <div className="space-y-2 rounded-lg bg-muted/40 p-4 text-sm">
         <div className="flex justify-between">
-          <span className="text-muted-foreground">Subtotal</span>
+          <span className="text-muted-foreground">Zwischensumme</span>
           <span>{formatMoney(totals.subtotal, currency)}</span>
         </div>
         <div className="flex justify-between">
-          <span className="text-muted-foreground">VAT ({vatRate}%)</span>
+          <span className="text-muted-foreground">MwSt. ({vatRate}%)</span>
           <span>{formatMoney(totals.vatAmount, currency)}</span>
         </div>
         <div className="flex justify-between border-t border-border pt-2 text-base font-semibold">

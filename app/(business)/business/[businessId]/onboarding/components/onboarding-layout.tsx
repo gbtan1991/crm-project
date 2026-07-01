@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const STEPS = ["Company", "Website", "Calendar"] as const;
+const STEPS = ["Unternehmen", "Website", "Kalender"] as const;
 
 export function OnboardingLayout({
   step,

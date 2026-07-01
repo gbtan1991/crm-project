@@ -60,20 +60,20 @@ export function AddUserDialog() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to create user.");
+        setError(data.error ?? "Benutzer konnte nicht erstellt werden.");
         return;
       }
 
       toast.success(
         role === "BUSINESS"
-          ? `Business user "${base.email}" created.`
-          : `Admin "${base.email}" created.`,
+          ? `Geschäftsbenutzer «${base.email}» erstellt.`
+          : `Admin «${base.email}» erstellt.`,
       );
       setOpen(false);
       reset();
       router.refresh();
     } catch {
-      setError("Network error. Please try again.");
+      setError("Netzwerkfehler. Bitte versuchen Sie es erneut.");
     } finally {
       setSubmitting(false);
     }
@@ -90,14 +90,14 @@ export function AddUserDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="size-4" />
-          Add user
+          Benutzer hinzufügen
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add user</DialogTitle>
+          <DialogTitle>Benutzer hinzufügen</DialogTitle>
           <DialogDescription>
-            Create a business owner or a platform administrator.
+            Erstellen Sie einen Geschäftsinhaber oder einen Plattform-Administrator.
           </DialogDescription>
         </DialogHeader>
 
@@ -109,7 +109,7 @@ export function AddUserDialog() {
           }}
         >
           <TabsList className="w-full">
-            <TabsTrigger value="BUSINESS">Business</TabsTrigger>
+            <TabsTrigger value="BUSINESS">Geschäft</TabsTrigger>
             <TabsTrigger value="ADMIN">Admin</TabsTrigger>
           </TabsList>
 
@@ -123,7 +123,7 @@ export function AddUserDialog() {
 
             <TabsContent value="BUSINESS" className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="businessName">Business name</Label>
+                <Label htmlFor="businessName">Firmenname</Label>
                 <Input
                   id="businessName"
                   name="businessName"
@@ -144,7 +144,7 @@ export function AddUserDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">E-Mail</Label>
               <Input
                 id="email"
                 name="email"
@@ -159,11 +159,11 @@ export function AddUserDialog() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Temporary password</Label>
+              <Label htmlFor="password">Temporäres Passwort</Label>
               <PasswordInput
                 id="password"
                 name="password"
-                placeholder="At least 8 characters"
+                placeholder="Mindestens 8 Zeichen"
                 minLength={8}
                 required
               />
@@ -174,12 +174,12 @@ export function AddUserDialog() {
                 {submitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Creating...
+                    Wird erstellt…
                   </>
                 ) : role === "BUSINESS" ? (
-                  "Create business"
+                  "Unternehmen erstellen"
                 ) : (
-                  "Create admin"
+                  "Admin erstellen"
                 )}
               </Button>
             </DialogFooter>

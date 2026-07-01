@@ -19,14 +19,14 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (!(file instanceof File)) {
       return NextResponse.json(
-        { error: "Upload a CSV file to import customers." },
+        { error: "Laden Sie eine CSV-Datei hoch, um Kunden zu importieren." },
         { status: 400 },
       );
     }
 
     if (file.size > MAX_CSV_BYTES) {
       return NextResponse.json(
-        { error: "CSV file is too large. Upload a file under 512 KB." },
+        { error: "CSV-Datei ist zu gross. Laden Sie eine Datei unter 512 KB hoch." },
         { status: 400 },
       );
     }
@@ -36,7 +36,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     if (result.created === 0 && result.failed > 0) {
       return NextResponse.json(
-        { error: "No customers were imported.", result },
+        { error: "Es wurden keine Kunden importiert.", result },
         { status: 400 },
       );
     }
@@ -48,7 +48,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
     console.error("[business/customers/import][POST]", error);
     return NextResponse.json(
-      { error: "Failed to import customers." },
+      { error: "Kunden konnten nicht importiert werden." },
       { status: 500 },
     );
   }

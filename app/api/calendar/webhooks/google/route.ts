@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const channelToken = request.headers.get("x-goog-channel-token");
 
   if (!channelId || !resourceId) {
-    return NextResponse.json({ error: "Missing channel headers." }, { status: 400 });
+    return NextResponse.json({ error: "Kanal-Header fehlen." }, { status: 400 });
   }
 
   if (resourceState === "sync" || resourceState !== "exists") {

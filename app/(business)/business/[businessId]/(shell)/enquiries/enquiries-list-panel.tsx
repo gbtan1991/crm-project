@@ -43,10 +43,9 @@ export function EnquiriesListPanel({
       <Card>
         <CardContent className="flex flex-col items-center justify-center gap-2 py-16 text-center">
           <Inbox className="size-8 text-muted-foreground" />
-          <p className="font-medium">No enquiries yet</p>
+          <p className="font-medium">Noch keine Anfragen</p>
           <p className="text-sm text-muted-foreground">
-            Create a form and send submissions to its webhook URL, or add one
-            manually.
+            Erstellen Sie ein Formular und senden Sie Einsendungen an die Webhook-URL, oder erfassen Sie eine Anfrage manuell.
           </p>
         </CardContent>
       </Card>

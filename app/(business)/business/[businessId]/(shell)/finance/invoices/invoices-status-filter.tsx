@@ -45,12 +45,12 @@ export function InvoicesStatusFilter({ businessId }: { businessId: string }) {
   return (
     <Select value={current} onValueChange={onChange}>
       <SelectTrigger className="w-[180px]">
-        <SelectValue placeholder="All statuses" />
+        <SelectValue placeholder="Alle Status" />
       </SelectTrigger>
       <SelectContent>
         {STATUS_OPTIONS.map((status) => (
           <SelectItem key={status} value={status}>
-            {status === "ALL" ? "All statuses" : invoiceStatusLabel(status)}
+            {status === "ALL" ? "Alle Status" : invoiceStatusLabel(status)}
           </SelectItem>
         ))}
       </SelectContent>

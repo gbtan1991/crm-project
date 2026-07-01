@@ -28,7 +28,7 @@ export async function requestPasswordResetOtpAction(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid email." };
+    return { error: parsed.error.issues[0]?.message ?? "Ungültige E-Mail-Adresse." };
   }
 
   const result = await requestPasswordResetOtp(parsed.data.email);
@@ -38,7 +38,7 @@ export async function requestPasswordResetOtpAction(
 
   return {
     success:
-      "If an account exists for that email, a verification code has been sent.",
+      "Falls ein Konto mit dieser E-Mail existiert, wurde ein Bestätigungscode gesendet.",
   };
 }
 
@@ -52,7 +52,7 @@ export async function verifyPasswordResetOtpAction(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid verification code." };
+    return { error: parsed.error.issues[0]?.message ?? "Ungültiger Bestätigungscode." };
   }
 
   const result = await verifyPasswordResetOtp(
@@ -64,7 +64,7 @@ export async function verifyPasswordResetOtpAction(
     return { error: result.error };
   }
 
-  return { success: "Verification code accepted." };
+  return { success: "Bestätigungscode akzeptiert." };
 }
 
 export async function resetPasswordWithOtpAction(
@@ -79,7 +79,7 @@ export async function resetPasswordWithOtpAction(
   });
 
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+    return { error: parsed.error.issues[0]?.message ?? "Ungültige Eingabe." };
   }
 
   const result = await resetPasswordWithOtp(
@@ -102,7 +102,7 @@ export async function resetPasswordWithOtpAction(
     if (error instanceof AuthError) {
       return {
         error:
-          "Password was updated, but automatic sign-in failed. Try logging in manually.",
+          "Passwort wurde aktualisiert, aber die automatische Anmeldung ist fehlgeschlagen. Bitte melden Sie sich manuell an.",
       };
     }
     throw error;
