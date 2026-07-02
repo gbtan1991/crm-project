@@ -15,6 +15,15 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN --mount=type=secret,id=env_file \
     set -a && . /run/secrets/env_file && set +a && npm run build
 
+# ---- Migrate ----
+FROM node:22-alpine AS migrate
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+CMD ["npx", "prisma", "migrate", "deploy"]
+
 # ---- Runner ----
 FROM node:22-alpine AS runner
 WORKDIR /app
