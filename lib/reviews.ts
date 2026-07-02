@@ -81,6 +81,7 @@ function serializeReview(review: {
   requestedAt: Date | null;
   requestReason: string | null;
   requestCount: number;
+  failureCount: number;
   respondedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
@@ -205,7 +206,7 @@ export function getReviewStatsPeriodRange(
     };
   }
 
-  let monthsBack = period === "last_3_months" ? 2 : 11;
+  const monthsBack = period === "last_3_months" ? 2 : 11;
   let fromYear = year;
   let fromMonth = month - monthsBack;
   while (fromMonth <= 0) {

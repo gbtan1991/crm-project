@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      secrets:
+        - env_file
     container_name: meisterflow-app
     restart: unless-stopped
     profiles:
@@ -34,3 +36,7 @@ services:
 volumes:
   postgres_data:
     name: meisterflow-postgres-data
+
+secrets:
+  env_file:
+    file: .env

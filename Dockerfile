@@ -12,7 +12,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm run build
+RUN --mount=type=secret,id=env_file \
+    set -a && . /run/secrets/env_file && set +a && npm run build
 
 # ---- Runner ----
 FROM node:22-alpine AS runner
