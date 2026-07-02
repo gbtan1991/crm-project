@@ -267,7 +267,7 @@ export function CustomerDetailView({
             ) : null}
           </div>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Customer since {formatCustomerSince(customer.createdAt, timeZone)}
+            Kunde seit {formatCustomerSince(customer.createdAt, timeZone)}
           </p>
         </div>
       </div>

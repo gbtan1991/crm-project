@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
+  CustomerCombobox,
+  NO_CUSTOMER_VALUE,
+} from "@/components/customer-combobox";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -41,16 +45,11 @@ import {
   formatBookingTime,
 } from "@/lib/booking-display";
 import type { BookingListRow } from "@/lib/bookings";
-import { formatCustomerName } from "@/lib/customer-display";
-import type { CustomerOption } from "@/lib/customers";
 import { dateTimeLocalToUtcIso, toDateTimeLocalValue } from "@/lib/datetime";
-
-const NO_CUSTOMER_VALUE = "no-customer";
 
 export function BookingDetailDialog({
   businessId,
   booking,
-  customers,
   open,
   timeZone,
   onOpenChange,
@@ -58,7 +57,6 @@ export function BookingDetailDialog({
 }: {
   businessId: string;
   booking: BookingListRow | null;
-  customers: CustomerOption[];
   open: boolean;
   timeZone: string;
   onOpenChange: (open: boolean) => void;
@@ -81,7 +79,6 @@ export function BookingDetailDialog({
             key={booking.id}
             businessId={businessId}
             booking={booking}
-            customers={customers}
             timeZone={timeZone}
             onOpenChange={onOpenChange}
             onUpdated={onUpdated}
@@ -95,14 +92,12 @@ export function BookingDetailDialog({
 function BookingDetailForm({
   businessId,
   booking,
-  customers,
   timeZone,
   onOpenChange,
   onUpdated,
 }: {
   businessId: string;
   booking: BookingListRow;
-  customers: CustomerOption[];
   timeZone: string;
   onOpenChange: (open: boolean) => void;
   onUpdated?: () => void;
@@ -269,19 +264,14 @@ function BookingDetailForm({
 
         <div className="space-y-2">
           <Label htmlFor="detail-customer">Kunde</Label>
-          <Select value={customerId} onValueChange={setCustomerId}>
-            <SelectTrigger id="detail-customer">
-              <SelectValue placeholder="Kunde auswählen" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={NO_CUSTOMER_VALUE}>Kein Kunde</SelectItem>
-              {customers.map((customer) => (
-                <SelectItem key={customer.id} value={customer.id}>
-                  {formatCustomerName(customer)} ({customer.email})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CustomerCombobox
+            id="detail-customer"
+            businessId={businessId}
+            knownCustomers={booking.customer ? [booking.customer] : []}
+            value={customerId}
+            onValueChange={setCustomerId}
+            allowEmpty
+          />
         </div>
 
         <div className="space-y-2">

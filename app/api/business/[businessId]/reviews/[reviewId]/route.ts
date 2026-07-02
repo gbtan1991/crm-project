@@ -2,16 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { ApiAuthError, requireBusinessOwnerOrAdmin } from "@/lib/auth/guards";
-import { sendReviewRequestEmailForBusiness } from "@/lib/messages/send-review-request-email";
-import { declineReview, requestReviewUpdate } from "@/lib/reviews";
+import {
+  resetReviewForManualRetry,
+  sendQueuedDirectReview,
+} from "@/lib/review-delivery";
+import {
+  declineReview,
+  getReviewForBusiness,
+  requestReviewUpdate,
+} from "@/lib/reviews";
 import {
   declineReviewSchema,
   requestReviewUpdateSchema,
+  retryReviewSchema,
 } from "@/lib/validation/review";
 
 const patchSchema = z.discriminatedUnion("action", [
   declineReviewSchema,
   requestReviewUpdateSchema,
+  retryReviewSchema,
 ]);
 
 export async function PATCH(
@@ -37,34 +46,61 @@ export async function PATCH(
       return NextResponse.json({ review });
     }
 
+    if (parsed.data.action === "retry") {
+      const resetResult = await resetReviewForManualRetry(reviewId, businessId);
+      if ("error" in resetResult) {
+        return NextResponse.json({ error: resetResult.error }, { status: 400 });
+      }
+
+      const emailResult = await sendQueuedDirectReview(businessId, reviewId, {
+        subject: resetResult.subject,
+        bodyHtml: resetResult.bodyHtml,
+      });
+
+      const updatedReview = await getReviewForBusiness(businessId, reviewId);
+      if (!emailResult.ok) {
+        return NextResponse.json(
+          {
+            review: updatedReview,
+            warning: emailResult.error,
+          },
+          { status: 200 },
+        );
+      }
+
+      return NextResponse.json({
+        review: await getReviewForBusiness(businessId, reviewId),
+        messageId: emailResult.messageId,
+      });
+    }
+
     const result = await requestReviewUpdate(reviewId, businessId, parsed.data);
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    const emailResult = await sendReviewRequestEmailForBusiness(
+    const emailResult = await sendQueuedDirectReview(
       businessId,
       result.review.id,
       {
         subject: parsed.data.subject,
-        bodyText: parsed.data.bodyText,
         bodyHtml: parsed.data.bodyHtml,
       },
     );
 
-    if (!emailResult) {
-      return NextResponse.json({ error: "Bewertung nicht gefunden." }, { status: 404 });
-    }
-
+    const review = await getReviewForBusiness(businessId, result.review.id);
     if (!emailResult.ok) {
       return NextResponse.json(
-        { error: emailResult.error, review: result.review },
-        { status: 400 },
+        {
+          review,
+          warning: emailResult.error,
+        },
+        { status: 200 },
       );
     }
 
     return NextResponse.json({
-      review: result.review,
+      review: await getReviewForBusiness(businessId, result.review.id),
       messageId: emailResult.messageId,
     });
   } catch (error) {

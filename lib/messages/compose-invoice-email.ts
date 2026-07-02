@@ -6,7 +6,6 @@ export type InvoiceEmailCompose = {
   fromAddress: string;
   toAddress: string;
   subject: string;
-  bodyText: string;
   bodyHtml: string;
   attachment: {
     filename: string;
@@ -76,7 +75,6 @@ export async function getInvoiceEmailCompose(
       fromAddress: connection.accountEmail,
       toAddress: emailContext.toAddress,
       subject: emailContext.subject,
-      bodyText: emailContext.bodyText,
       bodyHtml: emailContext.bodyHtml,
       attachment: {
         filename,

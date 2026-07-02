@@ -11,7 +11,6 @@ import {
   listBookingsForBusiness,
 } from "@/lib/bookings";
 import { getAppointmentReminderSettings } from "@/lib/appointment-reminders";
-import { listCustomerOptionsForBusiness } from "@/lib/customers";
 import { prisma } from "@/lib/prisma";
 
 type PageProps = {
@@ -33,7 +32,7 @@ export default async function BookingsPage({ params }: PageProps) {
 
   const timeZone = business.config?.timezone ?? "UTC";
 
-  const [bookings, calendarConnection, customers, reminderSettings] = await Promise.all([
+  const [bookings, calendarConnection, reminderSettings] = await Promise.all([
     listBookingsForBusiness(businessId),
     prisma.calendarConnection.findUnique({
       where: { businessId },
@@ -44,7 +43,6 @@ export default async function BookingsPage({ params }: PageProps) {
         lastSyncedAt: true,
       },
     }),
-    listCustomerOptionsForBusiness(businessId),
     getAppointmentReminderSettings(businessId),
   ]);
 
@@ -80,7 +78,6 @@ export default async function BookingsPage({ params }: PageProps) {
         businessName={business.name}
         bookings={bookings}
         calendarConnected={isConnected}
-        customers={customers}
         stats={stats}
         timeZone={timeZone}
         reminderSettings={reminderSettings}

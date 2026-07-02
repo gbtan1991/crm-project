@@ -9,6 +9,7 @@ export { formatCustomerName, customerInitials } from "@/lib/customer-display";
 
 export const CUSTOMER_PAGE_SIZE = 20;
 export const CUSTOMER_OPTION_LIMIT = 500;
+export const CUSTOMER_COMBOBOX_RESULT_LIMIT = 5;
 
 export type CustomerListRow = {
   id: string;
@@ -124,6 +125,59 @@ export async function listCustomerOptionsForBusiness(
     where: { businessId },
     orderBy: [{ companyName: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
     take: CUSTOMER_OPTION_LIMIT,
+    select: {
+      id: true,
+      companyName: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+    },
+  });
+}
+
+export async function searchCustomerOptionsForBusiness(
+  businessId: string,
+  options: { q?: string; limit?: number } = {},
+): Promise<CustomerOption[]> {
+  const q = options.q?.trim();
+  const limit = options.limit ?? CUSTOMER_COMBOBOX_RESULT_LIMIT;
+
+  return prisma.customer.findMany({
+    where: {
+      businessId,
+      ...(q
+        ? {
+            OR: [
+              { email: { contains: q, mode: "insensitive" as const } },
+              { firstName: { contains: q, mode: "insensitive" as const } },
+              { lastName: { contains: q, mode: "insensitive" as const } },
+              { companyName: { contains: q, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
+    },
+    orderBy: [{ companyName: "asc" }, { lastName: "asc" }, { firstName: "asc" }],
+    take: limit,
+    select: {
+      id: true,
+      companyName: true,
+      firstName: true,
+      lastName: true,
+      email: true,
+    },
+  });
+}
+
+export async function getCustomerCountForBusiness(businessId: string) {
+  return prisma.customer.count({ where: { businessId } });
+}
+
+export async function getCustomerOptionForBusiness(
+  businessId: string,
+  customerId: string,
+): Promise<CustomerOption | null> {
+  return prisma.customer.findFirst({
+    where: { id: customerId, businessId },
     select: {
       id: true,
       companyName: true,

@@ -12,7 +12,6 @@ export const appointmentReminderOffsetSchema = z.object({
 export const appointmentReminderSettingsSchema = z.object({
   enabled: z.boolean().default(false),
   subject: z.string().trim().min(1, "Betreff ist erforderlich.").max(500),
-  bodyText: z.string().trim().min(1, "E-Mail-Text ist erforderlich.").max(20_000),
   bodyHtml: z.string().trim().min(1, "HTML-Text ist erforderlich.").max(20_000),
   offsets: z
     .array(appointmentReminderOffsetSchema)

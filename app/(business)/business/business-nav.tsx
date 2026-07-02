@@ -42,10 +42,10 @@ export function BusinessNav({
     { segment: "customers", label: "Kunden", icon: Users },
     { segment: "enquiries", label: "Anfragen", icon: Inbox },
     { segment: "bookings", label: "Termine", icon: CalendarDays },
-    { segment: "finance", label: "Finanzen", icon: Landmark },
-    { segment: "sequences", label: "Sequenzen", icon: Workflow },
     { segment: "reviews", label: "Bewertungen", icon: Star },
+    { segment: "sequences", label: "Sequenzen", icon: Workflow },
     { segment: "website", label: "Webseite", icon: Globe },
+    { segment: "finance", label: "Finanzen", icon: Landmark },
   ];
 
   return (

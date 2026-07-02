@@ -13,6 +13,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  CustomerCombobox,
+  NO_CUSTOMER_VALUE,
+} from "@/components/customer-combobox";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,17 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import {
   enquiryDisplayValue,
   enquiryStatusLabel,
   formatEnquiryReceivedAt,
 } from "@/lib/enquiry-display";
 import { businessCustomerPath } from "@/lib/business-paths";
-import { formatCustomerName } from "@/lib/customer-display";
 import type { CustomerOption } from "@/lib/customers";
 import type { EnquiryListRow } from "@/lib/enquiries";
-
-const NO_CUSTOMER_VALUE = "no-customer";
 
 function enquiryString(data: Record<string, unknown>, keys: string[]) {
   for (const key of keys) {
@@ -72,7 +74,6 @@ function customerValuesFromEnquiry(enquiry: EnquiryListRow): CustomerFormValues 
 
 export function EnquiryDetailDialog({
   businessId,
-  customers,
   enquiry,
   open,
   timeZone,
@@ -80,14 +81,15 @@ export function EnquiryDetailDialog({
   onUpdated,
 }: {
   businessId: string;
-  customers: CustomerOption[];
   enquiry: EnquiryListRow | null;
   open: boolean;
   timeZone: string;
   onOpenChange: (open: boolean) => void;
   onUpdated?: () => void;
 }) {
-  const [localCustomers, setLocalCustomers] = useState(customers);
+  const [knownCustomers, setKnownCustomers] = useState<CustomerOption[]>(
+    enquiry?.customer ? [enquiry.customer] : [],
+  );
   const [status, setStatus] = useState<EnquiryListRow["status"]>(
     enquiry?.status ?? "NEW",
   );
@@ -156,7 +158,7 @@ export function EnquiryDetailDialog({
       }
 
       const customer = data.customer as CustomerOption;
-      setLocalCustomers((current) => [customer, ...current]);
+      setKnownCustomers((current) => [customer, ...current]);
       setCustomerId(customer.id);
       setCustomerOpen(false);
       toast.success("Kunde erstellt.");
@@ -266,23 +268,18 @@ export function EnquiryDetailDialog({
                   </DialogContent>
                 </Dialog>
               </div>
-              <Select value={customerId} onValueChange={setCustomerId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Kunde verknüpfen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_CUSTOMER_VALUE}>Kein Kunde</SelectItem>
-                  {localCustomers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {formatCustomerName(customer)} ({customer.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomerCombobox
+                businessId={businessId}
+                knownCustomers={knownCustomers}
+                value={customerId}
+                onValueChange={setCustomerId}
+                placeholder="Kunde verknüpfen"
+                allowEmpty
+              />
               {enquiry.customer ? (
                 <Button variant="link" className="h-auto p-0" asChild>
                   <Link href={businessCustomerPath(businessId, enquiry.customer.id)}>
-                    View linked customer
+                    Verknüpften Kunden anzeigen
                   </Link>
                 </Button>
               ) : null}
@@ -307,7 +304,7 @@ export function EnquiryDetailDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            Schließen
           </Button>
           <Button onClick={() => void handleSave()} disabled={saving || !enquiry}>
             {saving ? (

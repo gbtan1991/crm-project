@@ -35,7 +35,7 @@ export default async function OnboardingPage({
             MeisterFlow
           </p>
           <p className="text-sm text-muted-foreground">
-            Setup · Schritt {state.step} von 3
+            Einrichtung · Schritt {state.step} von 3
           </p>
         </div>
         <p className="text-sm text-muted-foreground">{business.name}</p>

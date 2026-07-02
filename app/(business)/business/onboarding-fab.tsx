@@ -22,7 +22,7 @@ export function OnboardingFab({
   }
 
   return (
-    <div className="fixed right-6 top-1/2 z-50 -translate-y-1/2">
+    <div className="fixed right-6 bottom-6 z-50">
       <Button
         asChild
         size="lg"
@@ -30,8 +30,8 @@ export function OnboardingFab({
       >
         <Link href={onboardingPath}>
           <Sparkles className="size-4" />
-          <span className="max-w-[9rem] text-left text-sm leading-tight">
-            Einrichtung abschliessen
+          <span className="text-left text-sm leading-tight">
+            Onboarding
           </span>
         </Link>
       </Button>

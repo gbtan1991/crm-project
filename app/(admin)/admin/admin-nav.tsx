@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/dashboard", label: "Übersicht", icon: LayoutDashboard },
   { href: "/admin/businesses", label: "Unternehmen", icon: Building2 },
   { href: "/admin/users", label: "Benutzer", icon: Users },
 ];
@@ -24,7 +24,7 @@ export function AdminNav({ email }: { email?: string | null }) {
           <span className="font-heading text-lg font-bold tracking-tight">
             MeisterFlow
             <span className="ml-2 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
-              Admin
+              Administrator
             </span>
           </span>
           <nav className="flex items-center gap-1">

@@ -4,7 +4,7 @@ import {
   MessagePurpose,
   MessageStatus,
 } from "@/lib/generated/prisma/client";
-import { buildEmailHtmlFromPlainText, wrapEmailContentHtml } from "@/lib/email-html";
+import { wrapEmailContentHtml } from "@/lib/email-html";
 import {
   buildInvoicePdfForBusiness,
   getInvoiceEmailContext,
@@ -83,9 +83,7 @@ export async function sendInvoiceEmailForBusiness(
     return null;
   }
 
-  const bodyHtml = email.bodyHtml?.trim()
-    ? wrapEmailContentHtml(email.bodyHtml)
-    : buildEmailHtmlFromPlainText(email.bodyText);
+  const bodyHtml = wrapEmailContentHtml(email.bodyHtml);
 
   const message = await prisma.message.create({
     data: {
@@ -100,7 +98,7 @@ export async function sendInvoiceEmailForBusiness(
       fromAddress: connection.accountEmail,
       toAddress: emailContext.toAddress,
       subject: email.subject,
-      bodyText: email.bodyText,
+      bodyText: "",
       bodyHtml,
       customerId: emailContext.invoice.customer.id,
       invoiceId,
@@ -124,7 +122,6 @@ export async function sendInvoiceEmailForBusiness(
             from: connection.accountEmail,
             to: emailContext.toAddress,
             subject: email.subject,
-            bodyText: email.bodyText,
             bodyHtml,
             attachments: [attachment],
           })
@@ -132,7 +129,6 @@ export async function sendInvoiceEmailForBusiness(
             accessToken: await OutlookCalendarOAuth.getValidAccessToken(businessId),
             to: emailContext.toAddress,
             subject: email.subject,
-            bodyText: email.bodyText,
             bodyHtml,
             attachments: [attachment],
           });

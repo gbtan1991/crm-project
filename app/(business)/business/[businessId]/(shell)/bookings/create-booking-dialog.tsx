@@ -9,6 +9,11 @@ import {
   emptyCustomerForm,
   type CustomerFormValues,
 } from "@/app/(business)/business/[businessId]/(shell)/customers/customer-form-fields";
+import {
+  CustomerCombobox,
+  isCustomerSelected,
+  NO_CUSTOMER_VALUE,
+} from "@/components/customer-combobox";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,19 +26,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCustomerName } from "@/lib/customer-display";
 import type { CustomerOption } from "@/lib/customers";
 import { dateTimeLocalToUtcIso, toDateTimeLocalValue } from "@/lib/datetime";
-
-const NO_CUSTOMER_VALUE = "no-customer";
 
 function defaultStartEnd(timeZone: string) {
   const start = new Date();
@@ -50,7 +45,6 @@ function defaultStartEnd(timeZone: string) {
 export function CreateBookingDialog({
   businessId,
   calendarConnected,
-  customers,
   open,
   timeZone,
   onOpenChange,
@@ -58,14 +52,13 @@ export function CreateBookingDialog({
 }: {
   businessId: string;
   calendarConnected: boolean;
-  customers: CustomerOption[];
   open: boolean;
   timeZone: string;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
 }) {
   const defaults = defaultStartEnd(timeZone);
-  const [localCustomers, setLocalCustomers] = useState(customers);
+  const [knownCustomers, setKnownCustomers] = useState<CustomerOption[]>([]);
   const [title, setTitle] = useState("");
   const [startsAt, setStartsAt] = useState(defaults.startsAt);
   const [endsAt, setEndsAt] = useState(defaults.endsAt);
@@ -100,7 +93,7 @@ export function CreateBookingDialog({
       return;
     }
 
-    if (customerId === NO_CUSTOMER_VALUE) {
+    if (!isCustomerSelected(customerId)) {
       setError("Wählen oder erstellen Sie einen Kunden, bevor Sie einen Termin anlegen.");
       return;
     }
@@ -159,7 +152,7 @@ export function CreateBookingDialog({
       }
 
       const customer = data.customer as CustomerOption;
-      setLocalCustomers((current) => [customer, ...current]);
+      setKnownCustomers((current) => [customer, ...current]);
       setCustomerId(customer.id);
       setCustomerValues(emptyCustomerForm);
       setCustomerOpen(false);
@@ -229,7 +222,7 @@ export function CreateBookingDialog({
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-3">
-              <Label htmlFor="booking-customer">Customer *</Label>
+              <Label htmlFor="booking-customer">Kunde *</Label>
               <Dialog open={customerOpen} onOpenChange={setCustomerOpen}>
                 <DialogTrigger asChild>
                   <Button type="button" variant="outline" size="sm">
@@ -288,21 +281,13 @@ export function CreateBookingDialog({
                 </DialogContent>
               </Dialog>
             </div>
-            <Select value={customerId} onValueChange={setCustomerId}>
-              <SelectTrigger id="booking-customer">
-                <SelectValue placeholder="Kunde auswählen" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_CUSTOMER_VALUE} disabled>
-                  Kunde auswählen
-                </SelectItem>
-                {localCustomers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {formatCustomerName(customer)} ({customer.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CustomerCombobox
+              id="booking-customer"
+              businessId={businessId}
+              knownCustomers={knownCustomers}
+              value={customerId}
+              onValueChange={setCustomerId}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="booking-location">Ort</Label>
@@ -338,7 +323,7 @@ export function CreateBookingDialog({
             </Button>
             <Button
               type="submit"
-              disabled={submitting || customerId === NO_CUSTOMER_VALUE}
+              disabled={submitting || !isCustomerSelected(customerId)}
             >
               {submitting ? (
                 <>

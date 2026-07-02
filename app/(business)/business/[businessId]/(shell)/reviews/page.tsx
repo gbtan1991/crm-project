@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/app/(business)/business/page-header";
 import { auth } from "@/auth";
 import { getBusinessForViewer } from "@/lib/business-context";
-import { listCustomerOptionsForBusiness } from "@/lib/customers";
+import { getCustomerCountForBusiness } from "@/lib/customers";
 import { getReviewStats, listReviews } from "@/lib/reviews";
 import { getActiveReviewSequenceForBusiness } from "@/lib/sequences";
 import { listReviewsSchema } from "@/lib/validation/review";
@@ -17,6 +17,8 @@ type PageProps = {
     status?: string;
     sort?: string;
     period?: string;
+    from?: string;
+    to?: string;
   }>;
 };
 
@@ -42,16 +44,28 @@ export default async function ReviewsPage({
     status: rawParams.status,
     sort: rawParams.sort ?? "newest",
     period: rawParams.period ?? "all",
+    from: rawParams.from,
+    to: rawParams.to,
   });
   const query = parsed.success
     ? parsed.data
-    : { page: 1, limit: 20, sort: "newest" as const, period: "all" as const };
+    : {
+        page: 1,
+        limit: 20,
+        sort: "newest" as const,
+        period: "all" as const,
+      };
   const timeZone = business.config?.timezone ?? "UTC";
 
-  const [result, stats, customers, activeReviewSequence] = await Promise.all([
+  const [result, stats, customerCount, activeReviewSequence] = await Promise.all([
     listReviews(businessId, query, timeZone),
-    getReviewStats(businessId, { period: query.period, timeZone }),
-    listCustomerOptionsForBusiness(businessId),
+    getReviewStats(businessId, {
+      period: query.period,
+      from: query.from,
+      to: query.to,
+      timeZone,
+    }),
+    getCustomerCountForBusiness(businessId),
     getActiveReviewSequenceForBusiness(businessId),
   ]);
 
@@ -65,7 +79,7 @@ export default async function ReviewsPage({
         businessId={businessId}
         businessName={business.name}
         initialGoogleReviewUrl={business.config?.googleReviewUrl ?? null}
-        customers={customers}
+        hasCustomers={customerCount > 0}
         activeReviewSequence={activeReviewSequence}
         stats={stats}
         reviews={result.items}
@@ -75,6 +89,8 @@ export default async function ReviewsPage({
         currentStatus={query.status ?? null}
         currentSort={query.sort}
         currentPeriod={query.period}
+        currentFrom={query.from ?? null}
+        currentTo={query.to ?? null}
       />
     </div>
   );

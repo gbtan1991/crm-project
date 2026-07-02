@@ -148,10 +148,10 @@ export function FormEditor({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Fields</CardTitle>
+          <CardTitle className="text-base">Felder</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={addField}>
             <Plus className="size-4" />
-            Add field
+            Feld hinzufügen
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -230,7 +230,7 @@ export function FormEditor({
                     onClick={() => removeField(index)}
                   >
                     <Trash2 className="size-4" />
-                    Remove
+                    Entfernen
                   </Button>
                 ) : null}
               </div>

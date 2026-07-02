@@ -18,7 +18,7 @@ export default async function ReviewPage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-dvh items-center justify-center bg-gradient-to-b from-background to-muted/50 p-4">
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-xl">
         <div className="rounded-2xl border bg-card p-8 shadow-sm">
           <div className="mb-6 text-center">
             <div className="mb-3 inline-flex size-12 items-center justify-center rounded-full bg-primary/10">

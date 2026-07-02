@@ -3,9 +3,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Eye, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { EmailHtmlField } from "@/components/email-html-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import type { ActivityLogRow } from "@/lib/activity-logs";
 import type { SequenceType } from "@/lib/generated/prisma/client";
 import type { SequenceRow } from "@/lib/sequences";
@@ -29,17 +29,12 @@ import {
 } from "@/lib/email-preview";
 import {
   defaultInvoiceSequenceStepHtml,
-  defaultInvoiceSequenceStepText,
   defaultReviewSequenceStepHtml,
-  defaultReviewSequenceStepText,
 } from "@/lib/email-templates";
-
-import { EmailPreviewDialog } from "./email-preview-dialog";
 
 type StepDraft = {
   key: string;
   subject: string;
-  bodyText: string;
   bodyHtml: string;
   delayAmount: string;
   delayUnit: "MINUTES" | "HOURS" | "DAYS";
@@ -56,9 +51,6 @@ function defaultStep(index = 0, type: SequenceType = "INVOICE"): StepDraft {
       : index === 0
         ? "Rechnung {{invoiceNumber}} von {{businessName}}"
         : "Erinnerung: Rechnung {{invoiceNumber}} ist noch offen",
-    bodyText: isReview
-      ? defaultReviewSequenceStepText(index)
-      : defaultInvoiceSequenceStepText(index),
     bodyHtml: isReview
       ? defaultReviewSequenceStepHtml(index)
       : defaultInvoiceSequenceStepHtml(index),
@@ -76,7 +68,6 @@ function sequenceToDraft(sequence?: SequenceRow) {
       sequence?.steps.map((step, index) => ({
         key: step.id,
         subject: step.subject,
-        bodyText: step.bodyText,
         bodyHtml:
           step.bodyHtml ??
           (sequence.type === "REVIEW"
@@ -126,7 +117,11 @@ export function SequencesPanel({
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [previewStep, setPreviewStep] = useState<StepDraft | null>(null);
+
+  const previewVariables =
+    type === "REVIEW"
+      ? reviewSequencePreviewVariables(businessName)
+      : invoiceSequencePreviewVariables(businessName);
 
   useEffect(() => {
     if (tab !== "logs" || logPage !== 1) {
@@ -179,7 +174,6 @@ export function SequencesPanel({
 
     const payloadSteps = steps.map((step, index) => ({
       subject: step.subject,
-      bodyText: step.bodyText,
       bodyHtml: step.bodyHtml,
       delayAmount: Number(step.delayAmount),
       delayUnit: step.delayUnit,
@@ -190,13 +184,12 @@ export function SequencesPanel({
       payloadSteps.some(
         (step) =>
           !step.subject.trim() ||
-          !step.bodyText.trim() ||
           !step.bodyHtml.trim() ||
           !Number.isFinite(step.delayAmount) ||
           step.delayAmount < 0,
       )
     ) {
-      setError("Jeder Schritt benötigt Betreff, Klartext, HTML-Text und eine gültige Verzögerung.");
+      setError("Jeder Schritt benötigt Betreff, HTML-Text und eine gültige Verzögerung.");
       return;
     }
 
@@ -368,8 +361,8 @@ export function SequencesPanel({
                     <div>
                       <h3 className="font-semibold">E-Mail-Schritt {index + 1}</h3>
                       <p className="text-xs text-muted-foreground">
-                        Delay is counted from sequence start for step 1, and
-                        from the previous email for later steps.
+                        Die Verzögerung wird ab Sequenzstart für Schritt 1 gezählt und
+                        ab der vorherigen E-Mail für spätere Schritte.
                       </p>
                     </div>
                     <Button
@@ -384,7 +377,7 @@ export function SequencesPanel({
                       }
                     >
                       <Trash2 className="size-4" />
-                      Remove
+                      Entfernen
                     </Button>
                   </div>
                   <div className="grid gap-4 md:grid-cols-3">
@@ -400,7 +393,7 @@ export function SequencesPanel({
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Unit</Label>
+                      <Label>Einheit</Label>
                       <Select
                         value={step.delayUnit}
                         onValueChange={(value) =>
@@ -429,41 +422,20 @@ export function SequencesPanel({
                       />
                     </div>
                     <div className="space-y-2 md:col-span-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <Label>HTML-Text</Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setPreviewStep(step)}
-                        >
-                          <Eye className="size-4" />
-                          Preview
-                        </Button>
-                      </div>
-                      <Textarea
+                      <EmailHtmlField
+                        id={`sequence-step-html-${step.key}`}
                         value={step.bodyHtml}
-                        rows={12}
-                        className="font-mono text-xs"
-                        onChange={(event) =>
-                          updateStep(step.key, { bodyHtml: event.target.value })
+                        onChange={(value) =>
+                          updateStep(step.key, { bodyHtml: value })
+                        }
+                        sampleVariables={previewVariables}
+                        helpText={
+                          <>
+                            Bearbeiten Sie das HTML direkt. Verwenden Sie
+                            Vorlagenvariablen in doppelten geschweiften Klammern.
+                          </>
                         }
                       />
-                      <p className="text-xs text-muted-foreground">
-                        Bearbeiten Sie das HTML direkt. Verwenden Sie Vorlagenvariablen in doppelten
-                        geschweiften Klammern.
-                      </p>
-                      <Label className="pt-2">Klartext-Fallback</Label>
-                      <Textarea
-                        value={step.bodyText}
-                        rows={6}
-                        onChange={(event) =>
-                          updateStep(step.key, { bodyText: event.target.value })
-                        }
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Used by email clients that do not render HTML.
-                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -474,20 +446,16 @@ export function SequencesPanel({
           <div className="rounded-lg bg-muted p-4 text-sm text-muted-foreground">
             {type === "REVIEW" ? (
               <>
-                Variables: {"{{customerName}}"}, {"{{businessName}}"},{" "}
+                Variablen: {"{{customerName}}"}, {"{{businessName}}"},{" "}
                 {"{{reviewLink}}"}, {"{{link}}"}.
-                {" "}
-                The HTML body is sent as the main email. The plain text fallback
-                is used only when HTML is not supported.
               </>
             ) : (
               <>
-                Variables: {"{{customerName}}"}, {"{{businessName}}"},{" "}
+                Variablen: {"{{customerName}}"}, {"{{businessName}}"},{" "}
                 {"{{invoiceNumber}}"}, {"{{invoiceTitle}}"}, {"{{total}}"},{" "}
                 {"{{dueDate}}"}, {"{{issueDate}}"}, {"{{invoiceStatus}}"}.
                 {" "}
-                The HTML body is sent as the main email with the invoice PDF
-                attached.
+                Der HTML-Text wird mit angehängter Rechnungs-PDF versendet.
               </>
             )}
           </div>
@@ -499,7 +467,7 @@ export function SequencesPanel({
               onClick={() => setSteps((current) => [...current, defaultStep(current.length, type)])}
             >
               <Plus className="size-4" />
-              Add step
+              Schritt hinzufügen
             </Button>
             <div className="flex gap-3">
               <Button
@@ -523,23 +491,6 @@ export function SequencesPanel({
           </div>
         </form>
         ) : null}
-
-        <EmailPreviewDialog
-          open={previewStep !== null}
-          onOpenChange={(open) => {
-            if (!open) {
-              setPreviewStep(null);
-            }
-          }}
-          subject={previewStep?.subject ?? ""}
-          bodyHtml={previewStep?.bodyHtml ?? ""}
-          bodyText={previewStep?.bodyText ?? ""}
-          sampleVariables={
-            type === "REVIEW"
-              ? reviewSequencePreviewVariables(businessName)
-              : invoiceSequencePreviewVariables(businessName)
-          }
-        />
 
         {!creating ? (
         <div className="space-y-3">

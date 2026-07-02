@@ -233,12 +233,12 @@ export function InvoiceTemplateEditor({
               id="templateName"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Garden maintenance"
+              placeholder="z. B. Gartenpflege"
               required
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="defaultTitle">Standard-Rechnungstitel (optional)</Label>
+            <Label htmlFor="defaultTitle">Standard-Rechnungstitel (freiwillig)</Label>
             <Input
               id="defaultTitle"
               value={defaultTitle}
@@ -279,7 +279,7 @@ export function InvoiceTemplateEditor({
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="defaultNotes">Standardnotizen (optional)</Label>
+            <Label htmlFor="defaultNotes">Standardnotizen (freiwillig)</Label>
             <Textarea
               id="defaultNotes"
               value={defaultNotes}
@@ -293,10 +293,10 @@ export function InvoiceTemplateEditor({
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Services</CardTitle>
+          <CardTitle className="text-base">Leistungen</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={addService}>
             <Plus className="size-4" />
-            Add service
+            Leistung hinzufügen
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -318,7 +318,7 @@ export function InvoiceTemplateEditor({
                     }
                   >
                     <Trash2 className="size-4" />
-                    Remove
+                    Entfernen
                   </Button>
                 ) : null}
               </div>
@@ -330,11 +330,11 @@ export function InvoiceTemplateEditor({
                     onChange={(event) =>
                       updateService(service.key, { name: event.target.value })
                     }
-                    placeholder="e.g. Lawn mowing"
+                    placeholder="z. B. Rasenmähen"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Standard-Einzelpreis (optional)</Label>
+                  <Label>Standard-Einzelpreis (freiwillig)</Label>
                   <Input
                     type="number"
                     min="0"

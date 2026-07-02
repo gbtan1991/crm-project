@@ -34,10 +34,10 @@ export function EnquiriesStatusFilter({
   return (
     <Select value={current} onValueChange={handleChange}>
       <SelectTrigger className="w-[160px] bg-card">
-        <SelectValue placeholder="All statuses" />
+        <SelectValue placeholder="Alle Status" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value={ALL_STATUSES}>All statuses</SelectItem>
+        <SelectItem value={ALL_STATUSES}>Alle Status</SelectItem>
         {ENQUIRY_STATUS_OPTIONS.map((status) => (
           <SelectItem key={status} value={status}>
             {enquiryStatusLabel(status)}

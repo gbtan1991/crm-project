@@ -179,7 +179,7 @@ export function CalendarSettingsPanel({
               />
             ) : (
               <p className="text-sm text-muted-foreground">
-                No calendar connected yet.
+                Noch kein Kalender verbunden.
               </p>
             )}
           </div>

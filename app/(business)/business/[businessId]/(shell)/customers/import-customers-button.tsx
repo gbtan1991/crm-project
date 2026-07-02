@@ -92,7 +92,7 @@ export function ImportCustomersButton({ businessId }: { businessId: string }) {
         ) : (
           <Upload className="size-4" />
         )}
-        Import CSV
+        CSV importieren
       </Button>
       <input
         ref={inputRef}

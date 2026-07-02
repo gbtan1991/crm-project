@@ -21,10 +21,14 @@ import { ensureInboxForBusiness } from "@/lib/inbox";
 import { buildInvoicePdfForBusiness, getInvoiceEmailContext } from "@/lib/invoice-email";
 import { formatInvoiceDate, invoiceStatusLabel } from "@/lib/invoice-display";
 import { formatMoney } from "@/lib/invoice-money";
+import {
+  markReviewEmailSent,
+  recordReviewSendFailure,
+} from "@/lib/review-delivery";
 import { sendReviewRequestEmailForBusiness } from "@/lib/messages/send-review-request-email";
 import { OutlookCalendarOAuth } from "@/lib/outlook-calendar/oauth";
 import { OutlookSendError, sendOutlookMessage } from "@/lib/outlook-mail/send";
-import { wrapEmailContentHtml, buildEmailHtmlFromPlainText } from "@/lib/email-html";
+import { wrapEmailContentHtml } from "@/lib/email-html";
 import { prisma } from "@/lib/prisma";
 import type { SequenceWriteInput } from "@/lib/validation/sequence";
 
@@ -168,8 +172,7 @@ async function sendInvoiceSequenceEmail(input: {
   businessId: string;
   invoiceId: string;
   subject: string;
-  bodyText: string;
-  bodyHtml?: string;
+  bodyHtml: string;
   sequenceId: string;
   enrollmentId: string;
   stepId: string;
@@ -231,10 +234,9 @@ async function sendInvoiceSequenceEmail(input: {
   }
 
   const subject = renderInvoiceVariables(input.subject, emailContext);
-  const bodyText = renderInvoiceVariables(input.bodyText, emailContext);
-  const bodyHtml = input.bodyHtml
-    ? wrapEmailContentHtml(renderInvoiceVariables(input.bodyHtml, emailContext))
-    : buildEmailHtmlFromPlainText(bodyText);
+  const bodyHtml = wrapEmailContentHtml(
+    renderInvoiceVariables(input.bodyHtml, emailContext),
+  );
   const attachment = {
     filename: pdfResult.filename,
     contentType: "application/pdf",
@@ -254,7 +256,7 @@ async function sendInvoiceSequenceEmail(input: {
       fromAddress: connection.accountEmail,
       toAddress: emailContext.toAddress,
       subject,
-      bodyText,
+      bodyText: "",
       bodyHtml,
       customerId: emailContext.invoice.customer.id,
       invoiceId: input.invoiceId,
@@ -289,7 +291,6 @@ async function sendInvoiceSequenceEmail(input: {
             from: connection.accountEmail,
             to: emailContext.toAddress,
             subject,
-            bodyText,
             bodyHtml,
             attachments: [attachment],
           })
@@ -297,7 +298,6 @@ async function sendInvoiceSequenceEmail(input: {
             accessToken: await OutlookCalendarOAuth.getValidAccessToken(input.businessId),
             to: emailContext.toAddress,
             subject,
-            bodyText,
             bodyHtml,
             attachments: [attachment],
           });
@@ -420,8 +420,8 @@ export async function createSequenceForBusiness(
       steps: {
         create: input.steps.map((step, index) => ({
           subject: step.subject.trim(),
-          bodyText: step.bodyText.trim(),
-          bodyHtml: step.bodyHtml?.trim() || null,
+          bodyText: "",
+          bodyHtml: step.bodyHtml.trim(),
           delayAmount: step.delayAmount,
           delayUnit: step.delayUnit,
           sortOrder: step.sortOrder ?? index,
@@ -476,8 +476,8 @@ export async function updateSequenceForBusiness(
         steps: {
           create: input.steps.map((step, index) => ({
             subject: step.subject.trim(),
-            bodyText: step.bodyText.trim(),
-            bodyHtml: step.bodyHtml?.trim() || null,
+            bodyText: "",
+            bodyHtml: step.bodyHtml.trim(),
             delayAmount: step.delayAmount,
             delayUnit: step.delayUnit,
             sortOrder: step.sortOrder ?? index,
@@ -685,8 +685,8 @@ export async function startReviewSequenceForBusiness(
   if (sequence.steps.length === 0) {
     return { error: "Bewertungssequenz hat keine E-Mail-Schritte." as const };
   }
-  if (review.status !== ReviewStatus.REQUESTED) {
-    return { error: "Nur angefragte Bewertungen können eine Sequenz starten." as const };
+  if (review.status !== ReviewStatus.QUEUED && review.status !== ReviewStatus.REQUESTED) {
+    return { error: "Nur Bewertungen in Warteschlange oder angefragt können eine Sequenz starten." as const };
   }
 
   const firstStep = sequence.steps[0];
@@ -787,7 +787,8 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
 
   if (
     enrollment.review.status === ReviewStatus.RECEIVED ||
-    enrollment.review.status === ReviewStatus.DECLINED
+    enrollment.review.status === ReviewStatus.DECLINED ||
+    enrollment.review.status === ReviewStatus.FAILED
   ) {
     await prisma.sequenceEnrollment.update({
       where: { id: enrollment.id },
@@ -837,10 +838,9 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
     reviewLink: reviewLink(enrollment.review.id),
   };
   const subject = renderReviewVariables(step.subject, context);
-  const bodyText = renderReviewVariables(step.bodyText, context);
   const bodyHtml = step.bodyHtml
     ? renderReviewVariables(step.bodyHtml, context)
-    : undefined;
+    : "";
 
   await createActivityLog({
     businessId: enrollment.businessId,
@@ -856,28 +856,44 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
   const sendResult = await sendReviewRequestEmailForBusiness(
     enrollment.businessId,
     enrollment.review.id,
-    { subject, bodyText, bodyHtml },
+    { subject, bodyHtml },
   );
 
   if (!sendResult) {
-    await prisma.sequenceEnrollment.update({
-      where: { id: enrollment.id },
-      data: {
-        status: SequenceEnrollmentStatus.FAILED,
-        lastError: "Bewertung nicht gefunden.",
-      },
-    });
+    const failure = await recordReviewSendFailure(enrollment.review.id);
+    if (failure.exhausted) {
+      await prisma.sequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: {
+          status: SequenceEnrollmentStatus.FAILED,
+          lastError: "Bewertung nicht gefunden.",
+        },
+      });
+    }
     return { failed: true, reason: "Bewertung nicht gefunden." };
   }
 
   if (!sendResult.ok) {
-    await prisma.sequenceEnrollment.update({
-      where: { id: enrollment.id },
-      data: {
-        status: SequenceEnrollmentStatus.FAILED,
-        lastError: sendResult.error,
-      },
-    });
+    const failure = await recordReviewSendFailure(enrollment.review.id);
+
+    if (failure.exhausted) {
+      await prisma.sequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: {
+          status: SequenceEnrollmentStatus.FAILED,
+          lastError: sendResult.error,
+        },
+      });
+    } else {
+      await prisma.sequenceEnrollment.update({
+        where: { id: enrollment.id },
+        data: {
+          nextRunAt: new Date(),
+          lastError: sendResult.error,
+        },
+      });
+    }
+
     await createActivityLog({
       businessId: enrollment.businessId,
       type: ActivityLogType.EMAIL,
@@ -892,6 +908,8 @@ async function processReviewEnrollment(enrollment: ReviewEnrollmentForProcessing
     });
     return { failed: true, reason: sendResult.error };
   }
+
+  await markReviewEmailSent(enrollment.review.id);
 
   const sentAt = new Date();
   const nextStepIndex = enrollment.currentStepIndex + 1;
@@ -1085,8 +1103,7 @@ async function processEnrollment(enrollmentId: string) {
     enrollmentId: enrollment.id,
     stepId: step.id,
     subject: step.subject,
-    bodyText: step.bodyText,
-    bodyHtml: step.bodyHtml ?? undefined,
+    bodyHtml: step.bodyHtml ?? "",
   });
 
   if (!sendResult.ok) {

@@ -3,7 +3,7 @@ type GmailSendInput = {
   from: string;
   to: string;
   subject: string;
-  bodyText: string;
+  bodyText?: string;
   bodyHtml?: string;
   attachments?: Array<{
     filename: string;
@@ -27,7 +27,10 @@ function encodeHeaderValue(value: string): string {
 }
 
 function buildMimeMessage(input: GmailSendInput): string {
-  const hasHtml = Boolean(input.bodyHtml?.trim());
+  const bodyHtml = input.bodyHtml?.trim();
+  const bodyText = input.bodyText?.trim();
+  const hasHtml = Boolean(bodyHtml);
+  const hasText = Boolean(bodyText);
   const mixedBoundary = `mf_mixed_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   const alternativeBoundary = `mf_alt_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   const hasAttachments = (input.attachments?.length ?? 0) > 0;
@@ -41,21 +44,39 @@ function buildMimeMessage(input: GmailSendInput): string {
 
   if (hasAttachments) {
     lines.push(`Content-Type: multipart/mixed; boundary="${mixedBoundary}"`, "");
-  } else if (hasHtml) {
+  } else if (hasHtml && hasText) {
     lines.push(`Content-Type: multipart/alternative; boundary="${alternativeBoundary}"`, "");
+  } else if (hasHtml) {
+    lines.push(
+      "Content-Type: text/html; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      bodyHtml ?? "",
+    );
+    return lines.join("\r\n");
+  } else if (hasText) {
+    lines.push(
+      "Content-Type: text/plain; charset=UTF-8",
+      "Content-Transfer-Encoding: 7bit",
+      "",
+      bodyText ?? "",
+    );
+    return lines.join("\r\n");
   } else {
-    lines.push("Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: 7bit", "", input.bodyText);
+    lines.push("Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: 7bit", "", "");
     return lines.join("\r\n");
   }
 
   function appendAlternativeParts(boundary: string) {
-    lines.push(
-      `--${boundary}`,
-      "Content-Type: text/plain; charset=UTF-8",
-      "Content-Transfer-Encoding: 7bit",
-      "",
-      input.bodyText,
-    );
+    if (hasText) {
+      lines.push(
+        `--${boundary}`,
+        "Content-Type: text/plain; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        bodyText ?? "",
+      );
+    }
 
     if (hasHtml) {
       lines.push(
@@ -63,7 +84,7 @@ function buildMimeMessage(input: GmailSendInput): string {
         "Content-Type: text/html; charset=UTF-8",
         "Content-Transfer-Encoding: 7bit",
         "",
-        input.bodyHtml ?? "",
+        bodyHtml ?? "",
       );
     }
 
@@ -72,18 +93,26 @@ function buildMimeMessage(input: GmailSendInput): string {
 
   if (hasAttachments) {
     lines.push(`--${mixedBoundary}`);
-    if (hasHtml) {
+    if (hasHtml && hasText) {
       lines.push(
         `Content-Type: multipart/alternative; boundary="${alternativeBoundary}"`,
         "",
       );
       appendAlternativeParts(alternativeBoundary);
+    } else if (hasHtml) {
+      lines.push(
+        "Content-Type: text/html; charset=UTF-8",
+        "Content-Transfer-Encoding: 7bit",
+        "",
+        bodyHtml ?? "",
+        "",
+      );
     } else {
       lines.push(
         "Content-Type: text/plain; charset=UTF-8",
         "Content-Transfer-Encoding: 7bit",
         "",
-        input.bodyText,
+        bodyText ?? "",
         "",
       );
     }

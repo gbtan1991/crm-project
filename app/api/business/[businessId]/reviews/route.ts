@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { ApiAuthError, requireBusinessOwnerOrAdmin } from "@/lib/auth/guards";
-import { sendReviewRequestEmailForBusiness } from "@/lib/messages/send-review-request-email";
-import { createReview, listReviews } from "@/lib/reviews";
+import { sendQueuedDirectReview } from "@/lib/review-delivery";
+import { createReview, getReviewForBusiness, listReviews } from "@/lib/reviews";
 import { startReviewSequenceForBusiness } from "@/lib/sequences";
 import { createReviewSchema, listReviewsSchema } from "@/lib/validation/review";
 
@@ -82,35 +82,40 @@ export async function POST(
         );
       }
 
+      const review = await getReviewForBusiness(businessId, result.review.id);
       return NextResponse.json(
-        { review: result.review, enrollmentId: sequenceResult.enrollmentId },
+        { review, enrollmentId: sequenceResult.enrollmentId },
         { status: 201 },
       );
     }
 
-    const emailResult = await sendReviewRequestEmailForBusiness(
+    const emailResult = await sendQueuedDirectReview(
       businessId,
       result.review.id,
       {
         subject: parsed.data.subject ?? "",
-        bodyText: parsed.data.bodyText ?? "",
-        bodyHtml: parsed.data.bodyHtml,
+        bodyHtml: parsed.data.bodyHtml ?? "",
       },
     );
 
-    if (!emailResult) {
+    const review = await getReviewForBusiness(businessId, result.review.id);
+    if (!review) {
       return NextResponse.json({ error: "Bewertung nicht gefunden." }, { status: 404 });
     }
 
     if (!emailResult.ok) {
       return NextResponse.json(
-        { error: emailResult.error, review: result.review },
-        { status: 400 },
+        {
+          review,
+          warning: emailResult.error,
+          queued: !("exhausted" in emailResult && emailResult.exhausted),
+        },
+        { status: 201 },
       );
     }
 
     return NextResponse.json(
-      { review: result.review, messageId: emailResult.messageId },
+      { review: await getReviewForBusiness(businessId, result.review.id), messageId: emailResult.messageId },
       { status: 201 },
     );
   } catch (error) {

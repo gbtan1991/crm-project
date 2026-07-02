@@ -38,7 +38,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-2xl font-bold tracking-tight">
-          Dashboard
+          Übersicht
         </h1>
         <p className="mt-1 text-muted-foreground">
           Übersicht über die Plattformaktivität.

@@ -103,18 +103,6 @@ export function buildInvoiceEmailContent(input: {
   const subject = `Rechnung ${input.invoiceNumber} von ${input.businessName}`;
   const statusLabel = invoiceStatusLabel(input.displayStatus);
 
-  const bodyText = [
-    `Guten Tag ${input.customerName},`,
-    "",
-    `Anbei finden Sie die Rechnung ${input.invoiceNumber} von ${input.businessName}.`,
-    "",
-    `Betrag: ${input.totalLabel}`,
-    `Fälligkeitsdatum: ${input.dueDateLabel}`,
-    `Status: ${statusLabel}`,
-    "",
-    "Vielen Dank für Ihr Vertrauen.",
-  ].join("\n");
-
   const bodyHtml = wrapEmailContentHtml(
     defaultInvoiceEmailHtml()
       .replaceAll("{{customerName}}", input.customerName)
@@ -125,7 +113,7 @@ export function buildInvoiceEmailContent(input: {
       .replaceAll("{{invoiceStatus}}", statusLabel),
   );
 
-  return { subject, bodyText, bodyHtml };
+  return { subject, bodyHtml };
 }
 
 export async function getInvoiceEmailContext(
@@ -155,7 +143,7 @@ export async function getInvoiceEmailContext(
     dateStyle: "medium",
   });
 
-  const { subject, bodyText, bodyHtml } = buildInvoiceEmailContent({
+  const { subject, bodyHtml } = buildInvoiceEmailContent({
     businessName: business.name,
     invoiceNumber: invoice.number,
     customerName,
@@ -168,7 +156,6 @@ export async function getInvoiceEmailContext(
     invoice,
     customerName,
     subject,
-    bodyText,
     bodyHtml,
     toAddress: invoice.customer.email,
   };

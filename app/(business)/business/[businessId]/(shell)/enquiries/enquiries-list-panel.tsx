@@ -7,17 +7,14 @@ import { Inbox } from "lucide-react";
 import { EnquiryCard } from "@/app/(business)/business/[businessId]/(shell)/enquiries/enquiry-card";
 import { EnquiryDetailDialog } from "@/app/(business)/business/[businessId]/(shell)/enquiries/enquiry-detail-dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import type { CustomerOption } from "@/lib/customers";
 import type { EnquiryListRow } from "@/lib/enquiries";
 
 export function EnquiriesListPanel({
   businessId,
-  customers,
   enquiries,
   timeZone,
 }: {
   businessId: string;
-  customers: CustomerOption[];
   enquiries: EnquiryListRow[];
   timeZone: string;
 }) {
@@ -70,7 +67,6 @@ export function EnquiriesListPanel({
       <EnquiryDetailDialog
         key={selected?.id ?? "empty"}
         businessId={businessId}
-        customers={customers}
         enquiry={selected}
         open={open}
         timeZone={timeZone}

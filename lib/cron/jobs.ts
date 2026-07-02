@@ -30,6 +30,11 @@ export async function ensureCronJobs() {
       name: "Process appointment reminders",
       intervalSeconds: 60,
     },
+    {
+      type: CronJobType.PROCESS_REVIEW_REQUESTS,
+      name: "Process queued review requests",
+      intervalSeconds: 60,
+    },
   ];
 
   for (const job of defaults) {

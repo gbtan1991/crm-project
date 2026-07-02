@@ -123,17 +123,17 @@ export function InvoiceLineItemsEditor({
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Add as many line items as you need.
+          Fügen Sie so viele Positionen hinzu, wie Sie benötigen.
         </p>
         <Button type="button" variant="outline" size="sm" onClick={addLine}>
           <Plus className="size-4" />
-          Add line item
+          Position hinzufügen
         </Button>
       </div>
 
       {lines.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">
-          No line items yet. Add one to continue.
+          Noch keine Positionen. Fügen Sie eine hinzu, um fortzufahren.
         </div>
       ) : (
         lines.map((line) => {
@@ -158,7 +158,7 @@ export function InvoiceLineItemsEditor({
                   disabled={lines.length === 1}
                 >
                   <Trash2 className="size-4" />
-                  Remove
+                  Entfernen
                 </Button>
               </div>
               <div className="grid gap-3 md:grid-cols-4">
@@ -169,7 +169,7 @@ export function InvoiceLineItemsEditor({
                     onChange={(event) =>
                       updateLine(line.key, { description: event.target.value })
                     }
-                    placeholder="e.g. Website design"
+                    placeholder="z. B. Webseitengestaltung"
                   />
                 </div>
                 <div className="space-y-2">

@@ -58,7 +58,7 @@ export function CustomerFormFields({
           id={id("companyName")}
           value={values.companyName}
           onChange={(e) => set("companyName", e.target.value)}
-          placeholder="e.g. Acme Roofing Ltd"
+          placeholder="z. B. Mustermann Bedachungen GmbH"
         />
       </div>
 

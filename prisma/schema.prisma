@@ -60,6 +60,7 @@ enum CronJobType {
   PROCESS_INVOICE_SEQUENCES
   PROCESS_SEQUENCES
   PROCESS_APPOINTMENT_REMINDERS
+  PROCESS_REVIEW_REQUESTS
 }
 
 enum CronJobStatus {
@@ -182,9 +183,11 @@ enum EnquiryStatus {
 }
 
 enum ReviewStatus {
+  QUEUED
   REQUESTED
   RECEIVED
   DECLINED
+  FAILED
 }
 
 model User {
@@ -492,12 +495,15 @@ model Review {
   customerId String       @map("customer_id")
   customer   Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
-  status      ReviewStatus @default(REQUESTED)
+  status      ReviewStatus @default(QUEUED)
   rating      Int?                        // 1–5, null until submitted
   content     String?      @db.Text       // null until submitted
   requestedAt DateTime?    @map("requested_at")
   requestReason String?    @map("request_reason") @db.Text
   requestCount Int         @default(0) @map("request_count")
+  failureCount Int         @default(0) @map("failure_count")
+  pendingSubject String?   @map("pending_subject")
+  pendingBodyHtml String?  @map("pending_body_html") @db.Text
   respondedAt DateTime?    @map("responded_at")
 
   sequenceEnrollments SequenceEnrollment[]

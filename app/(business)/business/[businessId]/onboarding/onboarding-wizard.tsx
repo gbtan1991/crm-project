@@ -349,14 +349,14 @@ export function OnboardingWizard({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="hostingAccess">Hosting-Anbieter (optional)</Label>
+            <Label htmlFor="hostingAccess">Hosting-Anbieter (freiwillig)</Label>
             <Input
               id="hostingAccess"
               value={website.hostingAccess}
               onChange={(e) =>
                 setWebsite({ ...website, hostingAccess: e.target.value })
               }
-              placeholder="e.g. Hostpoint, Infomaniak"
+              placeholder="z. B. Hostpoint, Infomaniak"
             />
           </div>
           <div className="divide-y divide-border overflow-hidden rounded-xl border border-border">

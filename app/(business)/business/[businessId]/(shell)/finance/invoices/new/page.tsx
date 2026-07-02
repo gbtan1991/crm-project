@@ -8,7 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { auth } from "@/auth";
 import { getBusinessForViewer } from "@/lib/business-context";
 import { businessInvoiceTemplatesPath } from "@/lib/business-paths";
-import { listCustomerOptionsForBusiness } from "@/lib/customers";
+import {
+  getCustomerCountForBusiness,
+  getCustomerOptionForBusiness,
+} from "@/lib/customers";
 import { listInvoiceTemplatesForBusiness } from "@/lib/invoice-templates";
 
 type PageProps = {
@@ -30,8 +33,8 @@ export default async function NewInvoicePage({ params, searchParams }: PageProps
     notFound();
   }
 
-  const [customers, templates] = await Promise.all([
-    listCustomerOptionsForBusiness(businessId),
+  const [customerCount, templates] = await Promise.all([
+    getCustomerCountForBusiness(businessId),
     listInvoiceTemplatesForBusiness(businessId),
   ]);
 
@@ -58,7 +61,7 @@ export default async function NewInvoicePage({ params, searchParams }: PageProps
     );
   }
 
-  if (customers.length === 0) {
+  if (customerCount === 0) {
     return (
       <div>
         <PageHeader
@@ -79,12 +82,16 @@ export default async function NewInvoicePage({ params, searchParams }: PageProps
     );
   }
 
+  const initialCustomer = query.customerId
+    ? await getCustomerOptionForBusiness(businessId, query.customerId)
+    : null;
+
   return (
     <CreateInvoiceForm
       businessId={businessId}
-      customers={customers}
+      hasCustomers={customerCount > 0}
+      initialCustomer={initialCustomer}
       templates={templates}
-      initialCustomerId={query.customerId}
       initialTemplateId={query.templateId}
     />
   );

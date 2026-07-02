@@ -2,7 +2,7 @@ type OutlookSendInput = {
   accessToken: string;
   to: string;
   subject: string;
-  bodyText: string;
+  bodyText?: string;
   bodyHtml?: string;
   attachments?: Array<{
     filename: string;

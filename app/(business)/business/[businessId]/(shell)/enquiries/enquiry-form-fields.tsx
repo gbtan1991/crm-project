@@ -28,7 +28,9 @@ export function EnquiryFormFields({
             {field.label}
             {field.required ? (
               <span className="text-destructive"> *</span>
-            ) : null}
+            ) : (
+              <span className="text-muted-foreground"> (freiwillig)</span>
+            )}
           </Label>
           {field.type === "TEXTAREA" ? (
             <Textarea

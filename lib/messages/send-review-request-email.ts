@@ -6,7 +6,7 @@ import {
 } from "@/lib/generated/prisma/client";
 import { env } from "@/env/server.mjs";
 import { formatCustomerName } from "@/lib/customer-display";
-import { buildReviewEmailHtmlFromPlainText, wrapEmailContentHtml } from "@/lib/email-html";
+import { wrapEmailContentHtml } from "@/lib/email-html";
 import { GmailSendError, sendGmailMessage } from "@/lib/google-mail/send";
 import { GoogleCalendarOAuth } from "@/lib/google-calendar/oauth";
 import { ensureInboxForBusiness } from "@/lib/inbox";
@@ -16,8 +16,7 @@ import { prisma } from "@/lib/prisma";
 
 export type SendReviewRequestEmailInput = {
   subject: string;
-  bodyText: string;
-  bodyHtml?: string;
+  bodyHtml: string;
 };
 
 export type SendReviewRequestEmailResult =
@@ -25,26 +24,12 @@ export type SendReviewRequestEmailResult =
   | { ok: false; error: string }
   | null;
 
-function ensureReviewLink(bodyText: string, reviewUrl: string) {
-  const rendered = bodyText.replaceAll("{{link}}", reviewUrl);
-
-  return rendered.includes(reviewUrl)
-    ? rendered
-    : [rendered.trim(), "", `Bewertungslink: ${reviewUrl}`].join("\n");
-}
-
 function ensureReviewLinkHtml(bodyHtml: string, reviewUrl: string) {
   const rendered = bodyHtml.replaceAll("{{link}}", reviewUrl);
 
   return rendered.includes(reviewUrl)
     ? rendered
     : `${rendered.trim()}\n<p><a href="${reviewUrl}">${reviewUrl}</a></p>`;
-}
-
-function reviewButtonLabel(subject: string) {
-  return /update|aktualisier/i.test(subject)
-    ? "Bewertung aktualisieren"
-    : "Bewertung abgeben";
 }
 
 export async function sendReviewRequestEmailForBusiness(
@@ -99,12 +84,9 @@ export async function sendReviewRequestEmailForBusiness(
   }
 
   const reviewUrl = `${env.NEXT_PUBLIC_URL}/review/${review.id}`;
-  const bodyText = ensureReviewLink(input.bodyText, reviewUrl);
-  const bodyHtml = input.bodyHtml?.trim()
-    ? wrapEmailContentHtml(ensureReviewLinkHtml(input.bodyHtml, reviewUrl))
-    : buildReviewEmailHtmlFromPlainText(bodyText, reviewUrl, {
-        buttonLabel: reviewButtonLabel(input.subject),
-      });
+  const bodyHtml = wrapEmailContentHtml(
+    ensureReviewLinkHtml(input.bodyHtml, reviewUrl),
+  );
 
   const message = await prisma.message.create({
     data: {
@@ -119,7 +101,7 @@ export async function sendReviewRequestEmailForBusiness(
       fromAddress: connection.accountEmail,
       toAddress: review.customer.email,
       subject: input.subject,
-      bodyText,
+      bodyText: "",
       bodyHtml,
       customerId: review.customer.id,
       metadata: {
@@ -139,14 +121,12 @@ export async function sendReviewRequestEmailForBusiness(
             from: connection.accountEmail,
             to: review.customer.email,
             subject: input.subject,
-            bodyText,
             bodyHtml,
           })
         : await sendOutlookMessage({
             accessToken: await OutlookCalendarOAuth.getValidAccessToken(businessId),
             to: review.customer.email,
             subject: input.subject,
-            bodyText,
             bodyHtml,
           });
 

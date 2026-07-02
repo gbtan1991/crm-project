@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const REVIEW_STATUSES = ["REQUESTED", "RECEIVED", "DECLINED"] as const;
+export const REVIEW_STATUSES = [
+  "QUEUED",
+  "REQUESTED",
+  "RECEIVED",
+  "DECLINED",
+  "FAILED",
+] as const;
 export const REVIEW_DELIVERY_MODES = ["DIRECT", "SEQUENCE"] as const;
 
 export const createReviewSchema = z
@@ -9,16 +15,15 @@ export const createReviewSchema = z
     customerId: z.string().uuid("Ungültige Kunden-ID."),
     deliveryMode: z.enum(REVIEW_DELIVERY_MODES).default("DIRECT"),
     subject: z.string().trim().max(500).optional().or(z.literal("")),
-    bodyText: z.string().trim().max(20_000).optional().or(z.literal("")),
     bodyHtml: z.string().trim().max(20_000).optional().or(z.literal("")),
     requestReason: z.string().trim().max(1000).optional().or(z.literal("")),
   })
   .refine(
     (input) =>
       input.deliveryMode === "SEQUENCE" ||
-      (Boolean(input.subject?.trim()) && Boolean(input.bodyText?.trim())),
+      (Boolean(input.subject?.trim()) && Boolean(input.bodyHtml?.trim())),
     {
-      message: "Betreff und Nachricht sind für direkte Bewertungsanfragen erforderlich.",
+      message: "Betreff und HTML-Text sind für direkte Bewertungsanfragen erforderlich.",
       path: ["subject"],
     },
   );
@@ -26,13 +31,16 @@ export const createReviewSchema = z
 export const requestReviewUpdateSchema = z.object({
   action: z.literal("requestUpdate"),
   subject: z.string().trim().min(1, "Betreff ist erforderlich.").max(500),
-  bodyText: z.string().trim().min(1, "Nachricht ist erforderlich.").max(20_000),
-  bodyHtml: z.string().trim().max(20_000).optional().or(z.literal("")),
+  bodyHtml: z.string().trim().min(1, "HTML-Text ist erforderlich.").max(20_000),
   requestReason: z.string().trim().max(1000).optional().or(z.literal("")),
 });
 
 export const declineReviewSchema = z.object({
   action: z.literal("decline"),
+});
+
+export const retryReviewSchema = z.object({
+  action: z.literal("retry"),
 });
 
 export const submitReviewSchema = z.object({
@@ -57,15 +65,45 @@ export const REVIEW_STATS_PERIODS = [
   "last_month",
   "last_3_months",
   "last_12_months",
+  "custom",
 ] as const;
 
-export const listReviewsSchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  status: z.enum(REVIEW_STATUSES).optional(),
-  sort: z.enum(REVIEW_SORT_OPTIONS).default("newest"),
-  period: z.enum(REVIEW_STATS_PERIODS).default("all"),
-});
+const isoDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Ungültiges Datum.");
+
+export const listReviewsSchema = z
+  .object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+    status: z.enum(REVIEW_STATUSES).optional(),
+    sort: z.enum(REVIEW_SORT_OPTIONS).default("newest"),
+    period: z.enum(REVIEW_STATS_PERIODS).default("all"),
+    from: isoDateSchema.optional(),
+    to: isoDateSchema.optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.period !== "custom") {
+      return;
+    }
+
+    if (!data.from || !data.to) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Start- und Enddatum sind erforderlich.",
+        path: ["from"],
+      });
+      return;
+    }
+
+    if (data.from > data.to) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Das Enddatum muss nach dem Startdatum liegen.",
+        path: ["to"],
+      });
+    }
+  });
 
 export type ListReviewsInput = z.infer<typeof listReviewsSchema>;
 export type ReviewStatsPeriod = (typeof REVIEW_STATS_PERIODS)[number];

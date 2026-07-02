@@ -15,16 +15,14 @@ import { GmailSendError, sendGmailMessage } from "@/lib/google-mail/send";
 import { ensureInboxForBusiness } from "@/lib/inbox";
 import { OutlookCalendarOAuth } from "@/lib/outlook-calendar/oauth";
 import { OutlookSendError, sendOutlookMessage } from "@/lib/outlook-mail/send";
-import { buildEmailHtmlFromPlainText, wrapEmailContentHtml } from "@/lib/email-html";
+import { wrapEmailContentHtml } from "@/lib/email-html";
 import {
   defaultAppointmentReminderHtml,
-  defaultAppointmentReminderText,
 } from "@/lib/email-templates";
 import { prisma } from "@/lib/prisma";
 import type { AppointmentReminderSettingsInput } from "@/lib/validation/appointment-reminder";
 
 const DEFAULT_SUBJECT = "Erinnerung: {{appointmentTitle}} bei {{businessName}}";
-const DEFAULT_BODY = defaultAppointmentReminderText();
 const DEFAULT_BODY_HTML = defaultAppointmentReminderHtml();
 const LOOKAHEAD_MS = 2 * 60 * 1000;
 
@@ -38,7 +36,6 @@ export type AppointmentReminderOffsetRow = {
 export type AppointmentReminderSettingsRow = {
   enabled: boolean;
   subject: string;
-  bodyText: string;
   bodyHtml: string;
   offsets: AppointmentReminderOffsetRow[];
 };
@@ -68,7 +65,6 @@ function serializeSettings(config: {
   return {
     enabled: config?.enabled ?? false,
     subject: config?.subject ?? DEFAULT_SUBJECT,
-    bodyText: config?.bodyText ?? DEFAULT_BODY,
     bodyHtml: config?.bodyHtml ?? DEFAULT_BODY_HTML,
     offsets:
       config?.offsets.map((offset) => ({
@@ -106,15 +102,15 @@ export async function updateAppointmentReminderSettings(
       update: {
         enabled: input.enabled,
         subject: input.subject.trim(),
-        bodyText: input.bodyText.trim(),
-        bodyHtml: input.bodyHtml?.trim() || null,
+        bodyText: "",
+        bodyHtml: input.bodyHtml.trim(),
       },
       create: {
         businessId,
         enabled: input.enabled,
         subject: input.subject.trim(),
-        bodyText: input.bodyText.trim(),
-        bodyHtml: input.bodyHtml?.trim() || null,
+        bodyText: "",
+        bodyHtml: input.bodyHtml.trim(),
       },
       select: { id: true },
     });
@@ -177,8 +173,7 @@ async function sendAppointmentReminder(input: {
   bookingId: string;
   offsetId: string;
   subject: string;
-  bodyText: string;
-  bodyHtml?: string;
+  bodyHtml: string;
 }) {
   const [booking, connection, inbox] = await Promise.all([
     prisma.booking.findFirst({
@@ -244,10 +239,7 @@ async function sendAppointmentReminder(input: {
       : "",
   };
   const subject = renderTemplate(input.subject, context);
-  const bodyText = renderTemplate(input.bodyText, context);
-  const bodyHtml = input.bodyHtml
-    ? wrapEmailContentHtml(renderTemplate(input.bodyHtml, context))
-    : buildEmailHtmlFromPlainText(bodyText);
+  const bodyHtml = wrapEmailContentHtml(renderTemplate(input.bodyHtml, context));
 
   const message = await prisma.message.create({
     data: {
@@ -262,7 +254,7 @@ async function sendAppointmentReminder(input: {
       fromAddress: connection.accountEmail,
       toAddress: booking.customer.email,
       subject,
-      bodyText,
+      bodyText: "",
       bodyHtml,
       customerId: booking.customer.id,
       metadata: {
@@ -281,14 +273,12 @@ async function sendAppointmentReminder(input: {
             from: connection.accountEmail,
             to: booking.customer.email,
             subject,
-            bodyText,
             bodyHtml,
           })
         : await sendOutlookMessage({
             accessToken: await OutlookCalendarOAuth.getValidAccessToken(input.businessId),
             to: booking.customer.email,
             subject,
-            bodyText,
             bodyHtml,
           });
 
@@ -395,8 +385,7 @@ export async function processAppointmentReminders() {
           bookingId: booking.id,
           offsetId: offset.id,
           subject: config.subject,
-          bodyText: config.bodyText,
-          bodyHtml: config.bodyHtml ?? undefined,
+          bodyHtml: config.bodyHtml ?? DEFAULT_BODY_HTML,
         });
 
         if (result.ok) {

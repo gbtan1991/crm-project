@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
@@ -14,9 +14,17 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CustomerCombobox } from "@/components/customer-combobox";
+import { DateRangePicker } from "@/components/date-range-picker";
+import { EmailHtmlField } from "@/components/email-html-field";
 import {
   Dialog,
   DialogContent,
@@ -43,14 +51,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { businessReviewsPath } from "@/lib/business-paths";
+import { dateRangeToYmd, ymdToDateRange } from "@/lib/date-range";
 import { formatCustomerName } from "@/lib/customer-display";
-import type { CustomerOption } from "@/lib/customers";
 import type { ReviewStatus } from "@/lib/generated/prisma/client";
 import { buildReviewRequestEmailContent } from "@/lib/review-email-content";
 import type { ReviewListRow } from "@/lib/reviews";
 import type { ReviewStatsPeriod } from "@/lib/validation/review";
+import { reviewSequencePreviewVariables } from "@/lib/email-preview";
 import { cn } from "@/lib/utils";
 
 type ReviewStats = {
@@ -66,7 +74,7 @@ type ReviewListProps = {
   businessId: string;
   businessName: string;
   initialGoogleReviewUrl: string | null;
-  customers: CustomerOption[];
+  hasCustomers: boolean;
   activeReviewSequence: { id: string; name: string; stepCount: number } | null;
   stats: ReviewStats;
   reviews: ReviewListRow[];
@@ -76,6 +84,8 @@ type ReviewListProps = {
   currentStatus: string | null;
   currentSort: "newest" | "oldest";
   currentPeriod: ReviewStatsPeriod;
+  currentFrom: string | null;
+  currentTo: string | null;
 };
 
 const REVIEW_PERIOD_LABELS: Record<ReviewStatsPeriod, string> = {
@@ -84,23 +94,49 @@ const REVIEW_PERIOD_LABELS: Record<ReviewStatsPeriod, string> = {
   last_month: "Letzter Monat",
   last_3_months: "Letzte 3 Monate",
   last_12_months: "Letzte 12 Monate",
+  custom: "Benutzerdefiniert",
 };
 
 const STATUS_LABELS: Record<ReviewStatus, string> = {
+  QUEUED: "In Warteschlange",
   REQUESTED: "Angefragt",
   RECEIVED: "Erhalten",
   DECLINED: "Abgelehnt",
+  FAILED: "Fehlgeschlagen",
 };
 
-function StatusBadge({ status }: { status: ReviewStatus }) {
-  const variantMap: Record<ReviewStatus, "outline" | "success" | "secondary"> =
-    {
-      REQUESTED: "outline",
-      RECEIVED: "success",
-      DECLINED: "secondary",
-    };
+function StatusBadge({
+  status,
+  requestCount,
+}: {
+  status: ReviewStatus;
+  requestCount: number;
+}) {
+  if (status === "QUEUED") {
+    return (
+      <Badge variant="outline" className="gap-1.5">
+        <Loader2 className="size-3 animate-spin" />
+        {STATUS_LABELS.QUEUED}
+      </Badge>
+    );
+  }
 
-  return <Badge variant={variantMap[status]}>{STATUS_LABELS[status]}</Badge>;
+  const variantMap: Record<
+    Exclude<ReviewStatus, "QUEUED">,
+    "outline" | "success" | "secondary" | "destructive"
+  > = {
+    REQUESTED: "outline",
+    RECEIVED: "success",
+    DECLINED: "secondary",
+    FAILED: "destructive",
+  };
+
+  const label =
+    status === "REQUESTED" && requestCount > 0
+      ? `${STATUS_LABELS.REQUESTED} · ${requestCount} Anfrage${requestCount === 1 ? "" : "n"}`
+      : STATUS_LABELS[status];
+
+  return <Badge variant={variantMap[status]}>{label}</Badge>;
 }
 
 function GoogleReviewSettingsCard({
@@ -182,7 +218,7 @@ function GoogleReviewSettingsCard({
               onClick={() => void handleCopy()}
             >
               <Copy className="size-4" />
-              Copy
+              Kopieren
             </Button>
             <Button
               type="button"
@@ -198,12 +234,12 @@ function GoogleReviewSettingsCard({
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="size-4" />
-                  Open
+                  Öffnen
                 </a>
               ) : (
                 <span>
                   <ExternalLink className="size-4" />
-                  Open
+                  Öffnen
                 </span>
               )}
             </Button>
@@ -255,6 +291,80 @@ function StarRating({
   );
 }
 
+function ReviewRatingPopover({
+  rating,
+  content,
+}: {
+  rating: number;
+  content: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
+
+  function clearCloseTimer() {
+    if (closeTimerRef.current !== null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }
+
+  function handleOpen() {
+    clearCloseTimer();
+    setOpen(true);
+  }
+
+  function handleClose() {
+    clearCloseTimer();
+    closeTimerRef.current = window.setTimeout(() => {
+      setOpen(false);
+    }, 120);
+  }
+
+  useEffect(() => {
+    return () => clearCloseTimer();
+  }, []);
+
+  const reviewText = content?.trim();
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="inline-flex rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Bewertung anzeigen"
+          onMouseEnter={handleOpen}
+          onMouseLeave={handleClose}
+          onFocus={handleOpen}
+          onBlur={handleClose}
+        >
+          <StarRating rating={rating} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-80 p-3"
+        align="start"
+        onMouseEnter={handleOpen}
+        onMouseLeave={handleClose}
+        onOpenAutoFocus={(event) => event.preventDefault()}
+      >
+        <div className="space-y-2">
+          <StarRating rating={rating} />
+          {reviewText ? (
+            <p className="whitespace-pre-wrap text-sm text-foreground">
+              &ldquo;{reviewText}&rdquo;
+            </p>
+          ) : (
+            <p className="text-sm italic text-muted-foreground">
+              Kein Bewertungstext hinterlegt.
+            </p>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function reviewUrl(reviewId: string) {
   if (typeof window === "undefined") {
     return `/review/${reviewId}`;
@@ -266,23 +376,22 @@ function reviewUrl(reviewId: string) {
 function ReviewRequestDialog({
   businessId,
   businessName,
-  customers,
+  hasCustomers,
   activeReviewSequence,
   review,
   children,
 }: {
   businessId: string;
   businessName: string;
-  customers: CustomerOption[];
+  hasCustomers: boolean;
   activeReviewSequence: { id: string; name: string; stepCount: number } | null;
   review?: ReviewListRow;
   children: ReactNode;
 }) {
   const router = useRouter();
   const isUpdate = Boolean(review);
-  const defaultCustomerId = review?.customer.id ?? customers[0]?.id ?? "";
-  const selectedCustomer =
-    review?.customer ?? customers.find((customer) => customer.id === defaultCustomerId);
+  const defaultCustomerId = review?.customer.id ?? "";
+  const selectedCustomer = review?.customer;
   const defaultContent = buildReviewRequestEmailContent({
     businessName,
     customerName: selectedCustomer
@@ -298,7 +407,6 @@ function ReviewRequestDialog({
     activeReviewSequence && !isUpdate ? "SEQUENCE" : "DIRECT",
   );
   const [subject, setSubject] = useState(defaultContent.subject);
-  const [bodyText, setBodyText] = useState(defaultContent.bodyText);
   const [bodyHtml, setBodyHtml] = useState(defaultContent.bodyHtml);
   const [requestReason, setRequestReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -311,7 +419,6 @@ function ReviewRequestDialog({
       setCustomerId(defaultCustomerId);
       setDeliveryMode(activeReviewSequence && !isUpdate ? "SEQUENCE" : "DIRECT");
       setSubject(defaultContent.subject);
-      setBodyText(defaultContent.bodyText);
       setBodyHtml(defaultContent.bodyHtml);
       setRequestReason("");
     }
@@ -340,7 +447,6 @@ function ReviewRequestDialog({
               ? {
                   action: "requestUpdate",
                   subject,
-                  bodyText,
                   bodyHtml,
                   requestReason,
                 }
@@ -348,7 +454,6 @@ function ReviewRequestDialog({
                   customerId,
                   deliveryMode,
                   subject,
-                  bodyText,
                   bodyHtml,
                   requestReason,
                 },
@@ -361,9 +466,19 @@ function ReviewRequestDialog({
         throw new Error(data.error ?? "Bewertungsanfrage konnte nicht gesendet werden.");
       }
 
-      toast.success(
-        isUpdate ? "Anfrage zur Bewertungsaktualisierung gesendet." : "Bewertungsanfrage gesendet.",
-      );
+      if (data.warning) {
+        toast.warning(
+          isUpdate
+            ? `Anfrage in Warteschlange: ${data.warning}`
+            : `Bewertung erstellt, Versand ausstehend: ${data.warning}`,
+        );
+      } else {
+        toast.success(
+          isUpdate
+            ? "Anfrage zur Bewertungsaktualisierung gesendet."
+            : "Bewertungsanfrage gesendet.",
+        );
+      }
       setOpen(false);
       router.refresh();
     } catch (submitError) {
@@ -388,7 +503,7 @@ function ReviewRequestDialog({
               {isUpdate ? "Bewertungsaktualisierung anfragen" : "Bewertung anfragen"}
             </DialogTitle>
             <DialogDescription>
-              The customer receives an email with their private review page.
+              Der Kunde erhält eine E-Mail mit seiner privaten Bewertungsseite.
             </DialogDescription>
           </DialogHeader>
 
@@ -408,18 +523,12 @@ function ReviewRequestDialog({
           ) : (
             <div className="space-y-2">
               <Label htmlFor="review-customer">Kunde</Label>
-              <Select value={customerId} onValueChange={setCustomerId}>
-                <SelectTrigger id="review-customer">
-                  <SelectValue placeholder="Kunde auswählen" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {formatCustomerName(customer)} ({customer.email})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CustomerCombobox
+                id="review-customer"
+                businessId={businessId}
+                value={customerId}
+                onValueChange={setCustomerId}
+              />
             </div>
           )}
 
@@ -439,28 +548,28 @@ function ReviewRequestDialog({
                   <SelectItem value="DIRECT">Jetzt senden</SelectItem>
                   {activeReviewSequence ? (
                     <SelectItem value="SEQUENCE">
-                      Use active sequence ({activeReviewSequence.name})
+                      Aktive Sequenz verwenden ({activeReviewSequence.name})
                     </SelectItem>
                   ) : null}
                 </SelectContent>
               </Select>
               {deliveryMode === "SEQUENCE" && activeReviewSequence ? (
                 <p className="text-xs text-muted-foreground">
-                  The review request will be enrolled into{" "}
-                  {activeReviewSequence.name} ({activeReviewSequence.stepCount}{" "}
-                  steps). Email content comes from the sequence.
+                  Die Bewertungsanfrage wird in {activeReviewSequence.name} (
+                  {activeReviewSequence.stepCount} Schritte) eingeschrieben. Der
+                  E-Mail-Inhalt stammt aus der Sequenz.
                 </p>
               ) : null}
             </div>
           ) : null}
 
           <div className="space-y-2">
-            <Label htmlFor="review-reason">Interner Grund (optional)</Label>
+            <Label htmlFor="review-reason">Interner Grund (freiwillig)</Label>
             <Input
               id="review-reason"
               value={requestReason}
               onChange={(event) => setRequestReason(event.target.value)}
-              placeholder="e.g. Job completed, asked for updated wording"
+              placeholder="z. B. Auftrag abgeschlossen, um aktualisierten Text gebeten"
             />
           </div>
 
@@ -476,38 +585,22 @@ function ReviewRequestDialog({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="review-body-html">HTML-Text</Label>
-                <Textarea
-                  id="review-body-html"
-                  value={bodyHtml}
-                  onChange={(event) => setBodyHtml(event.target.value)}
-                  rows={12}
-                  className="font-mono text-xs"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Bearbeiten Sie das HTML direkt. Verwenden Sie {"{{link}}"} für die Bewertungs-URL,
-                  z. B.{" "}
-                  <code className="rounded bg-muted px-1">
-                    &lt;a href=&quot;{"{{link}}"}&quot;&gt;Leave a review&lt;/a&gt;
-                  </code>
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="review-body">Klartext-Fallback</Label>
-                <Textarea
-                  id="review-body"
-                  value={bodyText}
-                  onChange={(event) => setBodyText(event.target.value)}
-                  rows={6}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Used by email clients that do not render HTML.
-                </p>
-              </div>
+              <EmailHtmlField
+                id="review-body-html"
+                value={bodyHtml}
+                onChange={setBodyHtml}
+                sampleVariables={reviewSequencePreviewVariables(businessName)}
+                resetWhenOpen={open}
+                helpText={
+                  <>
+                    Bearbeiten Sie das HTML direkt. Verwenden Sie {"{{link}}"} für die
+                    Bewertungs-URL, z. B.{" "}
+                    <code className="rounded bg-muted px-1">
+                      &lt;a href=&quot;{"{{link}}"}&quot;&gt;Bewertung abgeben&lt;/a&gt;
+                    </code>
+                  </>
+                }
+              />
             </>
           ) : null}
 
@@ -520,7 +613,7 @@ function ReviewRequestDialog({
             >
               Abbrechen
             </Button>
-            <Button type="submit" disabled={submitting || customers.length === 0}>
+            <Button type="submit" disabled={submitting || !hasCustomers}>
               {submitting ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
@@ -543,7 +636,7 @@ export function ReviewList({
   businessId,
   businessName,
   initialGoogleReviewUrl,
-  customers,
+  hasCustomers,
   activeReviewSequence,
   stats,
   reviews,
@@ -553,9 +646,28 @@ export function ReviewList({
   currentStatus,
   currentSort,
   currentPeriod,
+  currentFrom,
+  currentTo,
 }: ReviewListProps) {
   const router = useRouter();
   const basePath = businessReviewsPath(businessId);
+  const customDateRange = ymdToDateRange(
+    currentFrom ?? undefined,
+    currentTo ?? undefined,
+  );
+  const hasQueuedReviews = reviews.some((review) => review.status === "QUEUED");
+
+  useEffect(() => {
+    if (!hasQueuedReviews) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      router.refresh();
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [hasQueuedReviews, router]);
 
   function buildHref(overrides: Record<string, string | null>) {
     const params = new URLSearchParams();
@@ -565,13 +677,53 @@ export function ReviewList({
     const sort = "sort" in overrides ? overrides.sort : currentSort;
     const period =
       "period" in overrides ? overrides.period : currentPeriod;
+    const from = "from" in overrides ? overrides.from : currentFrom;
+    const to = "to" in overrides ? overrides.to : currentTo;
 
     if (page && page !== "1") params.set("page", page);
     if (status) params.set("status", status);
     if (sort && sort !== "newest") params.set("sort", sort);
-    if (period && period !== "all") params.set("period", period);
+
+    if (period === "custom") {
+      params.set("period", "custom");
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+    } else if (period && period !== "all") {
+      params.set("period", period);
+    }
+
     const qs = params.toString();
     return qs ? `${basePath}?${qs}` : basePath;
+  }
+
+  async function handleRetry(reviewId: string) {
+    try {
+      const response = await fetch(
+        `/api/business/${businessId}/reviews/${reviewId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "retry" }),
+        },
+      );
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error ?? "Erneutes Senden fehlgeschlagen.");
+      }
+
+      if (data.warning) {
+        toast.warning(data.warning);
+      } else {
+        toast.success("Bewertungsanfrage erneut gesendet.");
+      }
+
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erneutes Senden fehlgeschlagen.",
+      );
+    }
   }
 
   async function handleDecline(reviewId: string) {
@@ -609,12 +761,12 @@ export function ReviewList({
         <ReviewRequestDialog
           businessId={businessId}
           businessName={businessName}
-          customers={customers}
-              activeReviewSequence={activeReviewSequence}
+          hasCustomers={hasCustomers}
+          activeReviewSequence={activeReviewSequence}
         >
-          <Button disabled={customers.length === 0}>
+          <Button disabled={!hasCustomers}>
             <Plus className="size-4" />
-            Request a review
+            Bewertung anfragen
           </Button>
         </ReviewRequestDialog>
       </div>
@@ -627,23 +779,53 @@ export function ReviewList({
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">Analysen</h2>
-          <Select
-            value={currentPeriod}
-            onValueChange={(value) => {
-              router.push(buildHref({ period: value, page: "1" }));
-            }}
-          >
-            <SelectTrigger className="h-8 w-[160px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(REVIEW_PERIOD_LABELS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={currentPeriod}
+              onValueChange={(value) => {
+                router.push(
+                  buildHref({
+                    period: value,
+                    from: value === "custom" ? currentFrom : null,
+                    to: value === "custom" ? currentTo : null,
+                    page: "1",
+                  }),
+                );
+              }}
+            >
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(REVIEW_PERIOD_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <DateRangePicker
+              value={customDateRange}
+              className="h-8 text-xs"
+              placeholder="Von – Bis"
+              closeOnComplete={false}
+              onChange={(range) => {
+                const { from, to } = dateRangeToYmd(range);
+                if (!from || !to) {
+                  return;
+                }
+
+                router.push(
+                  buildHref({
+                    period: "custom",
+                    from,
+                    to,
+                    page: "1",
+                  }),
+                );
+              }}
+            />
+          </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
@@ -667,7 +849,7 @@ export function ReviewList({
               {stats.received}
             </p>
             <p className="text-xs text-muted-foreground">
-              {stats.requested} requested · {stats.declined} declined
+              {stats.requested} angefragt · {stats.declined} abgelehnt
             </p>
           </CardContent>
         </Card>
@@ -685,7 +867,7 @@ export function ReviewList({
               </div>
             ) : (
               <p className="mt-2 text-sm text-muted-foreground">
-                No reviews received yet.
+                Noch keine Bewertungen erhalten.
               </p>
             )}
           </CardContent>
@@ -711,9 +893,11 @@ export function ReviewList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="QUEUED">In Warteschlange</SelectItem>
               <SelectItem value="REQUESTED">Angefragt</SelectItem>
               <SelectItem value="RECEIVED">Erhalten</SelectItem>
               <SelectItem value="DECLINED">Abgelehnt</SelectItem>
+              <SelectItem value="FAILED">Fehlgeschlagen</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -769,11 +953,17 @@ export function ReviewList({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={review.status} />
+                    <StatusBadge
+                      status={review.status}
+                      requestCount={review.requestCount}
+                    />
                   </TableCell>
                   <TableCell>
                     {review.rating ? (
-                      <StarRating rating={review.rating} />
+                      <ReviewRatingPopover
+                        rating={review.rating}
+                        content={review.content}
+                      />
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>
                     )}
@@ -781,8 +971,9 @@ export function ReviewList({
                   <TableCell className="hidden text-xs text-muted-foreground md:table-cell">
                     {review.requestedAt
                       ? new Date(review.requestedAt).toLocaleDateString("de-CH")
-                      : new Date(review.createdAt).toLocaleDateString("de-CH")}
-                    {review.requestCount > 1 ? ` · ${review.requestCount}x` : ""}
+                      : review.status === "QUEUED"
+                        ? "—"
+                        : new Date(review.createdAt).toLocaleDateString("de-CH")}
                   </TableCell>
                   <TableCell className="hidden max-w-[240px] truncate text-xs text-muted-foreground lg:table-cell">
                     {review.requestReason || "—"}
@@ -798,7 +989,16 @@ export function ReviewList({
                         <Copy className="size-3" />
                         Link kopieren
                       </Button>
-                      {review.status === "REQUESTED" ? (
+                      {review.status === "FAILED" ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => void handleRetry(review.id)}
+                        >
+                          Erneut senden
+                        </Button>
+                      ) : review.status === "REQUESTED" ? (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -814,12 +1014,12 @@ export function ReviewList({
                         <ReviewRequestDialog
                           businessId={businessId}
                           businessName={businessName}
-                          customers={customers}
-                        activeReviewSequence={activeReviewSequence}
+                          hasCustomers={hasCustomers}
+                          activeReviewSequence={activeReviewSequence}
                           review={review}
                         >
                           <Button variant="ghost" size="sm" className="h-7 text-xs">
-                            Request update
+                            Aktualisierung anfragen
                           </Button>
                         </ReviewRequestDialog>
                       ) : (

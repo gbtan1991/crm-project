@@ -5,6 +5,7 @@ import { FileText, Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { EmailHtmlField } from "@/components/email-html-field";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import type { InvoiceEmailCompose } from "@/lib/messages/compose-invoice-email";
 
 export function SendInvoiceDialog({
@@ -42,7 +42,6 @@ export function SendInvoiceDialog({
   const [loadedInvoiceId, setLoadedInvoiceId] = useState<string | null>(null);
   const [compose, setCompose] = useState<InvoiceEmailCompose | null>(null);
   const [subject, setSubject] = useState("");
-  const [bodyText, setBodyText] = useState("");
   const [bodyHtml, setBodyHtml] = useState("");
   const loading = open && loadedInvoiceId !== invoiceId;
   const currentLoadError =
@@ -76,7 +75,6 @@ export function SendInvoiceDialog({
         setLoadError(null);
         setError(null);
         setSubject(nextCompose.subject);
-        setBodyText(nextCompose.bodyText);
         setBodyHtml(nextCompose.bodyHtml);
       } catch (loadError) {
         if (!cancelled) {
@@ -108,7 +106,7 @@ export function SendInvoiceDialog({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject, bodyText, bodyHtml }),
+          body: JSON.stringify({ subject, bodyHtml }),
         },
       );
       const data = await response.json().catch(() => ({}));
@@ -136,8 +134,8 @@ export function SendInvoiceDialog({
         <DialogHeader>
           <DialogTitle>Rechnung {invoiceNumber} senden</DialogTitle>
           <DialogDescription>
-            Review and edit the email before sending it with the invoice PDF
-            attached.
+            Prüfen und bearbeiten Sie die E-Mail, bevor sie mit dem
+            Rechnungs-PDF-Anhang gesendet wird.
           </DialogDescription>
         </DialogHeader>
 
@@ -170,27 +168,13 @@ export function SendInvoiceDialog({
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="send-body-html">HTML-Text</Label>
-                <Textarea
-                  id="send-body-html"
-                  value={bodyHtml}
-                  onChange={(event) => setBodyHtml(event.target.value)}
-                  rows={12}
-                  className="font-mono text-xs"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="send-body">Klartext-Fallback</Label>
-                <Textarea
-                  id="send-body"
-                  value={bodyText}
-                  onChange={(event) => setBodyText(event.target.value)}
-                  rows={6}
-                  required
-                />
-              </div>
+              <EmailHtmlField
+                id="send-body-html"
+                value={bodyHtml}
+                onChange={setBodyHtml}
+                sampleVariables={{}}
+                resetWhenOpen={open}
+              />
               <div className="space-y-2">
                 <Label>Anhang</Label>
                 <div className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
@@ -210,7 +194,7 @@ export function SendInvoiceDialog({
                       href={compose.attachment.downloadPath}
                       download={compose.attachment.filename}
                     >
-                      Preview
+                      Vorschau
                     </a>
                   </Button>
                 </div>

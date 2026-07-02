@@ -349,12 +349,12 @@ export function InvoiceDetailView({
               {downloading ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Downloading…
+                  Wird heruntergeladen …
                 </>
               ) : (
                 <>
                   <Download className="size-4" />
-                  Download PDF
+                  PDF herunterladen
                 </>
               )}
             </Button>
@@ -459,7 +459,7 @@ export function InvoiceDetailView({
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="edit-title">Titel (optional)</Label>
+                    <Label htmlFor="edit-title">Titel (freiwillig)</Label>
                     <Input
                       id="edit-title"
                       value={title}
@@ -487,7 +487,7 @@ export function InvoiceDetailView({
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="edit-notes">Notizen (optional)</Label>
+                    <Label htmlFor="edit-notes">Notizen (freiwillig)</Label>
                     <Textarea
                       id="edit-notes"
                       value={notes}
@@ -671,7 +671,7 @@ export function InvoiceDetailView({
                           </p>
                           <p className="text-xs text-muted-foreground">
                             Aktive Standard-Rechnungssequenz ·{" "}
-                            {sequenceState.activeSequence.stepCount} steps
+                            {sequenceState.activeSequence.stepCount} Schritte
                           </p>
                         </div>
                         <Button
@@ -685,7 +685,7 @@ export function InvoiceDetailView({
                           ) : (
                             <Send className="size-4" />
                           )}
-                          Start sequence
+                          Sequenz starten
                         </Button>
                       </>
                     ) : (

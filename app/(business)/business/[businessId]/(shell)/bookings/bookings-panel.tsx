@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Settings, Trash2, Eye } from "lucide-react";
+import { Loader2, Plus, Settings, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-
-import { EmailPreviewDialog } from "@/app/(business)/business/[businessId]/(shell)/sequences/email-preview-dialog";
 
 import { BookingDetailDialog } from "@/app/(business)/business/[businessId]/(shell)/bookings/booking-detail-dialog";
 import { BookingsList } from "@/app/(business)/business/[businessId]/(shell)/bookings/bookings-list";
 import { CreateBookingDialog } from "@/app/(business)/business/[businessId]/(shell)/bookings/create-booking-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { EmailHtmlField } from "@/components/email-html-field";
 import {
   Dialog,
   DialogContent,
@@ -30,10 +29,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import type { AppointmentReminderSettingsRow } from "@/lib/appointment-reminders";
 import type { BookingListRow, BookingStats } from "@/lib/bookings";
-import type { CustomerOption } from "@/lib/customers";
 import { appointmentReminderPreviewVariables } from "@/lib/email-preview";
 
 type ReminderOffsetDraft = {
@@ -89,7 +86,6 @@ function AppointmentReminderSettingsDialog({
 }) {
   const [enabled, setEnabled] = useState(settings.enabled);
   const [subject, setSubject] = useState(settings.subject);
-  const [bodyText, setBodyText] = useState(settings.bodyText);
   const [bodyHtml, setBodyHtml] = useState(settings.bodyHtml);
   const [offsets, setOffsets] = useState<ReminderOffsetDraft[]>(
     settings.offsets.map((offset) => ({
@@ -100,7 +96,6 @@ function AppointmentReminderSettingsDialog({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   function updateOffset(key: string, patch: Partial<ReminderOffsetDraft>) {
     setOffsets((current) =>
@@ -120,13 +115,12 @@ function AppointmentReminderSettingsDialog({
 
     if (
       !subject.trim() ||
-      !bodyText.trim() ||
       !bodyHtml.trim() ||
       payloadOffsets.some(
         (offset) => !Number.isFinite(offset.amount) || offset.amount < 1,
       )
     ) {
-      setError("Bitte Betreff, HTML-Text, Klartext und gültige Erinnerungszeiten angeben.");
+      setError("Bitte Betreff, HTML-Text und gültige Erinnerungszeiten angeben.");
       return;
     }
 
@@ -140,7 +134,6 @@ function AppointmentReminderSettingsDialog({
           body: JSON.stringify({
             enabled,
             subject,
-            bodyText,
             bodyHtml,
             offsets: payloadOffsets,
           }),
@@ -204,44 +197,26 @@ function AppointmentReminderSettingsDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <Label htmlFor="appointment-reminder-body-html">HTML-Text</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setPreviewOpen(true)}
-              >
-                <Eye className="size-4" />
-                Preview
-              </Button>
-            </div>
-            <Textarea
-              id="appointment-reminder-body-html"
-              value={bodyHtml}
-              onChange={(event) => setBodyHtml(event.target.value)}
-              rows={12}
-              className="font-mono text-xs"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="appointment-reminder-body">Klartext-Fallback</Label>
-            <Textarea
-              id="appointment-reminder-body"
-              value={bodyText}
-              onChange={(event) => setBodyText(event.target.value)}
-              rows={6}
-            />
-          </div>
+          <EmailHtmlField
+            id="appointment-reminder-body-html"
+            value={bodyHtml}
+            onChange={setBodyHtml}
+            sampleVariables={appointmentReminderPreviewVariables(businessName)}
+            resetWhenOpen={open}
+            helpText={
+              <>
+                Bearbeiten Sie das HTML direkt. Verwenden Sie Vorlagenvariablen in
+                doppelten geschweiften Klammern.
+              </>
+            }
+          />
 
           <div className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
-            Variables: {"{{customerName}}"}, {"{{businessName}}"},{" "}
+            Variablen: {"{{customerName}}"}, {"{{businessName}}"},{" "}
             {"{{appointmentTitle}}"}, {"{{appointmentDate}}"},{" "}
             {"{{appointmentTime}}"}, {"{{meetingUrl}}"}, {"{{meetingLink}}"}.
             {" "}
-            Use {"{{meetingLink}}"} in HTML for a clickable meeting link.
+            Verwenden Sie {"{{meetingLink}}"} im HTML für einen klickbaren Meeting-Link.
           </div>
 
           <div className="space-y-3">
@@ -256,7 +231,7 @@ function AppointmentReminderSettingsDialog({
                 }
               >
                 <Plus className="size-4" />
-                Add time
+                Zeitpunkt hinzufügen
               </Button>
             </div>
             {offsets.map((offset) => (
@@ -306,7 +281,7 @@ function AppointmentReminderSettingsDialog({
                       }
                     >
                       <Trash2 className="size-4" />
-                      Remove
+                      Entfernen
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -340,15 +315,6 @@ function AppointmentReminderSettingsDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-
-      <EmailPreviewDialog
-        open={previewOpen}
-        onOpenChange={setPreviewOpen}
-        subject={subject}
-        bodyHtml={bodyHtml}
-        bodyText={bodyText}
-        sampleVariables={appointmentReminderPreviewVariables(businessName)}
-      />
     </>
   );
 }
@@ -358,7 +324,6 @@ export function BookingsPanel({
   businessName,
   bookings,
   calendarConnected,
-  customers,
   stats,
   timeZone,
   reminderSettings,
@@ -367,7 +332,6 @@ export function BookingsPanel({
   businessName: string;
   bookings: BookingListRow[];
   calendarConnected: boolean;
-  customers: CustomerOption[];
   stats: BookingStats;
   timeZone: string;
   reminderSettings: AppointmentReminderSettingsRow;
@@ -433,7 +397,6 @@ export function BookingsPanel({
       <BookingDetailDialog
         businessId={businessId}
         booking={selectedBooking}
-        customers={customers}
         open={detailOpen}
         timeZone={timeZone}
         onOpenChange={(open) => {
@@ -448,7 +411,6 @@ export function BookingsPanel({
       <CreateBookingDialog
         businessId={businessId}
         calendarConnected={calendarConnected}
-        customers={customers}
         open={createOpen}
         timeZone={timeZone}
         onOpenChange={setCreateOpen}

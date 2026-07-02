@@ -432,10 +432,10 @@ function WebsiteTicketDialog({
           ) : null}
 
           <div className="space-y-2">
-            <Label>Bilder (optional)</Label>
+            <Label>Bilder (freiwillig)</Label>
             <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground hover:bg-muted/40">
               <Upload className="size-4" />
-              Upload screenshots or images
+              Screenshots oder Bilder hochladen
               <input
                 type="file"
                 accept="image/*"
@@ -585,7 +585,7 @@ export function WebsitePanel({
             <CardContent className="p-5">
               <p className="text-sm text-muted-foreground">Website-Status</p>
               <p className="mt-2 font-heading text-2xl font-bold">
-                {overview.domain ? "Online" : "Nicht gesetzt"}
+                {overview.domain ? "Live" : "Nicht gesetzt"}
               </p>
             </CardContent>
           </Card>
@@ -643,7 +643,7 @@ export function WebsitePanel({
                   {reviewStats.received}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {reviewStats.requested} requested · {reviewStats.declined} declined
+                  {reviewStats.requested} angefragt · {reviewStats.declined} abgelehnt
                 </p>
               </CardContent>
             </Card>
@@ -662,7 +662,7 @@ export function WebsitePanel({
                   </div>
                 ) : (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    No reviews received yet.
+                    Noch keine Bewertungen erhalten.
                   </p>
                 )}
               </CardContent>
@@ -703,7 +703,7 @@ export function WebsitePanel({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
                 >
-                  Setup guide
+                  Einrichtungsanleitung
                   <ExternalLink className="size-3" />
                 </a>
               </div>
@@ -785,7 +785,7 @@ export function WebsitePanel({
         {filteredTickets.length === 0 ? (
           <Card>
             <CardContent className="py-14 text-center text-muted-foreground">
-              No website tickets in this view.
+              Keine Website-Tickets in dieser Ansicht.
             </CardContent>
           </Card>
         ) : (
@@ -820,7 +820,7 @@ export function WebsitePanel({
                       ) : null}
                       {role === "ADMIN" && ticket.adminNote ? (
                         <p className="text-xs text-muted-foreground/60 italic">
-                          Admin note: {ticket.adminNote}
+                          Admin-Notiz: {ticket.adminNote}
                         </p>
                       ) : null}
                       <p className="text-xs text-muted-foreground">
@@ -888,7 +888,7 @@ export function WebsitePanel({
                   ) : (
                     <div className="flex items-center gap-2 border-t pt-4 text-xs text-muted-foreground">
                       <ImageIcon className="size-4" />
-                      No images attached.
+                      Keine Bilder angehängt.
                     </div>
                   )}
                 </CardContent>

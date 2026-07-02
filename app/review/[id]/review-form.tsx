@@ -190,6 +190,22 @@ export function PublicReviewForm({
     );
   }
 
+  if (status === "QUEUED" || status === "FAILED") {
+    return (
+      <div className="space-y-4 text-center">
+        <Loader2 className="mx-auto size-8 animate-spin text-muted-foreground" />
+        <div>
+          <h2 className="mb-1 font-heading text-lg font-bold">
+            Bewertungsanfrage wird vorbereitet
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Bitte laden Sie diese Seite in Kürze erneut.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={(e) => void handleSubmit(e)} className="space-y-6">
       {bookingTitle ? (
@@ -252,7 +268,7 @@ export function PublicReviewForm({
           className="mb-1.5 block text-sm font-medium"
         >
           Ihre Bewertung{" "}
-          <span className="text-muted-foreground">(optional)</span>
+          <span className="text-muted-foreground">(freiwillig)</span>
         </label>
         <Textarea
           id="review-content"

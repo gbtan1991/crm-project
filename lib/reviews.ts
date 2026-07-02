@@ -1,5 +1,6 @@
 import { ReviewStatus, type Prisma } from "@/lib/generated/prisma/client";
 import { formatCustomerName } from "@/lib/customer-display";
+import { getInclusiveDateRangeBounds } from "@/lib/date-range";
 import { startOfDateInTimezone } from "@/lib/datetime";
 import { prisma } from "@/lib/prisma";
 import type {
@@ -24,6 +25,7 @@ const reviewListSelect = {
   requestedAt: true,
   requestReason: true,
   requestCount: true,
+  failureCount: true,
   respondedAt: true,
   createdAt: true,
   updatedAt: true,
@@ -53,6 +55,7 @@ export type ReviewListRow = {
   requestedAt: string | null;
   requestReason: string | null;
   requestCount: number;
+  failureCount: number;
   respondedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -102,6 +105,7 @@ function serializeReview(review: {
     requestedAt: review.requestedAt?.toISOString() ?? null,
     requestReason: review.requestReason,
     requestCount: review.requestCount,
+    failureCount: review.failureCount,
     respondedAt: review.respondedAt?.toISOString() ?? null,
     createdAt: review.createdAt.toISOString(),
     updatedAt: review.updatedAt.toISOString(),
@@ -143,10 +147,14 @@ export async function createReview(
       businessId,
       customerId: input.customerId,
       bookingId: input.bookingId || null,
-      status: ReviewStatus.REQUESTED,
-      requestedAt: new Date(),
+      status: ReviewStatus.QUEUED,
       requestReason: input.requestReason?.trim() || null,
-      requestCount: 1,
+      requestCount: 0,
+      failureCount: 0,
+      pendingSubject:
+        input.deliveryMode === "DIRECT" ? input.subject?.trim() || null : null,
+      pendingBodyHtml:
+        input.deliveryMode === "DIRECT" ? input.bodyHtml?.trim() || null : null,
     },
     select: reviewListSelect,
   });
@@ -159,7 +167,7 @@ export function getReviewStatsPeriodRange(
   timeZone: string,
   ref = new Date(),
 ): ReviewDateRange | null {
-  if (period === "all") {
+  if (period === "all" || period === "custom") {
     return null;
   }
 
@@ -225,6 +233,10 @@ function reviewActivityInRangeWhere(
         respondedAt: { gte: range.from, lt: range.to },
       },
       {
+        status: ReviewStatus.QUEUED,
+        createdAt: { gte: range.from, lt: range.to },
+      },
+      {
         status: ReviewStatus.REQUESTED,
         requestedAt: { gte: range.from, lt: range.to },
       },
@@ -237,15 +249,27 @@ function reviewActivityInRangeWhere(
   };
 }
 
+export function resolveReviewDateRange(
+  input: Pick<ListReviewsInput, "period" | "from" | "to">,
+  timeZone: string,
+): ReviewDateRange | null {
+  if (input.period === "custom" && input.from && input.to) {
+    return getInclusiveDateRangeBounds(input.from, input.to, timeZone);
+  }
+
+  if (input.period === "all" || input.period === "custom") {
+    return null;
+  }
+
+  return getReviewStatsPeriodRange(input.period, timeZone);
+}
+
 function buildReviewListWhere(
   businessId: string,
   input: ListReviewsInput,
   timeZone: string,
 ): Prisma.ReviewWhereInput {
-  const range =
-    input.period === "all"
-      ? null
-      : getReviewStatsPeriodRange(input.period, timeZone);
+  const range = resolveReviewDateRange(input, timeZone);
 
   return {
     businessId,
@@ -414,10 +438,11 @@ export async function requestReviewUpdate(
   const review = await prisma.review.update({
     where: { id: reviewId },
     data: {
-      status: ReviewStatus.REQUESTED,
-      requestedAt: new Date(),
+      status: ReviewStatus.QUEUED,
       requestReason: input.requestReason?.trim() || null,
-      requestCount: { increment: 1 },
+      pendingSubject: input.subject.trim(),
+      pendingBodyHtml: input.bodyHtml.trim(),
+      failureCount: 0,
     },
     select: reviewListSelect,
   });
@@ -427,11 +452,19 @@ export async function requestReviewUpdate(
 
 export async function getReviewStats(
   businessId: string,
-  options?: { period?: ReviewStatsPeriod; timeZone?: string },
+  options?: {
+    period?: ReviewStatsPeriod;
+    from?: string;
+    to?: string;
+    timeZone?: string;
+  },
 ) {
   const period = options?.period ?? "all";
   const timeZone = options?.timeZone ?? "UTC";
-  const range = getReviewStatsPeriodRange(period, timeZone);
+  const range = resolveReviewDateRange(
+    { period, from: options?.from, to: options?.to },
+    timeZone,
+  );
   const periodWhere = range ? reviewActivityInRangeWhere(range) : {};
 
   const [total, requested, received, declined, latest] = await Promise.all([

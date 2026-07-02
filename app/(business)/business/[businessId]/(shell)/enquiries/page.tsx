@@ -9,7 +9,6 @@ import { PageHeader } from "@/app/(business)/business/page-header";
 import { auth } from "@/auth";
 import { env } from "@/env/client.mjs";
 import { getBusinessForViewer } from "@/lib/business-context";
-import { listCustomerOptionsForBusiness } from "@/lib/customers";
 import { listEnquiriesForBusiness } from "@/lib/enquiries";
 import { listFormsForBusiness } from "@/lib/forms";
 import type { EnquiryStatus } from "@/lib/generated/prisma/client";
@@ -59,10 +58,9 @@ export default async function EnquiriesPage({ params, searchParams }: PageProps)
   }
 
   const status = parseStatus(query.status);
-  const [enquiries, forms, customers] = await Promise.all([
+  const [enquiries, forms] = await Promise.all([
     listEnquiriesForBusiness(businessId, { status, limit: 100 }),
     listFormsForBusiness(businessId),
-    listCustomerOptionsForBusiness(businessId),
   ]);
 
   const newCount = enquiries.filter((enquiry) => enquiry.status === "NEW").length;
@@ -79,7 +77,6 @@ export default async function EnquiriesPage({ params, searchParams }: PageProps)
       <EnquiriesTabNav businessId={businessId} />
       <EnquiriesListPanel
         businessId={businessId}
-        customers={customers}
         enquiries={enquiries}
         timeZone={business.config?.timezone ?? "UTC"}
       />

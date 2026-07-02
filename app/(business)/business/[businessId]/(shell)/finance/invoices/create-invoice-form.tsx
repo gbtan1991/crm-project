@@ -13,6 +13,7 @@ import {
   validateInvoiceLineItems,
 } from "@/app/(business)/business/[businessId]/(shell)/finance/invoices/invoice-line-items-editor";
 import { PageHeader } from "@/app/(business)/business/page-header";
+import { CustomerCombobox } from "@/components/customer-combobox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -29,16 +30,8 @@ import {
   businessInvoicePath,
   businessInvoicesPath,
 } from "@/lib/business-paths";
-import { formatCustomerName } from "@/lib/customer-display";
 import { dueDateFromIssue, toDateInputValue } from "@/lib/invoice-display";
-
-type CustomerOption = {
-  id: string;
-  companyName: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-};
+import type { CustomerOption } from "@/lib/customers";
 
 type InvoiceTemplateOption = {
   id: string;
@@ -81,15 +74,15 @@ function templateDefaults(template: InvoiceTemplateOption, issueDate: string) {
 
 export function CreateInvoiceForm({
   businessId,
-  customers,
+  hasCustomers,
+  initialCustomer,
   templates,
-  initialCustomerId,
   initialTemplateId,
 }: {
   businessId: string;
-  customers: CustomerOption[];
+  hasCustomers: boolean;
+  initialCustomer?: CustomerOption | null;
   templates: InvoiceTemplateOption[];
-  initialCustomerId?: string;
   initialTemplateId?: string;
 }) {
   const router = useRouter();
@@ -97,11 +90,7 @@ export function CreateInvoiceForm({
     templates.find((template) => template.id === initialTemplateId) ??
     templates[0];
 
-  const [customerId, setCustomerId] = useState(
-    initialCustomerId && customers.some((c) => c.id === initialCustomerId)
-      ? initialCustomerId
-      : customers[0]?.id ?? "",
-  );
+  const [customerId, setCustomerId] = useState(initialCustomer?.id ?? "");
   const [templateId, setTemplateId] = useState(defaultTemplate.id);
   const [issueDate, setIssueDate] = useState(toDateInputValue(new Date()));
 
@@ -241,21 +230,17 @@ export function CreateInvoiceForm({
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="customer">Kunde</Label>
-            <Select value={customerId} onValueChange={setCustomerId}>
-              <SelectTrigger id="customer">
-                <SelectValue placeholder="Kunde wählen" />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {formatCustomerName(customer)} ({customer.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CustomerCombobox
+              id="customer"
+              businessId={businessId}
+              knownCustomers={initialCustomer ? [initialCustomer] : []}
+              value={customerId}
+              onValueChange={setCustomerId}
+              placeholder="Kunde wählen"
+            />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="title">Titel (optional)</Label>
+            <Label htmlFor="title">Titel (freiwillig)</Label>
             <Input
               id="title"
               value={title}
@@ -284,7 +269,7 @@ export function CreateInvoiceForm({
             />
           </div>
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="notes">Notizen (optional)</Label>
+            <Label htmlFor="notes">Notizen (freiwillig)</Label>
             <Textarea
               id="notes"
               value={notes}
@@ -313,7 +298,7 @@ export function CreateInvoiceForm({
         <Button type="button" variant="outline" asChild>
           <Link href={businessInvoicesPath(businessId)}>Abbrechen</Link>
         </Button>
-        <Button type="submit" disabled={submitting || customers.length === 0}>
+        <Button type="submit" disabled={submitting || !hasCustomers || !customerId}>
           {submitting ? (
             <>
               <Loader2 className="size-4 animate-spin" />
