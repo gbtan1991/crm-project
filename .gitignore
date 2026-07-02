@@ -44,3 +44,6 @@ next-env.d.ts
 /lib/generated
 
 uploads/*
+
+# secrets are ignored and important to keep them safe so we must not commit them and keep them ignored
+secrets/
