@@ -5,6 +5,48 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { FormFieldRow } from "@/lib/forms";
 
+const FIELD_LABEL_TRANSLATIONS: Record<string, string> = {
+  Email: "E-Mail",
+  Phone: "Telefon",
+  Description: "Beschreibung",
+};
+
+const FIELD_LABELS_BY_KEY: Record<string, string> = {
+  name: "Name",
+  email: "E-Mail",
+  phone: "Telefon",
+  description: "Beschreibung",
+};
+
+const PLACEHOLDER_TRANSLATIONS: Record<string, string> = {
+  "Your name": "Ihr Name",
+  "Your Email": "Ihre E-Mail",
+  "a brief description of enquiry": "Kurze Beschreibung der Anfrage",
+};
+
+const PLACEHOLDERS_BY_KEY: Record<string, string> = {
+  name: "Ihr Name",
+  email: "Ihre E-Mail",
+  phone: "+49 ...",
+  description: "Kurze Beschreibung der Anfrage",
+};
+
+function displayFieldLabel(field: FormFieldRow): string {
+  return (
+    FIELD_LABEL_TRANSLATIONS[field.label] ??
+    FIELD_LABELS_BY_KEY[field.key] ??
+    field.label
+  );
+}
+
+function displayFieldPlaceholder(field: FormFieldRow): string | undefined {
+  const placeholder = field.placeholder?.trim();
+  if (placeholder) {
+    return PLACEHOLDER_TRANSLATIONS[placeholder] ?? placeholder;
+  }
+  return PLACEHOLDERS_BY_KEY[field.key];
+}
+
 export function emptyEnquiryFormValues(
   fields: FormFieldRow[],
 ): Record<string, string> {
@@ -25,7 +67,7 @@ export function EnquiryFormFields({
       {fields.map((field) => (
         <div key={field.key} className="space-y-2">
           <Label htmlFor={`enquiry-${field.key}`}>
-            {field.label}
+            {displayFieldLabel(field)}
             {field.required ? (
               <span className="text-destructive"> *</span>
             ) : (
@@ -36,7 +78,7 @@ export function EnquiryFormFields({
             <Textarea
               id={`enquiry-${field.key}`}
               value={values[field.key] ?? ""}
-              placeholder={field.placeholder ?? undefined}
+              placeholder={displayFieldPlaceholder(field)}
               rows={4}
               onChange={(event) => onChange(field.key, event.target.value)}
             />
@@ -53,7 +95,7 @@ export function EnquiryFormFields({
                       : "text"
               }
               value={values[field.key] ?? ""}
-              placeholder={field.placeholder ?? undefined}
+              placeholder={displayFieldPlaceholder(field)}
               onChange={(event) => onChange(field.key, event.target.value)}
             />
           )}

@@ -61,6 +61,7 @@ enum CronJobType {
   PROCESS_SEQUENCES
   PROCESS_APPOINTMENT_REMINDERS
   PROCESS_REVIEW_REQUESTS
+  PROCESS_SEO_RANKINGS
 }
 
 enum CronJobStatus {
@@ -190,6 +191,10 @@ enum ReviewStatus {
   FAILED
 }
 
+enum RankingSource {
+  GOOGLE_ORGANIC
+}
+
 model User {
   id       String @id @default(uuid())
   email    String @unique
@@ -243,6 +248,8 @@ model Business {
   inbox               Inbox?
   forms               Form[]
   enquiries           Enquiry[]
+  businessKeywords    BusinessKeyword[]
+  keywordRankingSyncs KeywordRankingSync[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -271,6 +278,7 @@ model BusinessConfig {
   address        String?
   postalCode     String? @map("postal_code")
   city           String?
+  country        String  @default("CH")
   taxId          String? @map("tax_id")
   billingAddress String? @map("billing_address")
   logoUrl        String? @map("logo_url")
@@ -863,4 +871,74 @@ model Enquiry {
   @@index([formId, createdAt])
   @@index([customerId])
   @@map("enquiries")
+}
+
+model BusinessKeyword {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  keyword       String
+  targetDomain  String  @map("target_domain")
+  locationLabel String? @map("location_label")
+
+  rankings BusinessKeywordRanking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([businessId, keyword])
+  @@index([businessId])
+  @@map("business_keywords")
+}
+
+model BusinessKeywordRanking {
+  id        String          @id @default(uuid())
+  keywordId String          @map("keyword_id")
+  keyword   BusinessKeyword @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  syncId    String?         @map("sync_id")
+  sync      KeywordRankingSync? @relation(fields: [syncId], references: [id], onDelete: SetNull)
+
+  source       RankingSource @default(GOOGLE_ORGANIC)
+  provider     String        @default("dataforseo")
+  position     Int?
+  rankingUrl   String?       @map("ranking_url") @db.Text
+  rankingTitle String?       @map("ranking_title")
+  topDomains   Json?         @map("top_domains")
+
+  checkedAt DateTime @map("checked_at")
+  checkedOn DateTime @db.Date @map("checked_on")
+  device    String   @default("desktop")
+  error     String?  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([keywordId, source, checkedOn])
+  @@index([keywordId, checkedAt])
+  @@index([syncId])
+  @@map("business_keyword_rankings")
+}
+
+model KeywordRankingSync {
+  id         String   @id @default(uuid())
+  businessId String   @map("business_id")
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  source       RankingSource @default(GOOGLE_ORGANIC)
+  provider     String        @default("dataforseo")
+  startedAt    DateTime      @map("started_at")
+  finishedAt   DateTime?     @map("finished_at")
+  totalCount   Int           @map("total_count")
+  successCount Int           @default(0) @map("success_count")
+  failedCount  Int           @default(0) @map("failed_count")
+  skippedCount Int           @default(0) @map("skipped_count")
+
+  rankings BusinessKeywordRanking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([businessId, startedAt])
+  @@map("keyword_ranking_syncs")
 }

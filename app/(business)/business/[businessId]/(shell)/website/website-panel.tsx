@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { SeoVisibilityPanel } from "@/app/(business)/business/[businessId]/(shell)/website/seo-visibility-panel";
 import { businessReviewsPath } from "@/lib/business-paths";
 import { formatCustomerName } from "@/lib/customer-display";
 import type { ReviewListRow } from "@/lib/reviews";
@@ -507,6 +508,7 @@ export function WebsitePanel({
   reviewStats: ReviewStats;
 }) {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState("overview");
   const [filter, setFilter] = useState<TicketStatus | "ALL">("ALL");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<WebsiteTicketRow | null>(null);
@@ -560,10 +562,11 @@ export function WebsitePanel({
   }
 
   return (
-    <Tabs defaultValue="overview" className="space-y-6">
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <TabsList>
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
+          <TabsTrigger value="seo">SEO-Sichtbarkeit</TabsTrigger>
           <TabsTrigger value="tickets">
             Tickets
             {statusCount(tickets, "PENDING") > 0 ? (
@@ -573,10 +576,12 @@ export function WebsitePanel({
             ) : null}
           </TabsTrigger>
         </TabsList>
-        <Button onClick={openCreate}>
-          <Plus className="size-4" />
-          Neues Website-Ticket
-        </Button>
+        {activeTab === "tickets" ? (
+          <Button onClick={openCreate}>
+            <Plus className="size-4" />
+            Neues Website-Ticket
+          </Button>
+        ) : null}
       </div>
 
       <TabsContent value="overview" className="space-y-6">
@@ -761,6 +766,10 @@ export function WebsitePanel({
             </CardContent>
           </Card>
         </div>
+      </TabsContent>
+
+      <TabsContent value="seo">
+        <SeoVisibilityPanel businessId={businessId} />
       </TabsContent>
 
       <TabsContent value="tickets" className="space-y-5">

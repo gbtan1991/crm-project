@@ -32,7 +32,7 @@ function sampleValueForField(field: FormFieldRow) {
     case "NUMBER":
       return 1;
     case "TEXTAREA":
-      return "I would like to book an appointment next week.";
+      return "Ich möchte einen Termin für nächste Woche buchen.";
     default:
       return field.key === "name" ? "Alex Müller" : field.label;
   }
@@ -156,7 +156,8 @@ export function FormsListPanel({
                       {webhookUrl}
                     </code>
                     <p className="text-xs text-muted-foreground">
-                      POST JSON to this URL. Only configured fields are accepted.
+                      Senden Sie JSON per POST an diese URL. Es werden nur konfigurierte
+                      Felder akzeptiert.
                     </p>
                     <div className="rounded-lg border bg-muted/40 p-3">
                       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">

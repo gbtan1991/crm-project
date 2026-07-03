@@ -125,7 +125,7 @@ export function AddEnquiryDialog({
           <DialogHeader>
             <DialogTitle>Anfrage hinzufügen</DialogTitle>
             <DialogDescription>
-              Manually record an enquiry using one of your active forms.
+              Erfassen Sie eine Anfrage manuell mit einem Ihrer aktiven Formulare.
             </DialogDescription>
           </DialogHeader>
 

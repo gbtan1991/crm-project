@@ -35,6 +35,11 @@ export async function ensureCronJobs() {
       name: "Process queued review requests",
       intervalSeconds: 60,
     },
+    {
+      type: CronJobType.PROCESS_SEO_RANKINGS,
+      name: "Sync due SEO keyword rankings",
+      intervalSeconds: 24 * 60 * 60, // daily
+    },
   ];
 
   for (const job of defaults) {

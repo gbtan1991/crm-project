@@ -104,7 +104,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
     label: "Name",
     type: "TEXT",
     required: true,
-    placeholder: "",
+    placeholder: "Ihr Name",
     sortOrder: 0,
   },
   {
@@ -112,7 +112,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
     label: "E-Mail",
     type: "EMAIL",
     required: true,
-    placeholder: "",
+    placeholder: "Ihre E-Mail",
     sortOrder: 1,
   },
   {
@@ -120,7 +120,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
     label: "Telefon",
     type: "PHONE",
     required: false,
-    placeholder: "",
+    placeholder: "+49 ...",
     sortOrder: 2,
   },
   {
@@ -128,7 +128,7 @@ export const DEFAULT_FORM_FIELDS: FormFieldWriteInput[] = [
     label: "Beschreibung",
     type: "TEXTAREA",
     required: false,
-    placeholder: "",
+    placeholder: "Kurze Beschreibung der Anfrage",
     sortOrder: 3,
   },
 ];

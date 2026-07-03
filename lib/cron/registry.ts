@@ -6,6 +6,7 @@ import {
 } from "@/lib/calendar/sync";
 import { processDueSequences } from "@/lib/sequences";
 import { processQueuedDirectReviewRequests } from "@/lib/review-delivery";
+import { syncAllDueBusinessKeywords } from "@/lib/seo-visibility/keywords";
 
 import type { CronHandlerRegistry } from "@/lib/cron/types";
 
@@ -32,6 +33,10 @@ export const cronHandlers: CronHandlerRegistry = {
   },
   [CronJobType.PROCESS_REVIEW_REQUESTS]: async () => {
     const summary = await processQueuedDirectReviewRequests();
+    return { summary };
+  },
+  [CronJobType.PROCESS_SEO_RANKINGS]: async () => {
+    const summary = await syncAllDueBusinessKeywords();
     return { summary };
   },
 };

@@ -29,7 +29,7 @@ import {
 function emptyField(index: number): FormFieldWriteInput {
   return {
     key: `field_${index + 1}`,
-    label: `Field ${index + 1}`,
+    label: `Feld ${index + 1}`,
     type: "TEXT",
     required: false,
     placeholder: "",
