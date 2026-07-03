@@ -32,6 +32,28 @@ export const metadata: Metadata = {
     apple: "/apple-touch-icon.png",
   },
   manifest: "/site.webmanifest",
+  openGraph: {
+    title: "MeisterFlow CRM",
+    description:
+      "Buchungen, Automatisierung und Rechnungsstellung für Ihr Unternehmen",
+    type: "website",
+    locale: "de",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 800,
+        height: 150,
+        alt: "MeisterFlow",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "MeisterFlow CRM",
+    description:
+      "Buchungen, Automatisierung und Rechnungsstellung für Ihr Unternehmen",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({
