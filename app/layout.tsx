@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { env } from "@/env/server.mjs";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,6 +23,7 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(env.NEXT_PUBLIC_URL),
   title: "MeisterFlow CRM",
   description: "Buchungen, Automatisierung und Rechnungsstellung für Ihr Unternehmen",
   icons: {
