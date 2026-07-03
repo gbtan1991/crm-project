@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { BusinessUserMenu } from "@/app/(business)/business/business-user-menu";
+import { MeisterFlowLogo } from "@/components/meisterflow-logo";
 import { businessBasePath } from "@/lib/business-paths";
 import { cn } from "@/lib/utils";
 
@@ -53,10 +54,8 @@ export function BusinessNav({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
         <div className="flex min-w-0 flex-1 items-center gap-6 lg:gap-8">
           <div className="shrink-0">
-            <span className="font-heading text-lg font-bold tracking-tight">
-              MeisterFlow
-            </span>
-            <p className="max-w-40 truncate text-xs text-muted-foreground sm:max-w-none">
+            <MeisterFlowLogo />
+            <p className="mt-1 max-w-40 truncate text-xs text-muted-foreground sm:max-w-none">
               {businessName}
             </p>
             {role === "ADMIN" ? (

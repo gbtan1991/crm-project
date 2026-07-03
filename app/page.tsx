@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { LogIn } from "lucide-react";
 
 import { auth } from "@/auth";
 import { LoginForm } from "@/app/login-form";
+import { MeisterFlowLogo } from "@/components/meisterflow-logo";
 import { getDashboardPath } from "@/lib/auth/redirects";
 
 export default async function Home() {
@@ -18,8 +18,8 @@ export default async function Home() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
         <div className="mb-10 text-center">
-          <div className="mb-4 inline-flex size-14 items-center justify-center rounded-2xl bg-primary">
-            <LogIn className="size-7 text-primary-foreground" aria-hidden="true" />
+          <div className="mb-6 flex justify-center">
+            <MeisterFlowLogo variant="icon" className="size-16 rounded-2xl" priority />
           </div>
           <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
             Willkommen zurück

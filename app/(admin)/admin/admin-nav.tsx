@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Building2, Users, LogOut } from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
+import { MeisterFlowLogo } from "@/components/meisterflow-logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -21,12 +22,12 @@ export function AdminNav({ email }: { email?: string | null }) {
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-6">
         <div className="flex items-center gap-8">
-          <span className="font-heading text-lg font-bold tracking-tight">
-            MeisterFlow
-            <span className="ml-2 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
+          <div className="flex items-center gap-2">
+            <MeisterFlowLogo />
+            <span className="rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
               Administrator
             </span>
-          </span>
+          </div>
           <nav className="flex items-center gap-1">
             {tabs.map((tab) => {
               const active = pathname === tab.href;

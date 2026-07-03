@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { OnboardingWizard } from "@/app/(business)/business/[businessId]/onboarding/onboarding-wizard";
+import { MeisterFlowLogo } from "@/components/meisterflow-logo";
 import {
   businessDashboardPath,
 } from "@/lib/business-paths";
@@ -31,10 +32,8 @@ export default async function OnboardingPage({
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-6 md:py-12">
       <div className="mb-8 flex items-center justify-between border-b border-border pb-4">
         <div>
-          <p className="font-heading text-lg font-bold tracking-tight">
-            MeisterFlow
-          </p>
-          <p className="text-sm text-muted-foreground">
+          <MeisterFlowLogo />
+          <p className="mt-1 text-sm text-muted-foreground">
             Einrichtung · Schritt {state.step} von 3
           </p>
         </div>
