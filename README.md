@@ -1,7 +1,12 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Deployment to VPS
 chmod 600 secrets/Private_key.txt
 ssh -i secrets/Private_key.txt ubuntu@179.237.82.98
+cd /home/ubuntu/app/crm-project/
+git pull origin main
+Update .env if required: sudo nano .env (optional)
+docker compose --profile app up -d --build
 
 ## Getting Started
 

@@ -12,6 +12,8 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV DOCKER_BUILD=1
+ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN --mount=type=secret,id=env_file \
     set -a && . /run/secrets/env_file && set +a && npm run build
 
