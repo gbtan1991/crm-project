@@ -6,8 +6,6 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  ExternalLink,
-  Globe,
   ImageIcon,
   Loader2,
   Pencil,
@@ -43,6 +41,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { SeoVisibilityPanel } from "@/app/(business)/business/[businessId]/(shell)/website/seo-visibility-panel";
+import { WebsiteSettingsForm } from "@/app/(business)/business/[businessId]/(shell)/website/website-settings-form";
 import { businessReviewsPath } from "@/lib/business-paths";
 import { formatCustomerName } from "@/lib/customer-display";
 import type { ReviewListRow } from "@/lib/reviews";
@@ -51,8 +50,6 @@ import type {
   WebsiteOverview,
   WebsiteTicketRow,
 } from "@/lib/website-tickets";
-
-const META_PIXEL_SETUP_URL = "https://www.youtube.com/watch?v=h35eEoI4wm8";
 
 type ReviewStats = {
   total: number;
@@ -120,13 +117,6 @@ function initialForm(ticket?: WebsiteTicketRow): TicketFormState {
   };
 }
 
-function normalizeWebsiteUrl(domain: string | null) {
-  if (!domain) return null;
-  return domain.startsWith("http://") || domain.startsWith("https://")
-    ? domain
-    : `https://${domain}`;
-}
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("de-CH", {
     dateStyle: "medium",
@@ -159,27 +149,6 @@ function StarRating({
           )}
         />
       ))}
-    </span>
-  );
-}
-
-function RequirementStatus({
-  active,
-  label,
-}: {
-  active: boolean;
-  label: string;
-}) {
-  return (
-    <span className={active ? "text-emerald-600" : "text-muted-foreground"}>
-      <span
-        className={
-          active
-            ? "mr-2 inline-block size-2 rounded-full bg-emerald-500"
-            : "mr-2 inline-block size-2 rounded-full bg-muted-foreground/40"
-        }
-      />
-      {label}
     </span>
   );
 }
@@ -513,7 +482,6 @@ export function WebsitePanel({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTicket, setEditingTicket] = useState<WebsiteTicketRow | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const websiteUrl = normalizeWebsiteUrl(overview.domain);
 
   const filteredTickets = useMemo(() => {
     return filter === "ALL"
@@ -676,72 +644,7 @@ export function WebsitePanel({
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Globe className="size-4" />
-                Website-Anforderungen
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Website-URL</span>
-                {websiteUrl ? (
-                  <a
-                    href={websiteUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                  >
-                    {overview.domain}
-                    <ExternalLink className="size-3" />
-                  </a>
-                ) : (
-                  <span className="text-muted-foreground">Nicht angegeben</span>
-                )}
-              </div>
-              <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Meta Pixel</span>
-                <a
-                  href={META_PIXEL_SETUP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                >
-                  Einrichtungsanleitung
-                  <ExternalLink className="size-3" />
-                </a>
-              </div>
-              <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Website vorhanden</span>
-                <RequirementStatus
-                  active={overview.hasWebsite}
-                  label={overview.hasWebsite ? "Ja" : "Nein"}
-                />
-              </div>
-              <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Hosting-Zugang</span>
-                <RequirementStatus
-                  active={overview.hostingAccessConfigured}
-                  label={overview.hostingAccessConfigured ? "Vorhanden" : "Fehlt"}
-                />
-              </div>
-              <div className="flex justify-between gap-4 border-b pb-3">
-                <span className="text-muted-foreground">Google Analytics</span>
-                <RequirementStatus
-                  active={overview.hasGoogleAnalytics}
-                  label={overview.hasGoogleAnalytics ? "Konfiguriert" : "Nicht konfiguriert"}
-                />
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Search Console</span>
-                <RequirementStatus
-                  active={overview.hasSearchConsole}
-                  label={overview.hasSearchConsole ? "Konfiguriert" : "Nicht konfiguriert"}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <WebsiteSettingsForm businessId={businessId} initialOverview={overview} />
 
           <Card>
             <CardHeader>

@@ -21,7 +21,7 @@ const UPLOAD_ROOT = path.join(process.cwd(), "uploads", "website-tickets");
 
 export type WebsiteOverview = {
   domain: string | null;
-  hostingAccessConfigured: boolean;
+  hostingAccess: string | null;
   hasWebsite: boolean;
   hasGoogleAnalytics: boolean;
   hasSearchConsole: boolean;
@@ -197,7 +197,7 @@ export async function listWebsiteTicketsForBusiness(
   return {
     overview: {
       domain: business.config?.domain ?? null,
-      hostingAccessConfigured: Boolean(business.config?.hostingAccess),
+      hostingAccess: business.config?.hostingAccess ?? null,
       hasWebsite: business.config?.hasWebsite ?? false,
       hasGoogleAnalytics: business.config?.hasGoogleAnalytics ?? false,
       hasSearchConsole: business.config?.hasSearchConsole ?? false,

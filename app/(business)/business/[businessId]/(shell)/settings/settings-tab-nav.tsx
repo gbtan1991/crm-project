@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const TABS: { id: BusinessSettingsTab; label: string }[] = [
   { id: "calendar", label: "Kalender" },
   { id: "general", label: "Allgemein" },
+  { id: "website", label: "Website" },
 ];
 
 export function SettingsTabNav({ businessId }: { businessId: string }) {

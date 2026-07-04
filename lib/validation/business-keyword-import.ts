@@ -6,12 +6,8 @@ export const businessKeywordImportRowSchema = z.object({
     .trim()
     .min(2, "Keyword muss mindestens 2 Zeichen haben.")
     .max(200, "Keyword darf maximal 200 Zeichen haben."),
-  locationLabel: z
-    .string()
-    .trim()
-    .max(100, "Standort darf maximal 100 Zeichen haben.")
-    .optional()
-    .or(z.literal("")),
+  locationCode: z.number().int().positive("Standort ist erforderlich."),
+  locationName: z.string().trim().min(1, "Standort ist erforderlich."),
 });
 
 export const businessKeywordImportSchema = z.object({

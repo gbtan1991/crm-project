@@ -1,34 +1,58 @@
 ---
-description: Prisma 7 schema change workflow (generate + db push)
-globs: prisma/schema.prisma
+description: Prisma schema changes — migrate dev locally, deploy via Docker on VPS
+globs: prisma/**
 alwaysApply: false
 ---
 
 # Prisma Workflow
 
-This project uses **Prisma 7** (`prisma-client`, rust-free) with the `@prisma/adapter-pg` driver adapter. The client is generated to `lib/generated/prisma` (git-ignored), and the DB connection lives in `prisma.config.ts` via `DATABASE_URL`.
+## Architecture (why this matters)
+
+- **Local dev**: Next.js app + Postgres (usually `docker compose up -d postgres`).
+- **Production (VPS)**: `docker compose --profile app up -d --build`
+  1. `postgres` starts
+  2. **`migrate` container** runs `prisma migrate deploy` (applies SQL in `prisma/migrations/`)
+  3. **`app` starts only if migrate succeeded** (`depends_on: service_completed_successfully`)
+- **Build time** (`npm run build`): runs `prisma generate` only — **does not change the DB**.
+
+Production never runs `db push`. It only applies **committed migration files**. Local workflow must produce those files.
 
 ## After ANY change to `prisma/schema.prisma`
 
-Always run both, in order:
+**Default — use versioned migrations** (anything that should reach production):
 
 ```bash
-npx prisma generate   # regenerate the typed client in lib/generated/prisma
-npx prisma db push    # sync the schema to the database (local dev)
+npx prisma migrate dev --name short_description_of_change
 ```
 
-`prisma generate` is required because in Prisma 7 `db push`/`migrate` no longer run it automatically, and the client is not in `node_modules`.
+This creates `prisma/migrations/<timestamp>_short_description_of_change/migration.sql`, applies it locally, and runs `generate`.
+
+Then commit **both** `schema.prisma` and the new migration folder before deploying.
+
+**Do not use `db push` as the normal workflow.** It skips migration files and causes drift — production's `migrate deploy` will not see those changes.
+
+### When `db push` is OK
+
+- Throwaway local DB / quick schema experiments only
+- Never as the path to production
+
+### After pulling migrations (no schema edit)
+
+```bash
+npx prisma migrate deploy   # apply pending migrations locally
+npx prisma generate
+```
+
+## Prisma 7 specifics
+
+- Client generates to `lib/generated/prisma` (git-ignored); import from `@/lib/generated/prisma/client`, shared instance from `@/lib/prisma`.
+- Uses `@prisma/adapter-pg`; connection URL in `prisma.config.ts` via `DATABASE_URL`.
+- `prisma generate` is required after schema changes — Prisma 7 does not always run it automatically.
 
 ## DATABASE_URL hostname
 
-- Running CLI/app **on the host** (normal dev): use `localhost`
+- CLI/app **on the host**: `localhost`
   `postgresql://meisterflow:meisterflow@localhost:5432/meisterflow_crm`
-- Inside the Docker Compose network: use the `postgres` service hostname.
+- **Inside Docker Compose** (app/migrate containers): `postgres` service hostname.
 
-If `db push` fails with `P1001: Can't reach database server at postgres:5432`, the `.env` `DATABASE_URL` is using the Docker hostname while running on the host — switch it to `localhost`.
-
-## Notes
-
-- Start the database first: `docker compose up -d`.
-- Use `npx prisma db push` for local iteration; use `npx prisma migrate dev` only when creating versioned migrations.
-- Import the client from `@/lib/generated/prisma/client` and the shared instance from `@/lib/prisma`.
+If migrate/push fails with `P1001` at `postgres:5432` while on the host, switch `.env` to `localhost`.

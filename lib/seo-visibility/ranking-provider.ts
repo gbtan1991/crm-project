@@ -4,6 +4,8 @@ export type RankingSearchParams = {
   keyword: string;
   targetDomain: string;
   market: MarketConfig;
+  /** Per-keyword DataForSEO location code (overrides market default). */
+  locationCode: number;
   /** Use DataForSEO standard queue (cheaper, ~5 min). Default: live mode. */
   useQueue?: boolean;
 };
@@ -13,6 +15,8 @@ export type RankingSearchResult = {
   rankingUrl: string | null;
   rankingTitle: string | null;
   topDomains: string[];
+  /** DataForSEO snapshot URL for the exact SERP that was checked. */
+  checkUrl?: string | null;
 };
 
 export interface RankingProvider {

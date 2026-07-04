@@ -48,3 +48,16 @@ export const businessGeneralSettingsSchema = z.object({
 export type BusinessGeneralSettingsInput = z.infer<
   typeof businessGeneralSettingsSchema
 >;
+
+export const websiteSettingsSchema = z.object({
+  domain: z.string().trim().max(200, "Domain darf maximal 200 Zeichen haben."),
+  hostingAccess: z
+    .string()
+    .trim()
+    .max(200, "Hosting-Angabe darf maximal 200 Zeichen haben."),
+  hasWebsite: z.boolean(),
+  hasGoogleAnalytics: z.boolean(),
+  hasSearchConsole: z.boolean(),
+});
+
+export type WebsiteSettingsInput = z.infer<typeof websiteSettingsSchema>;

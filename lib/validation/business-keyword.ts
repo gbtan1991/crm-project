@@ -6,12 +6,15 @@ export const businessKeywordWriteSchema = z.object({
     .trim()
     .min(2, "Keyword muss mindestens 2 Zeichen haben.")
     .max(200, "Keyword darf maximal 200 Zeichen haben."),
-  locationLabel: z
+  locationCode: z
+    .number()
+    .int("Standortcode muss eine ganze Zahl sein.")
+    .positive("Standortcode ist ungültig."),
+  locationName: z
     .string()
     .trim()
-    .max(100, "Standort darf maximal 100 Zeichen haben.")
-    .optional()
-    .or(z.literal("")),
+    .min(1, "Standortname ist erforderlich.")
+    .max(200, "Standortname darf maximal 200 Zeichen haben."),
 });
 
 export type BusinessKeywordWriteInput = z.infer<typeof businessKeywordWriteSchema>;

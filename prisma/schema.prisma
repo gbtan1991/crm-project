@@ -878,16 +878,17 @@ model BusinessKeyword {
   businessId String   @map("business_id")
   business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
 
-  keyword       String
-  targetDomain  String  @map("target_domain")
-  locationLabel String? @map("location_label")
+  keyword      String
+  targetDomain String @map("target_domain")
+  locationCode Int    @map("location_code")
+  locationName String @map("location_name")
 
   rankings BusinessKeywordRanking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([businessId, keyword])
+  @@unique([businessId, keyword, locationCode])
   @@index([businessId])
   @@map("business_keywords")
 }

@@ -37,7 +37,7 @@ export default async function WebsitePage({ params }: PageProps) {
     <div>
       <PageHeader
         title="Webseite"
-        subtitle="Website-Anforderungen prüfen und Änderungen anfragen."
+        subtitle="Website-Informationen verwalten und Änderungen anfragen."
       />
       <WebsitePanel
         businessId={businessId}

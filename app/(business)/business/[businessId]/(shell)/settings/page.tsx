@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { CalendarSettingsPanel } from "./calendar-settings-panel";
 import { GeneralSettingsForm } from "./general-settings-form";
 import { SettingsTabNav } from "./settings-tab-nav";
+import { WebsiteSettingsForm } from "../website/website-settings-form";
 
 type PageProps = {
   params: Promise<{ businessId: string }>;
@@ -75,6 +76,18 @@ export default async function SettingsPage({ params, searchParams }: PageProps) 
           businessId={businessId}
           initialName={business.name}
           initialTimezone={business.config?.timezone ?? "UTC"}
+        />
+      ) : activeTab === "website" ? (
+        <WebsiteSettingsForm
+          businessId={businessId}
+          initialOverview={{
+            domain: business.config?.domain ?? null,
+            hostingAccess: business.config?.hostingAccess ?? null,
+            hasWebsite: business.config?.hasWebsite ?? false,
+            hasGoogleAnalytics: business.config?.hasGoogleAnalytics ?? false,
+            hasSearchConsole: business.config?.hasSearchConsole ?? false,
+          }}
+          showMetaPixelHelp={false}
         />
       ) : (
         <CalendarSettingsPanel

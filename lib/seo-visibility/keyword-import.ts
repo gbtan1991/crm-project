@@ -16,6 +16,10 @@ export type KeywordImportResult = {
   errors: string[];
 };
 
+function duplicateKey(keyword: string, locationCode: number) {
+  return `${keyword.trim().toLowerCase()}::${locationCode}`;
+}
+
 export async function importBusinessKeywordsBatch(
   businessId: string,
   rows: BusinessKeywordImportRowInput[],
@@ -31,43 +35,61 @@ export async function importBusinessKeywordsBatch(
     errors: [],
   };
 
+  const business = await prisma.business.findUnique({
+    where: { id: businessId },
+    include: { config: true },
+  });
+  if (!business) {
+    result.errors.push("Unternehmen nicht gefunden.");
+    return result;
+  }
+
   const existing = await prisma.businessKeyword.findMany({
     where: { businessId },
-    select: { keyword: true },
+    select: { keyword: true, locationCode: true },
   });
-  const existingKeywords = new Set(
-    existing.map((item) => item.keyword.trim().toLowerCase()),
+  const existingKeys = new Set(
+    existing.map((item) => duplicateKey(item.keyword, item.locationCode)),
   );
   const seenInBatch = new Set<string>();
   const createdIds: string[] = [];
 
   for (const [index, row] of rows.entries()) {
     const keyword = row.keyword.trim();
-    const locationLabel = row.locationLabel?.trim() ?? "";
-    const normalized = keyword.toLowerCase();
+    const { locationCode, locationName } = row;
 
     if (!keyword) {
       result.skippedEmpty += 1;
       continue;
     }
 
-    if (seenInBatch.has(normalized)) {
+    const key = duplicateKey(keyword, locationCode);
+
+    if (seenInBatch.has(key)) {
       result.skippedDuplicates += 1;
-      result.errors.push(`Zeile ${index + 1}: Duplikat in der CSV (${keyword}).`);
+      result.errors.push(
+        `Zeile ${index + 1}: Duplikat in der Liste (${keyword}, ${locationName}).`,
+      );
       continue;
     }
 
-    if (existingKeywords.has(normalized)) {
+    if (existingKeys.has(key)) {
       result.skippedDuplicates += 1;
-      result.errors.push(`Zeile ${index + 1}: Keyword existiert bereits (${keyword}).`);
+      result.errors.push(
+        `Zeile ${index + 1}: Keyword existiert bereits (${keyword}, ${locationName}).`,
+      );
       continue;
     }
 
-    seenInBatch.add(normalized);
+    seenInBatch.add(key);
 
     const created = await createBusinessKeywordForBusiness({
       businessId,
-      data: { keyword, locationLabel },
+      data: {
+        keyword,
+        locationCode,
+        locationName,
+      },
     });
 
     if ("error" in created) {
@@ -76,7 +98,7 @@ export async function importBusinessKeywordsBatch(
       continue;
     }
 
-    existingKeywords.add(normalized);
+    existingKeys.add(key);
     createdIds.push(created.keyword.id);
     result.created += 1;
   }

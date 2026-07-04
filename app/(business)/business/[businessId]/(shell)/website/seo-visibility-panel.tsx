@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { buildGoogleSearchPreviewUrl } from "@/lib/seo-visibility/market";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +32,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { businessSettingsPath } from "@/lib/business-paths";
 import { KeywordImportActions } from "@/app/(business)/business/[businessId]/(shell)/website/keyword-import-dialog";
+import {
+  SerpLocationCombobox,
+} from "@/components/serp-location-combobox";
+import type { SerpLocationOption } from "@/lib/seo-visibility/serp-location-types";
 import type {
   BusinessKeywordListRow,
   BusinessKeywordsOverview,
@@ -116,14 +121,18 @@ function LastSyncLine({
 
 function KeywordCard({
   keyword,
+  country,
   onDelete,
   deleting,
 }: {
   keyword: BusinessKeywordListRow;
+  country: string;
   onDelete: (keyword: BusinessKeywordListRow) => void;
   deleting: boolean;
 }) {
-  const googleUrl = `https://www.google.com/search?q=${encodeURIComponent(keyword.keyword)}`;
+  const googleUrl =
+    keyword.latestRanking?.serpCheckUrl ??
+    buildGoogleSearchPreviewUrl(keyword.keyword, country);
   const visibility = keyword.latestRanking?.visibility ?? "NOT_VISIBLE";
   const position = keyword.latestRanking?.position;
 
@@ -143,10 +152,10 @@ function KeywordCard({
                 {position ? `#${position}` : "—"}
               </span>
             </p>
-            {keyword.locationLabel ? (
+            {keyword.locationName ? (
               <p className="inline-flex items-center gap-1">
                 <MapPin className="size-3" />
-                {keyword.locationLabel}
+                {keyword.locationName}
               </p>
             ) : null}
             {keyword.syncedToday ? (
@@ -198,27 +207,46 @@ function KeywordCard({
   );
 }
 
+function formatLocationPreview(locationName: string) {
+  return locationName.replace(/,/g, ", ");
+}
+
 function AddKeywordDialog({
   businessId,
   targetDomain,
+  defaultLocation,
   open,
   onOpenChange,
   onSaved,
 }: {
   businessId: string;
   targetDomain: string | null;
+  defaultLocation: SerpLocationOption | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
 }) {
   const [keyword, setKeyword] = useState("");
-  const [locationLabel, setLocationLabel] = useState("");
+  const [locationCode, setLocationCode] = useState<number | null>(null);
+  const [locationName, setLocationName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open || !defaultLocation) return;
+    setLocationCode(defaultLocation.locationCode);
+    setLocationName(defaultLocation.locationName);
+  }, [defaultLocation, open]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+
+    if (!locationCode || !locationName) {
+      setError("Bitte wählen Sie einen Standort aus.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -227,7 +255,8 @@ function AddKeywordDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           keyword,
-          locationLabel,
+          locationCode,
+          locationName,
         }),
       });
       const data = await response.json().catch(() => ({}));
@@ -243,7 +272,8 @@ function AddKeywordDialog({
         toast.error("Keyword gespeichert, aber die erste Synchronisation ist fehlgeschlagen.");
       }
       setKeyword("");
-      setLocationLabel("");
+      setLocationCode(defaultLocation?.locationCode ?? null);
+      setLocationName(defaultLocation?.locationName ?? "");
       onOpenChange(false);
       onSaved();
     } catch (submitError) {
@@ -265,8 +295,8 @@ function AddKeywordDialog({
           <DialogHeader>
             <DialogTitle>Keyword hinzufügen</DialogTitle>
             <DialogDescription>
-              Tragen Sie einen Google-Suchbegriff ein, den Sie für Ihre Website verfolgen
-              möchten.
+              Verfolgen Sie, an welcher Position Ihre Website für einen bestimmten
+              Google-Suchbegriff erscheint — simuliert von einem gewählten Standort aus.
             </DialogDescription>
           </DialogHeader>
 
@@ -282,25 +312,52 @@ function AddKeywordDialog({
               id="seo-keyword"
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
-              placeholder="z. B. Immobilienmakler Aargau"
+              placeholder="z. B. Webdesign Agentur Aargau"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              Der exakte Suchtext in Google — so wie ihn jemand eintippen würde. Für lokale
+              Suchen den Ort im Keyword mit angeben (z. B. „… in Aargau“ oder „… Aargau“).
+            </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="seo-location-label">Standort (optional)</Label>
-            <Input
-              id="seo-location-label"
-              value={locationLabel}
-              onChange={(event) => setLocationLabel(event.target.value)}
-              placeholder="z. B. Aargau"
+            <Label htmlFor="seo-location">Standort</Label>
+            <SerpLocationCombobox
+              id="seo-location"
+              businessId={businessId}
+              value={locationCode}
+              defaultLocation={defaultLocation}
+              onValueChange={(location) => {
+                setLocationCode(location.locationCode);
+                setLocationName(location.locationName);
+              }}
+              disabled={!defaultLocation}
             />
+            <p className="text-xs text-muted-foreground">
+              Wo die suchende Person sitzt — simuliert die Google-Ergebnisse aus dieser Region.
+              Der Standort wird nicht automatisch an das Keyword angehängt.
+            </p>
           </div>
 
           <div className="space-y-2">
             <Label>Ziel-Domain</Label>
             <Input value={targetDomain ?? "Nicht gesetzt"} readOnly disabled />
+            <p className="text-xs text-muted-foreground">
+              Die Website, deren Position in den Suchergebnissen gezählt wird.
+            </p>
           </div>
+
+          {locationName ? (
+            <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2.5 text-sm text-sky-950">
+              Personen in{" "}
+              <span className="font-semibold">{formatLocationPreview(locationName)}</span>{" "}
+              suchen nach{" "}
+              <span className="font-semibold">
+                {keyword.trim() || "…"}
+              </span>
+            </div>
+          ) : null}
 
           <DialogFooter>
             <Button
@@ -311,7 +368,7 @@ function AddKeywordDialog({
             >
               Abbrechen
             </Button>
-            <Button type="submit" disabled={saving || !targetDomain}>
+            <Button type="submit" disabled={saving || !targetDomain || !locationCode}>
               <span className="inline-flex items-center gap-2">
                 {saving ? <Loader2 className="size-4 animate-spin" /> : null}
                 {saving ? "Wird gespeichert…" : "Keyword speichern"}
@@ -466,7 +523,11 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
           </Button>
           <KeywordImportActions
             businessId={businessId}
-            existingKeywords={keywords.map((keyword) => keyword.keyword)}
+            defaultLocation={overview?.defaultLocation ?? null}
+            existingEntries={keywords.map((keyword) => ({
+              keyword: keyword.keyword,
+              locationCode: keyword.locationCode,
+            }))}
             disabled={missingDomain}
             onImported={() => void loadOverview({ silent: true })}
           />
@@ -516,6 +577,7 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
             <KeywordCard
               key={keyword.id}
               keyword={keyword}
+              country={overview?.country ?? "CH"}
               deleting={deletingId === keyword.id}
               onDelete={(item) => void handleDelete(item)}
             />
@@ -526,6 +588,7 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
       <AddKeywordDialog
         businessId={businessId}
         targetDomain={overview?.targetDomain ?? null}
+        defaultLocation={overview?.defaultLocation ?? null}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSaved={() => void loadOverview({ silent: true })}

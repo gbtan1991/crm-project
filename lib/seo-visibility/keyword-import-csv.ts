@@ -52,7 +52,6 @@ export function parseCsv(text: string): string[][] {
 
 export type ParsedKeywordImportRow = {
   keyword: string;
-  locationLabel: string;
 };
 
 export function parseKeywordImportCsv(text: string): ParsedKeywordImportRow[] {
@@ -65,18 +64,25 @@ export function parseKeywordImportCsv(text: string): ParsedKeywordImportRow[] {
   const keywordIndex = headers.findIndex((header) =>
     ["keyword", "keywords", "suchbegriff", "suchbegriffe"].includes(header),
   );
-  const standortIndex = headers.findIndex((header) =>
-    ["standort", "location", "locationlabel", "region", "ort"].includes(header),
-  );
 
   if (keywordIndex === -1) {
+    const singleColumn = rows.every((row) => row.length <= 1);
+    if (singleColumn) {
+      return rows
+        .slice(0, MAX_IMPORT_ROWS)
+        .map((row) => ({ keyword: (row[0] ?? "").trim() }))
+        .filter((row) => row.keyword.length > 0);
+    }
+
     throw new Error(
       "CSV muss eine Spalte \"keyword\" enthalten. Laden Sie die Beispiel-CSV herunter.",
     );
   }
 
-  return dataRows.slice(0, MAX_IMPORT_ROWS).map((row) => ({
-    keyword: (row[keywordIndex] ?? "").trim(),
-    locationLabel: standortIndex >= 0 ? (row[standortIndex] ?? "").trim() : "",
-  }));
+  return dataRows
+    .slice(0, MAX_IMPORT_ROWS)
+    .map((row) => ({
+      keyword: (row[keywordIndex] ?? "").trim(),
+    }))
+    .filter((row) => row.keyword.length > 0);
 }

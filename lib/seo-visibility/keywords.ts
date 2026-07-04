@@ -12,6 +12,10 @@ import {
   getVisibility,
   type KeywordVisibility,
 } from "@/lib/seo-visibility/visibility";
+import {
+  getDefaultCountryLocation,
+} from "@/lib/seo-visibility/serp-locations";
+import type { SerpLocationOption } from "@/lib/seo-visibility/serp-location-types";
 import type { BusinessKeywordWriteInput } from "@/lib/validation/business-keyword";
 
 const SYNC_DELAY_MS = 300;
@@ -23,13 +27,16 @@ export type BusinessKeywordRankingRow = {
   checkedAt: string;
   visibility: KeywordVisibility;
   error: string | null;
+  /** Exact Google SERP URL from DataForSEO (when available). */
+  serpCheckUrl: string | null;
 };
 
 export type BusinessKeywordListRow = {
   id: string;
   keyword: string;
   targetDomain: string;
-  locationLabel: string | null;
+  locationCode: number;
+  locationName: string;
   latestRanking: BusinessKeywordRankingRow | null;
   syncedToday: boolean;
 };
@@ -48,6 +55,7 @@ export type BusinessKeywordsOverview = {
   domain: string | null;
   targetDomain: string | null;
   country: string;
+  defaultLocation: SerpLocationOption | null;
   keywords: BusinessKeywordListRow[];
   tierSummary: ReturnType<typeof aggregateTierCounts>;
   lastSync: KeywordRankingSyncRow | null;
@@ -85,6 +93,22 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function extractSerpCheckUrl(topDomains: unknown): string | null {
+  if (!topDomains || typeof topDomains !== "object") return null;
+  const checkUrl = (topDomains as { checkUrl?: unknown }).checkUrl;
+  return typeof checkUrl === "string" && checkUrl.length > 0 ? checkUrl : null;
+}
+
+function buildTopDomainsPayload(searchResult: {
+  topDomains: string[];
+  checkUrl?: string | null;
+}) {
+  return {
+    top10: searchResult.topDomains,
+    ...(searchResult.checkUrl ? { checkUrl: searchResult.checkUrl } : {}),
+  };
+}
+
 function mapLatestRanking(
   ranking: {
     position: number | null;
@@ -92,6 +116,7 @@ function mapLatestRanking(
     rankingTitle: string | null;
     checkedAt: Date;
     error: string | null;
+    topDomains: unknown;
   } | null,
 ): BusinessKeywordRankingRow | null {
   if (!ranking) return null;
@@ -102,6 +127,7 @@ function mapLatestRanking(
     checkedAt: ranking.checkedAt.toISOString(),
     visibility: getVisibility(ranking.position),
     error: ranking.error,
+    serpCheckUrl: extractSerpCheckUrl(ranking.topDomains),
   };
 }
 
@@ -173,17 +199,20 @@ export async function listBusinessKeywordsForBusiness(
     id: keyword.id,
     keyword: keyword.keyword,
     targetDomain: keyword.targetDomain,
-    locationLabel: keyword.locationLabel,
+    locationCode: keyword.locationCode,
+    locationName: keyword.locationName,
     latestRanking: mapLatestRanking(keyword.rankings[0] ?? null),
     syncedToday: syncedTodayIds.has(keyword.id),
   }));
 
   const syncedTodayCount = rows.filter((row) => row.syncedToday).length;
+  const defaultLocation = getDefaultCountryLocation(context.country);
 
   return {
     domain: context.domain,
     targetDomain: context.targetDomain,
     country: context.country,
+    defaultLocation,
     keywords: rows,
     tierSummary: aggregateTierCounts(
       rows.map((row) => ({ position: row.latestRanking?.position ?? null })),
@@ -221,14 +250,17 @@ export async function createBusinessKeywordForBusiness(input: {
 
   const existing = await prisma.businessKeyword.findUnique({
     where: {
-      businessId_keyword: {
+      businessId_keyword_locationCode: {
         businessId: input.businessId,
         keyword: input.data.keyword,
+        locationCode: input.data.locationCode,
       },
     },
   });
   if (existing) {
-    return { error: "Dieses Keyword ist bereits vorhanden." as const };
+    return {
+      error: "Dieses Keyword ist für diesen Standort bereits vorhanden." as const,
+    };
   }
 
   const keyword = await prisma.businessKeyword.create({
@@ -236,7 +268,8 @@ export async function createBusinessKeywordForBusiness(input: {
       businessId: input.businessId,
       keyword: input.data.keyword,
       targetDomain: context.targetDomain,
-      locationLabel: input.data.locationLabel || null,
+      locationCode: input.data.locationCode,
+      locationName: input.data.locationName,
     },
   });
 
@@ -245,7 +278,8 @@ export async function createBusinessKeywordForBusiness(input: {
       id: keyword.id,
       keyword: keyword.keyword,
       targetDomain: keyword.targetDomain,
-      locationLabel: keyword.locationLabel,
+      locationCode: keyword.locationCode,
+      locationName: keyword.locationName,
       latestRanking: null,
       syncedToday: false,
     } satisfies BusinessKeywordListRow,
@@ -272,7 +306,13 @@ export async function deleteBusinessKeywordForBusiness(input: {
 }
 
 async function syncKeywordRanking(input: {
-  keyword: { id: string; keyword: string; targetDomain: string };
+  keyword: {
+    id: string;
+    keyword: string;
+    targetDomain: string;
+    locationCode: number;
+    locationName: string;
+  };
   provider: Awaited<ReturnType<typeof getRankingProvider>>;
   providerName: string;
   market: ReturnType<typeof resolveMarket>;
@@ -282,10 +322,20 @@ async function syncKeywordRanking(input: {
   useQueue?: boolean;
 }): Promise<SyncKeywordResult> {
   try {
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env.SEO_RANKING_DEBUG === "true"
+    ) {
+      console.info(
+        `[seo-ranking] syncing keyword="${input.keyword.keyword}" location="${input.keyword.locationName}" (${input.keyword.locationCode})`,
+      );
+    }
+
     const searchResult = await input.provider.searchOrganic({
       keyword: input.keyword.keyword,
       targetDomain: input.keyword.targetDomain,
       market: input.market,
+      locationCode: input.keyword.locationCode,
       useQueue: input.useQueue,
     });
 
@@ -305,7 +355,7 @@ async function syncKeywordRanking(input: {
         position: searchResult.position,
         rankingUrl: searchResult.rankingUrl,
         rankingTitle: searchResult.rankingTitle,
-        topDomains: { top10: searchResult.topDomains },
+        topDomains: buildTopDomainsPayload(searchResult),
         checkedAt: input.checkedAt,
         checkedOn: input.checkedOn,
         error: null,
@@ -316,7 +366,7 @@ async function syncKeywordRanking(input: {
         position: searchResult.position,
         rankingUrl: searchResult.rankingUrl,
         rankingTitle: searchResult.rankingTitle,
-        topDomains: { top10: searchResult.topDomains },
+        topDomains: buildTopDomainsPayload(searchResult),
         checkedAt: input.checkedAt,
         error: null,
       },
@@ -349,7 +399,6 @@ async function syncKeywordRanking(input: {
         position: null,
         rankingUrl: null,
         rankingTitle: null,
-        topDomains: null,
         checkedAt: input.checkedAt,
         checkedOn: input.checkedOn,
         error: message,

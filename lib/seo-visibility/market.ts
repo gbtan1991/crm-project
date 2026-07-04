@@ -79,3 +79,17 @@ export function resolveMarket(country: string | null | undefined): MarketConfig 
   if (!code) return MARKET_MAP.CH;
   return MARKET_MAP[code] ?? DEFAULT_MARKET;
 }
+
+/** Approximate Google SERP preview when no DataForSEO check_url is stored yet. */
+export function buildGoogleSearchPreviewUrl(
+  keyword: string,
+  country: string | null | undefined,
+): string {
+  const market = resolveMarket(country);
+  const params = new URLSearchParams({
+    q: keyword,
+    hl: market.hl,
+    gl: market.gl,
+  });
+  return `https://${market.googleDomain}/search?${params.toString()}`;
+}

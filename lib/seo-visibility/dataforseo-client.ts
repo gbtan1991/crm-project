@@ -23,6 +23,9 @@ type DataForSeoOrganicItem = {
 
 type DataForSeoSerpResult = {
   items?: DataForSeoOrganicItem[];
+  check_url?: string;
+  keyword?: string;
+  location_code?: number;
 };
 
 type DataForSeoTask = {
@@ -107,10 +110,74 @@ export function parseDataForSeoOrganicItems(
   };
 }
 
+function shouldLogSerpRankingDebug() {
+  return (
+    process.env.NODE_ENV === "development" ||
+    process.env.SEO_RANKING_DEBUG === "true"
+  );
+}
+
+export function logSerpRankingDebug(input: {
+  keyword: string;
+  locationCode: number;
+  targetDomain: string;
+  checkUrl?: string | null;
+  items?: DataForSeoOrganicItem[];
+  matchedPosition: number | null;
+}) {
+  if (!shouldLogSerpRankingDebug()) return;
+
+  const organicResults = (input.items ?? []).filter((item) => item.type === "organic");
+  const lines = [
+    `[seo-ranking] query="${input.keyword}" location_code=${input.locationCode} target=${input.targetDomain}`,
+  ];
+
+  if (input.checkUrl) {
+    lines.push(`[seo-ranking] check_url=${input.checkUrl}`);
+  }
+
+  if (organicResults.length === 0) {
+    lines.push("[seo-ranking]   (no organic results returned)");
+  } else {
+    for (const result of organicResults) {
+      if (typeof result.rank_group !== "number") continue;
+      const domain =
+        extractHostname(result.url ?? "") ?? result.domain?.toLowerCase() ?? "?";
+      lines.push(
+        `[seo-ranking]   #${String(result.rank_group).padStart(2, " ")} ${domain} — ${result.url ?? ""}`,
+      );
+    }
+  }
+
+  lines.push(
+    `[seo-ranking] matched target position: ${input.matchedPosition ?? "none"}`,
+  );
+  console.info(lines.join("\n"));
+}
+
+function parseAndLogSerpResult(
+  serpResult: DataForSeoSerpResult | undefined,
+  params: RankingSearchParams,
+): RankingSearchResult {
+  const parsed = parseDataForSeoOrganicItems(serpResult?.items, params.targetDomain);
+  logSerpRankingDebug({
+    keyword: params.keyword,
+    locationCode: params.locationCode,
+    targetDomain: params.targetDomain,
+    checkUrl: serpResult?.check_url ?? null,
+    items: serpResult?.items,
+    matchedPosition: parsed.position,
+  });
+  return {
+    ...parsed,
+    checkUrl: serpResult?.check_url ?? null,
+  };
+}
+
 export function buildDataForSeoSearchTask(params: RankingSearchParams) {
   return {
     keyword: params.keyword,
-    location_code: params.market.locationCode,
+    location_code: params.locationCode,
     language_code: params.market.languageCode,
     depth: DATAFORSEO_SEARCH_DEPTH,
     se_domain: params.market.googleDomain,
@@ -180,7 +247,7 @@ export async function fetchDataForSeoLiveOrganic(
   }
 
   const serpResult = task?.result?.[0];
-  return parseDataForSeoOrganicItems(serpResult?.items, params.targetDomain);
+  return parseAndLogSerpResult(serpResult, params);
 }
 
 export async function fetchDataForSeoQueuedOrganic(
@@ -216,7 +283,7 @@ export async function fetchDataForSeoQueuedOrganic(
 
     const serpResult = task?.result?.[0];
     if (serpResult?.items?.length) {
-      return parseDataForSeoOrganicItems(serpResult.items, params.targetDomain);
+      return parseAndLogSerpResult(serpResult, params);
     }
 
     await sleep(QUEUE_POLL_INTERVAL_MS);

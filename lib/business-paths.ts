@@ -107,7 +107,7 @@ export function businessProfilePath(
   return tab === "password" ? `${base}?tab=password` : base;
 }
 
-export type BusinessSettingsTab = "calendar" | "general";
+export type BusinessSettingsTab = "calendar" | "general" | "website";
 
 export function businessSettingsPath(
   businessId: string,
@@ -116,6 +116,9 @@ export function businessSettingsPath(
   const base = `${businessBasePath(businessId)}/settings`;
   if (tab === "general") {
     return `${base}?tab=general`;
+  }
+  if (tab === "website") {
+    return `${base}?tab=website`;
   }
   if (tab === "calendar") {
     return `${base}?tab=calendar`;
@@ -126,7 +129,9 @@ export function businessSettingsPath(
 export function resolveBusinessSettingsTab(
   tab: string | null | undefined,
 ): BusinessSettingsTab {
-  return tab === "general" ? "general" : "calendar";
+  if (tab === "general") return "general";
+  if (tab === "website") return "website";
+  return "calendar";
 }
 
 export function resolveBusinessProfileTab(
