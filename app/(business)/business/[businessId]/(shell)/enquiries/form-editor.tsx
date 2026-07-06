@@ -23,11 +23,13 @@ import type { FormRow } from "@/lib/forms";
 import {
   DEFAULT_FORM_FIELDS,
   FORM_FIELD_TYPES,
+  FORM_FIELD_TYPE_LABELS,
   type FormFieldWriteInput,
 } from "@/lib/validation/form";
 
 function emptyField(index: number): FormFieldWriteInput {
   return {
+    id: crypto.randomUUID(),
     key: `field_${index + 1}`,
     label: `Feld ${index + 1}`,
     type: "TEXT",
@@ -50,13 +52,18 @@ export function FormEditor({
   const [isActive, setIsActive] = useState(form?.isActive ?? true);
   const [fields, setFields] = useState<FormFieldWriteInput[]>(
     form?.fields.map((field) => ({
+      id: field.id,
       key: field.key,
       label: field.label,
       type: field.type as FormFieldWriteInput["type"],
       required: field.required,
       placeholder: field.placeholder ?? "",
       sortOrder: field.sortOrder,
-    })) ?? DEFAULT_FORM_FIELDS,
+    })) ??
+      DEFAULT_FORM_FIELDS.map((field) => ({
+        ...field,
+        id: crypto.randomUUID(),
+      })),
   );
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -157,7 +164,7 @@ export function FormEditor({
         <CardContent className="space-y-4">
           {fields.map((field, index) => (
             <div
-              key={`${field.key}-${index}`}
+              key={field.id ?? index}
               className="grid gap-4 rounded-lg border border-border p-4 md:grid-cols-2"
             >
               <div className="space-y-2">
@@ -196,12 +203,19 @@ export function FormEditor({
                   <SelectContent>
                     {FORM_FIELD_TYPES.map((type) => (
                       <SelectItem key={type} value={type}>
-                        {type}
+                        {FORM_FIELD_TYPE_LABELS[type]}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {field.type === "JSON" ? (
+                  <p className="text-xs text-muted-foreground">
+                    Webhook-Feld: akzeptiert JSON-Arrays (z. B. Mehrfachauswahl) oder
+                    Objekte. Keine Eingabe in der App.
+                  </p>
+                ) : null}
               </div>
+              {field.type === "JSON" ? null : (
               <div className="space-y-2">
                 <Label>Platzhalter</Label>
                 <Input
@@ -211,6 +225,7 @@ export function FormEditor({
                   }
                 />
               </div>
+              )}
               <div className="flex items-center justify-between md:col-span-2">
                 <div className="flex items-center gap-2">
                   <Switch

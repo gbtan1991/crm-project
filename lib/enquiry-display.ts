@@ -62,5 +62,14 @@ export function enquiryDisplayValue(value: unknown): string {
   if (typeof value === "number") {
     return String(value);
   }
+  if (typeof value === "boolean") {
+    return value ? "Ja" : "Nein";
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => enquiryDisplayValue(item)).join(", ");
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
   return String(value);
 }

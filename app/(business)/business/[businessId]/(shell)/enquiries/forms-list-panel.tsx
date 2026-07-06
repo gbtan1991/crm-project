@@ -33,13 +33,18 @@ function sampleValueForField(field: FormFieldRow) {
       return 1;
     case "TEXTAREA":
       return "Ich möchte einen Termin für nächste Woche buchen.";
+    case "JSON":
+      return [
+        "Weniger als 50 Google-Bewertungen",
+        "Zu wenige Anfragen",
+      ];
     default:
       return field.key === "name" ? "Alex Müller" : field.label;
   }
 }
 
 function samplePayload(fields: FormFieldRow[]) {
-  return fields.reduce<Record<string, string | number>>((payload, field) => {
+  return fields.reduce<Record<string, unknown>>((payload, field) => {
     payload[field.key] = sampleValueForField(field);
     return payload;
   }, {});

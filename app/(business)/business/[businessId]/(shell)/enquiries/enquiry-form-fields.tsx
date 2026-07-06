@@ -50,7 +50,11 @@ function displayFieldPlaceholder(field: FormFieldRow): string | undefined {
 export function emptyEnquiryFormValues(
   fields: FormFieldRow[],
 ): Record<string, string> {
-  return Object.fromEntries(fields.map((field) => [field.key, ""]));
+  return Object.fromEntries(
+    fields
+      .filter((field) => field.type !== "JSON")
+      .map((field) => [field.key, ""]),
+  );
 }
 
 export function EnquiryFormFields({
@@ -64,7 +68,9 @@ export function EnquiryFormFields({
 }) {
   return (
     <div className="space-y-4">
-      {fields.map((field) => (
+      {fields
+        .filter((field) => field.type !== "JSON")
+        .map((field) => (
         <div key={field.key} className="space-y-2">
           <Label htmlFor={`enquiry-${field.key}`}>
             {displayFieldLabel(field)}

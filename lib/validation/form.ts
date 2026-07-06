@@ -6,7 +6,38 @@ export const FORM_FIELD_TYPES = [
   "PHONE",
   "TEXTAREA",
   "NUMBER",
+  "JSON",
 ] as const;
+
+export const FORM_FIELD_TYPE_LABELS: Record<(typeof FORM_FIELD_TYPES)[number], string> = {
+  TEXT: "Text",
+  EMAIL: "E-Mail",
+  PHONE: "Telefon",
+  TEXTAREA: "Textbereich",
+  NUMBER: "Zahl",
+  JSON: "JSON (Mehrfachauswahl / Array)",
+};
+
+export const JSON_FIELD_MAX_ARRAY_LENGTH = 50;
+export const JSON_FIELD_MAX_STRING_LENGTH = 500;
+export const JSON_FIELD_MAX_OBJECT_KEYS = 20;
+
+const jsonPrimitiveSchema = z.union([
+  z.string().trim().max(JSON_FIELD_MAX_STRING_LENGTH),
+  z.number().finite(),
+  z.boolean(),
+]);
+
+export const jsonFieldValueSchema = z.union([
+  z.array(jsonPrimitiveSchema).max(JSON_FIELD_MAX_ARRAY_LENGTH),
+  z
+    .record(z.string().trim().min(1).max(100), jsonPrimitiveSchema)
+    .refine(
+      (value) => Object.keys(value).length <= JSON_FIELD_MAX_OBJECT_KEYS,
+      `Maximal ${JSON_FIELD_MAX_OBJECT_KEYS} Schlüssel erlaubt.`,
+    ),
+  jsonPrimitiveSchema,
+]);
 
 export const formFieldKeySchema = z
   .string()
@@ -65,10 +96,16 @@ export function buildEnquiryPayloadSchema(
     type: (typeof FORM_FIELD_TYPES)[number];
     required: boolean;
   }>,
+  options?: { includeJsonFields?: boolean },
 ) {
+  const activeFields =
+    options?.includeJsonFields === false
+      ? fields.filter((field) => field.type !== "JSON")
+      : fields;
+
   const shape: Record<string, z.ZodTypeAny> = {};
 
-  for (const field of fields) {
+  for (const field of activeFields) {
     let schema: z.ZodTypeAny;
 
     switch (field.type) {
@@ -84,6 +121,24 @@ export function buildEnquiryPayloadSchema(
       case "NUMBER":
         schema = z.coerce.number();
         break;
+      case "JSON":
+        schema = jsonFieldValueSchema;
+        if (field.required) {
+          schema = schema.refine(
+            (value) => {
+              if (Array.isArray(value)) return value.length > 0;
+              if (value !== null && typeof value === "object") {
+                return Object.keys(value).length > 0;
+              }
+              return value !== null && value !== undefined && value !== "";
+            },
+            { message: `${field.key} ist erforderlich.` },
+          );
+        } else {
+          schema = schema.optional();
+        }
+        shape[field.key] = schema;
+        continue;
       default:
         schema = z.string().trim().max(500);
     }

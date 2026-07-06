@@ -202,7 +202,7 @@ export async function createEnquiryForBusiness(
     return { error: "Formular nicht gefunden oder inaktiv." as const };
   }
 
-  const schema = buildEnquiryPayloadSchema(form.fields);
+  const schema = buildEnquiryPayloadSchema(form.fields, { includeJsonFields: false });
   const parsed = schema.safeParse(payload);
 
   if (!parsed.success) {

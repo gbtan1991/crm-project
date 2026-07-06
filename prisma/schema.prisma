@@ -175,6 +175,7 @@ enum FormFieldType {
   PHONE
   TEXTAREA
   NUMBER
+  JSON
 }
 
 enum EnquiryStatus {
