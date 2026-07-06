@@ -45,6 +45,8 @@ import type { AdminBusinessRow } from "@/lib/businesses";
 import {
   SUBSCRIPTION_PLANS,
   SUBSCRIPTION_STATUSES,
+  subscriptionPlanLabel,
+  subscriptionStatusLabel,
 } from "@/lib/validation/business";
 
 export function BusinessRowActions({ business }: { business: AdminBusinessRow }) {
@@ -205,7 +207,7 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
                   <SelectContent>
                     {SUBSCRIPTION_PLANS.map((p) => (
                       <SelectItem key={p} value={p}>
-                        {p}
+                        {subscriptionPlanLabel(p)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -221,7 +223,7 @@ export function BusinessRowActions({ business }: { business: AdminBusinessRow })
                   <SelectContent>
                     {SUBSCRIPTION_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {s}
+                        {subscriptionStatusLabel(s)}
                       </SelectItem>
                     ))}
                   </SelectContent>

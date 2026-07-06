@@ -50,7 +50,7 @@ function bucketByMonth(dates: Date[]): { month: string; count: number }[] {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     buckets.push({
       key: `${d.getFullYear()}-${d.getMonth()}`,
-      label: d.toLocaleString("en-US", { month: "short" }),
+      label: d.toLocaleString("de-CH", { month: "short" }),
       count: 0,
     });
   }

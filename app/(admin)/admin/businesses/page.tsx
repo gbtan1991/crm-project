@@ -17,6 +17,10 @@ import {
 import { businessDashboardPath } from "@/lib/business-paths";
 import { listBusinessesForAdmin } from "@/lib/businesses";
 import { parsePageParam } from "@/lib/pagination";
+import {
+  subscriptionPlanLabel,
+  subscriptionStatusLabel,
+} from "@/lib/validation/business";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("de-CH", {
@@ -88,7 +92,9 @@ export default async function AdminBusinessesPage({
                       {business.ownerEmail}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{business.plan}</Badge>
+                      <Badge variant="secondary">
+                        {subscriptionPlanLabel(business.plan)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -96,7 +102,7 @@ export default async function AdminBusinessesPage({
                           business.status === "ACTIVE" ? "success" : "outline"
                         }
                       >
-                        {business.status}
+                        {subscriptionStatusLabel(business.status)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">

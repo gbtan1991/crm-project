@@ -82,8 +82,8 @@ export function GeneralSettingsForm({
               required
             />
             <p className="text-xs text-muted-foreground">
-              Used for appointments, reminders, and calendar sync. IANA timezone
-              name (for example, Europe/London).
+              Wird für Termine, Erinnerungen und Kalendersynchronisation verwendet.
+              IANA-Zeitzone (z. B. Europe/Zurich).
             </p>
           </div>
 

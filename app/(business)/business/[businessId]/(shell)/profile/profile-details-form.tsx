@@ -77,7 +77,7 @@ export function ProfileDetailsForm({
               className="bg-muted/40"
             />
             <p className="text-xs text-muted-foreground">
-              Your login email cannot be changed here.
+              Ihre Anmelde-E-Mail kann hier nicht geändert werden.
             </p>
           </div>
 

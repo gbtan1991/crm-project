@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowDown,
+  ArrowUp,
   CheckCircle,
   ExternalLink,
   Loader2,
@@ -12,6 +14,7 @@ import {
   RefreshCw,
   Search,
   Trash2,
+  X,
   XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -42,9 +45,11 @@ import type {
   KeywordRankingSyncRow,
 } from "@/lib/seo-visibility/keywords";
 import {
+  getRankingTier,
   getVisibilityDescription,
   getVisibilityLabel,
   type KeywordVisibility,
+  type RankingTier,
 } from "@/lib/seo-visibility/visibility";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +58,124 @@ function formatSyncDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+}
+
+type TierFilter = "top3" | "top10" | "top50" | "notRanked";
+type SortOrder = "best" | "worst";
+
+const TIER_FILTERS: {
+  id: TierFilter;
+  label: string;
+  className: string;
+  activeClassName: string;
+}[] = [
+  {
+    id: "top3",
+    label: "Top 3",
+    className: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100",
+    activeClassName: "ring-2 ring-emerald-400 ring-offset-1",
+  },
+  {
+    id: "top10",
+    label: "Top 10",
+    className: "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100",
+    activeClassName: "ring-2 ring-amber-400 ring-offset-1",
+  },
+  {
+    id: "top50",
+    label: "Top 50",
+    className: "border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100",
+    activeClassName: "ring-2 ring-orange-400 ring-offset-1",
+  },
+  {
+    id: "notRanked",
+    label: "Nicht gerankt",
+    className: "border-red-200 bg-red-50 text-red-700 hover:bg-red-100",
+    activeClassName: "ring-2 ring-red-400 ring-offset-1",
+  },
+];
+
+function keywordTier(keyword: BusinessKeywordListRow): RankingTier {
+  return getRankingTier(keyword.latestRanking?.position ?? null);
+}
+
+function matchesTierFilter(keyword: BusinessKeywordListRow, filter: TierFilter) {
+  const tier = keywordTier(keyword);
+  return filter === "notRanked" ? tier === "none" : tier === filter;
+}
+
+function filterAndSortKeywords(
+  keywords: BusinessKeywordListRow[],
+  tierFilter: TierFilter | null,
+  sortOrder: SortOrder | null,
+) {
+  let result = tierFilter
+    ? keywords.filter((keyword) => matchesTierFilter(keyword, tierFilter))
+    : keywords;
+
+  if (sortOrder) {
+    result = [...result].sort((a, b) => {
+      const posA = a.latestRanking?.position ?? Number.POSITIVE_INFINITY;
+      const posB = b.latestRanking?.position ?? Number.POSITIVE_INFINITY;
+      return sortOrder === "best" ? posA - posB : posB - posA;
+    });
+  }
+
+  return result;
+}
+
+function TierFilterBadge({
+  label,
+  count,
+  active,
+  className,
+  activeClassName,
+  onToggle,
+  onClear,
+}: {
+  label: string;
+  count: number;
+  active: boolean;
+  className: string;
+  activeClassName: string;
+  onToggle: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onToggle}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
+        className,
+        active && activeClassName,
+      )}
+    >
+      {label} ({count})
+      {active ? (
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label="Filter entfernen"
+          className="rounded-full p-0.5 hover:bg-black/10"
+          onClick={(event) => {
+            event.stopPropagation();
+            onClear();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              event.stopPropagation();
+              onClear();
+            }
+          }}
+        >
+          <X className="size-3" />
+        </span>
+      ) : null}
+    </button>
+  );
 }
 
 function visibilityStyles(visibility: KeywordVisibility) {
@@ -387,6 +510,8 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
   const [syncing, setSyncing] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [tierFilter, setTierFilter] = useState<TierFilter | null>(null);
+  const [sortOrder, setSortOrder] = useState<SortOrder | null>(null);
 
   const loadOverview = useCallback(async (options?: { silent?: boolean }) => {
     if (!options?.silent) {
@@ -479,6 +604,15 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
   const keywords = overview?.keywords ?? [];
   const missingDomain = !overview?.targetDomain;
 
+  const filteredKeywords = useMemo(
+    () => filterAndSortKeywords(keywords, tierFilter, sortOrder),
+    [keywords, tierFilter, sortOrder],
+  );
+
+  function toggleTierFilter(filter: TierFilter) {
+    setTierFilter((current) => (current === filter ? null : filter));
+  }
+
   return (
     <section className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
@@ -545,19 +679,58 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
       ) : null}
 
       {tierSummary && keywords.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
-          <Badge variant="outline" className="gap-1 border-emerald-200 bg-emerald-50 text-emerald-700">
-            Top 3 ({tierSummary.top3})
-          </Badge>
-          <Badge variant="outline" className="gap-1 border-amber-200 bg-amber-50 text-amber-700">
-            Top 10 ({tierSummary.top10})
-          </Badge>
-          <Badge variant="outline" className="gap-1 border-orange-200 bg-orange-50 text-orange-700">
-            Top 50 ({tierSummary.top50})
-          </Badge>
-          <Badge variant="outline" className="gap-1 border-red-200 bg-red-50 text-red-700">
-            Nicht gerankt ({tierSummary.notRanked})
-          </Badge>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-3">
+            {TIER_FILTERS.map((filter) => {
+              const count =
+                filter.id === "top3"
+                  ? tierSummary.top3
+                  : filter.id === "top10"
+                    ? tierSummary.top10
+                    : filter.id === "top50"
+                      ? tierSummary.top50
+                      : tierSummary.notRanked;
+
+              return (
+                <TierFilterBadge
+                  key={filter.id}
+                  label={filter.label}
+                  count={count}
+                  active={tierFilter === filter.id}
+                  className={filter.className}
+                  activeClassName={filter.activeClassName}
+                  onToggle={() => toggleTierFilter(filter.id)}
+                  onClear={() => setTierFilter(null)}
+                />
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">Sortierung:</span>
+            <Button
+              type="button"
+              size="sm"
+              variant={sortOrder === "best" ? "default" : "outline"}
+              onClick={() =>
+                setSortOrder((current) => (current === "best" ? null : "best"))
+              }
+            >
+              <ArrowUp className="size-3.5" />
+              Beste zuerst
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={sortOrder === "worst" ? "default" : "outline"}
+              onClick={() =>
+                setSortOrder((current) => (current === "worst" ? null : "worst"))
+              }
+            >
+              <ArrowDown className="size-3.5" />
+              Schlechteste zuerst
+            </Button>
+          </div>
         </div>
       ) : null}
 
@@ -571,9 +744,25 @@ export function SeoVisibilityPanel({ businessId }: { businessId: string }) {
             Noch keine Keywords vorhanden. Fügen Sie Ihr erstes Keyword hinzu.
           </CardContent>
         </Card>
+      ) : filteredKeywords.length === 0 ? (
+        <Card>
+          <CardContent className="py-14 text-center text-muted-foreground">
+            Keine Keywords für diesen Filter.
+            {tierFilter ? (
+              <Button
+                type="button"
+                variant="link"
+                className="mt-2 h-auto p-0"
+                onClick={() => setTierFilter(null)}
+              >
+                Filter entfernen
+              </Button>
+            ) : null}
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {keywords.map((keyword) => (
+          {filteredKeywords.map((keyword) => (
             <KeywordCard
               key={keyword.id}
               keyword={keyword}

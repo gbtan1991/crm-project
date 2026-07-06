@@ -276,7 +276,7 @@ export function CustomerDetailView({
         <div className="space-y-5">
           <Card className="p-5">
             <h2 className="mb-4 font-heading text-sm font-bold">
-              Contact information
+              Kontaktinformationen
             </h2>
             <div className="space-y-3 text-sm">
               {contactName ? (
@@ -308,7 +308,7 @@ export function CustomerDetailView({
           <Card className="p-5">
             <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-bold">
               <StickyNote className="size-4 text-primary" />
-              Notes
+              Notizen
             </h2>
             {customer.notes ? (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">
@@ -322,14 +322,14 @@ export function CustomerDetailView({
           <Card className="p-5">
             <h2 className="mb-3 flex items-center gap-2 font-heading text-sm font-bold">
               <TrendingUp className="size-4 text-primary" />
-              Sales volume
+              Umsatz
             </h2>
             <p className="font-heading text-2xl font-extrabold">
               {formatMoney(customer.salesVolume)}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {customer.paidInvoiceCount} bezahlte Rechnung
-              {customer.paidInvoiceCount === 1 ? "" : "s"}
+              {customer.paidInvoiceCount === 1 ? "" : "en"}
             </p>
           </Card>
         </div>
@@ -345,7 +345,7 @@ export function CustomerDetailView({
             <CustomerActivityTimeline events={timelineEvents} timeZone={timeZone} />
             <p className="mt-6 text-xs text-muted-foreground">
               Anfragen, Angebote und Bewertungen erscheinen hier, sobald diese Module
-              are added.
+              hinzugefügt werden.
             </p>
           </Card>
         </div>
@@ -405,10 +405,10 @@ export function CustomerDetailView({
               {customer.bookingCount > 0 ? (
                 <>
                   {" "}
-                  and{" "}
+                  und{" "}
                   <strong>
-                    {customer.bookingCount} linked booking
-                    {customer.bookingCount === 1 ? "" : "s"}
+                    {customer.bookingCount} verknüpfte Buchung
+                    {customer.bookingCount === 1 ? "" : "en"}
                   </strong>
                 </>
               ) : null}
@@ -417,14 +417,14 @@ export function CustomerDetailView({
                   {" "}
                   Dieser Kunde hat auch{" "}
                   <strong>
-                    {customer.invoiceCount} invoice
-                    {customer.invoiceCount === 1 ? "" : "s"}
+                    {customer.invoiceCount} Rechnung
+                    {customer.invoiceCount === 1 ? "" : "en"}
                   </strong>
-                  , so deletion is blocked.
+                  , daher ist das Löschen gesperrt.
                 </>
               ) : null}
-              . Calendar events are not removed — only data in MeisterFlow. This
-              cannot be undone.
+              . Kalenderereignisse werden nicht entfernt — nur Daten in MeisterFlow. Dies
+              kann nicht rückgängig gemacht werden.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
