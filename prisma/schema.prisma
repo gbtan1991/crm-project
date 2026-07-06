@@ -52,6 +52,7 @@ enum CustomerStatus {
 enum CustomerSource {
   MANUAL
   CALENDAR
+  ENQUIRY
 }
 
 enum CronJobType {

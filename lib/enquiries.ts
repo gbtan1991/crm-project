@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { buildEnquiryPayloadSchema } from "@/lib/validation/form";
 import type { EnquiryStatus } from "@/lib/generated/prisma/client";
 import type { CustomerOption } from "@/lib/customers";
+import { findOrCreateCustomerFromEnquiry } from "@/lib/enquiry-customers";
 
 export type EnquiryListRow = {
   id: string;
@@ -163,24 +164,39 @@ export async function createEnquiryFromWebhook(
     ]),
   ) as Prisma.InputJsonValue;
 
-  const enquiry = await prisma.enquiry.create({
-    data: {
-      businessId: form.businessId,
-      formId: form.id,
-      data,
-    },
-    include: {
-      form: { select: { name: true } },
-      customer: {
-        select: {
-          id: true,
-          companyName: true,
-          firstName: true,
-          lastName: true,
-          email: true,
+  const record =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+
+  const enquiry = await prisma.$transaction(async (tx) => {
+    const customer = await findOrCreateCustomerFromEnquiry(
+      form.businessId,
+      record,
+      form.fields,
+      tx,
+    );
+
+    return tx.enquiry.create({
+      data: {
+        businessId: form.businessId,
+        formId: form.id,
+        data,
+        customerId: customer?.id ?? null,
+      },
+      include: {
+        form: { select: { name: true } },
+        customer: {
+          select: {
+            id: true,
+            companyName: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
         },
       },
-    },
+    });
   });
 
   return { enquiry: serializeEnquiry(enquiry) };
