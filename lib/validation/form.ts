@@ -45,8 +45,8 @@ export const formFieldKeySchema = z
   .min(1, "Feldschlüssel ist erforderlich.")
   .max(50)
   .regex(
-    /^[a-z][a-z0-9_]*$/,
-    "Feldschlüssel muss mit einem Buchstaben beginnen und nur Kleinbuchstaben, Zahlen oder Unterstriche enthalten.",
+    /^[a-zA-Z][a-zA-Z0-9_]*$/,
+    "Feldschlüssel muss mit einem Buchstaben beginnen und nur Buchstaben, Zahlen oder Unterstriche enthalten.",
   );
 
 export const formFieldWriteSchema = z.object({
