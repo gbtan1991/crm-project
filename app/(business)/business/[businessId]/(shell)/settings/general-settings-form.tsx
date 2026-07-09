@@ -13,14 +13,17 @@ import { Label } from "@/components/ui/label";
 export function GeneralSettingsForm({
   businessId,
   initialName,
+  initialBusinessEmail,
   initialTimezone,
 }: {
   businessId: string;
   initialName: string;
+  initialBusinessEmail: string;
   initialTimezone: string;
 }) {
   const router = useRouter();
   const [name, setName] = useState(initialName);
+  const [businessEmail, setBusinessEmail] = useState(initialBusinessEmail);
   const [timezone, setTimezone] = useState(initialTimezone);
   const [saving, setSaving] = useState(false);
 
@@ -34,7 +37,7 @@ export function GeneralSettingsForm({
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, timezone }),
+          body: JSON.stringify({ name, businessEmail, timezone }),
         },
       );
       const data = await response.json().catch(() => ({}));
@@ -70,6 +73,22 @@ export function GeneralSettingsForm({
               required
               minLength={2}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="business-email">Benachrichtigungs-E-Mail</Label>
+            <Input
+              id="business-email"
+              type="email"
+              value={businessEmail}
+              onChange={(event) => setBusinessEmail(event.target.value)}
+              placeholder="info@unternehmen.ch"
+            />
+            <p className="text-xs text-muted-foreground">
+              An diese Adresse werden Benachrichtigungen gesendet, z. B. bei
+              neuen Anfragen über Ihre Formulare. Wenn leer, wird die
+              E-Mail-Adresse Ihres Kontos verwendet.
+            </p>
           </div>
 
           <div className="space-y-2">

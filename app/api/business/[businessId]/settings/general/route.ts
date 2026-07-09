@@ -30,18 +30,23 @@ export async function PATCH(request: Request, context: RouteContext) {
       }),
       prisma.businessConfig.upsert({
         where: { businessId },
-        update: { timezone: parsed.data.timezone },
+        update: {
+          timezone: parsed.data.timezone,
+          businessEmail: parsed.data.businessEmail || null,
+        },
         create: {
           businessId,
           timezone: parsed.data.timezone,
+          businessEmail: parsed.data.businessEmail || null,
         },
-        select: { timezone: true },
+        select: { timezone: true, businessEmail: true },
       }),
     ]);
 
     return NextResponse.json({
       name: business.name,
       timezone: config.timezone,
+      businessEmail: config.businessEmail,
     });
   } catch (error) {
     if (error instanceof ApiAuthError) {

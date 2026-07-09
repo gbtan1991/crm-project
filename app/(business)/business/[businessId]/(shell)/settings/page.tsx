@@ -75,6 +75,7 @@ export default async function SettingsPage({ params, searchParams }: PageProps) 
         <GeneralSettingsForm
           businessId={businessId}
           initialName={business.name}
+          initialBusinessEmail={business.config?.businessEmail ?? ""}
           initialTimezone={business.config?.timezone ?? "UTC"}
         />
       ) : activeTab === "website" ? (

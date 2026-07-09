@@ -4,6 +4,20 @@ import { buildEnquiryPayloadSchema } from "@/lib/validation/form";
 import type { EnquiryStatus } from "@/lib/generated/prisma/client";
 import type { CustomerOption } from "@/lib/customers";
 import { findOrCreateCustomerFromEnquiry } from "@/lib/enquiry-customers";
+import { sendEnquiryNotificationEmail } from "@/lib/messages/send-enquiry-notification-email";
+
+function notifyBusinessOwnerOfEnquiry(input: {
+  businessId: string;
+  enquiryId: string;
+  formName: string;
+  fields: Array<{ key: string; label: string; type: string }>;
+  data: Record<string, unknown>;
+  createdAt: Date;
+}) {
+  void sendEnquiryNotificationEmail(input).catch((error) => {
+    console.error("[enquiries][notifyBusinessOwnerOfEnquiry]", error);
+  });
+}
 
 export type EnquiryListRow = {
   id: string;
@@ -199,6 +213,15 @@ export async function createEnquiryFromWebhook(
     });
   });
 
+  notifyBusinessOwnerOfEnquiry({
+    businessId: form.businessId,
+    enquiryId: enquiry.id,
+    formName: form.name,
+    fields: form.fields,
+    data: record,
+    createdAt: enquiry.createdAt,
+  });
+
   return { enquiry: serializeEnquiry(enquiry) };
 }
 
@@ -234,6 +257,11 @@ export async function createEnquiryForBusiness(
     ]),
   ) as Prisma.InputJsonValue;
 
+  const record =
+    data && typeof data === "object" && !Array.isArray(data)
+      ? (data as Record<string, unknown>)
+      : {};
+
   const enquiry = await prisma.enquiry.create({
     data: {
       businessId,
@@ -252,6 +280,15 @@ export async function createEnquiryForBusiness(
         },
       },
     },
+  });
+
+  notifyBusinessOwnerOfEnquiry({
+    businessId,
+    enquiryId: enquiry.id,
+    formName: form.name,
+    fields: form.fields,
+    data: record,
+    createdAt: enquiry.createdAt,
   });
 
   return { enquiry: serializeEnquiry(enquiry) };

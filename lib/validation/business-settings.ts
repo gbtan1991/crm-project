@@ -42,6 +42,13 @@ export const businessGeneralSettingsSchema = z.object({
     .string()
     .trim()
     .min(2, "Firmenname muss mindestens 2 Zeichen lang sein."),
+  businessEmail: z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || z.string().email().safeParse(value).success,
+      "Geben Sie eine gültige E-Mail-Adresse ein.",
+    ),
   timezone: z.string().trim().min(1, "Geben Sie eine Zeitzone ein."),
 });
 
