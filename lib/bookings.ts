@@ -10,6 +10,7 @@ import {
   getConnectedCalendarContext,
   updateCalendarEvent,
 } from "@/lib/calendar/events";
+import { htmlToPlainText } from "@/lib/html-text";
 import { prisma } from "@/lib/prisma";
 import type {
   BookingCreateInput,
@@ -80,7 +81,7 @@ function serializeBooking(booking: {
     endsAt: booking.endsAt.toISOString(),
     location: booking.location,
     meetingUrl: booking.meetingUrl,
-    notes: booking.notes,
+    notes: booking.notes ? htmlToPlainText(booking.notes) : null,
     status: booking.status,
     displayStatus: effectiveBookingStatus(booking.status, booking.endsAt),
     remindersEnabled: booking.remindersEnabled,

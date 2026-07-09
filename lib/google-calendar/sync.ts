@@ -7,6 +7,7 @@ import type {
   CalendarSyncResult,
   NormalizedCalendarEvent,
 } from "@/lib/calendar/types";
+import { htmlToPlainText } from "@/lib/html-text";
 import { GoogleCalendarOAuth } from "@/lib/google-calendar/oauth";
 
 type GoogleEvent = {
@@ -70,7 +71,9 @@ function parseGoogleEvent(event: GoogleEvent): NormalizedCalendarEvent | null {
     endsAt,
     location: event.location ?? undefined,
     meetingUrl,
-    notes: event.description ?? undefined,
+    notes: event.description
+      ? htmlToPlainText(event.description)
+      : undefined,
     allDay,
     cancelled: event.status === "cancelled",
     attendeeEmail: attendee?.email,
