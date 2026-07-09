@@ -39,14 +39,48 @@ function escapeHtml(value: string): string {
     .replaceAll("'", "&#39;");
 }
 
+function formatEnquiryFieldHtml(value: unknown): string {
+  if (value == null || value === "") {
+    return `<span style="color:#a1a1aa;">—</span>`;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return `<span style="color:#a1a1aa;">—</span>`;
+    }
+
+    const items = value
+      .map(
+        (item) =>
+          `<li style="margin:4px 0;">${escapeHtml(enquiryDisplayValue(item))}</li>`,
+      )
+      .join("");
+
+    return `<ul style="margin:0;padding-left:20px;">${items}</ul>`;
+  }
+
+  return escapeHtml(enquiryDisplayValue(value));
+}
+
+function formatEnquiryFieldText(value: unknown): string {
+  if (value == null || value === "") {
+    return "—";
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => `• ${enquiryDisplayValue(item)}`).join("\n");
+  }
+
+  return enquiryDisplayValue(value);
+}
+
 function buildEnquiryEmailContent(input: SendEnquiryNotificationEmailInput) {
-  const visibleFields = input.fields.filter((field) => field.type !== "JSON");
-  const rows = visibleFields
+  const rows = input.fields
     .map((field) => {
-      const value = enquiryDisplayValue(input.data[field.key]);
+      const value = input.data[field.key];
       return `<tr>
         <td style="padding:8px 12px;border-bottom:1px solid #e4e4e7;font-weight:600;color:#52525b;vertical-align:top;width:140px;">${escapeHtml(field.label)}</td>
-        <td style="padding:8px 12px;border-bottom:1px solid #e4e4e7;color:#18181b;white-space:pre-wrap;">${escapeHtml(value)}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e4e4e7;color:#18181b;white-space:pre-wrap;">${formatEnquiryFieldHtml(value)}</td>
       </tr>`;
     })
     .join("");
@@ -79,10 +113,12 @@ function buildEnquiryEmailContent(input: SendEnquiryNotificationEmailInput) {
     `Neue Anfrage über ${input.formName}`,
     `Eingegangen am ${receivedAt}`,
     "",
-    ...visibleFields.map(
-      (field) =>
-        `${field.label}: ${enquiryDisplayValue(input.data[field.key])}`,
-    ),
+    ...input.fields.map((field) => {
+      const value = formatEnquiryFieldText(input.data[field.key]);
+      return Array.isArray(input.data[field.key])
+        ? `${field.label}:\n${value}`
+        : `${field.label}: ${value}`;
+    }),
     "",
     `Anfrage öffnen: ${enquiriesUrl}`,
   ].join("\n");
