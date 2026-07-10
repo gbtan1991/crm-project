@@ -7,6 +7,11 @@ import {
   WebsiteTicketType,
 } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
+import {
+  ADMIN_PAGE_SIZE,
+  resolvePage,
+  type Paginated,
+} from "@/lib/pagination";
 import type { WebsiteTicketWriteInput } from "@/lib/validation/website-ticket";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -54,6 +59,75 @@ export type WebsiteTicketListResult = {
   overview: WebsiteOverview;
   tickets: WebsiteTicketRow[];
 };
+
+export type AdminWebsiteTicketRow = WebsiteTicketRow & {
+  businessId: string;
+  businessName: string;
+  businessSlug: string;
+};
+
+function serializeAdminTicket(input: {
+  id: string;
+  businessId: string;
+  type: WebsiteTicketType;
+  priority: WebsiteTicketPriority;
+  status: WebsiteTicketStatus;
+  title: string;
+  description: string | null;
+  adminNote: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  business: { name: string; slug: string };
+  attachments: Array<{
+    id: string;
+    fileName: string;
+    mimeType: string;
+    size: number;
+    createdAt: Date;
+  }>;
+}): AdminWebsiteTicketRow {
+  return {
+    ...serializeTicket(input),
+    businessId: input.businessId,
+    businessName: input.business.name,
+    businessSlug: input.business.slug,
+  };
+}
+
+export async function listWebsiteTicketsForAdmin(input: {
+  businessId?: string;
+  status?: WebsiteTicketStatus;
+  page?: number;
+  pageSize?: number;
+}): Promise<Paginated<AdminWebsiteTicketRow>> {
+  const pageSize = input.pageSize ?? ADMIN_PAGE_SIZE;
+  const where = {
+    ...(input.businessId ? { businessId: input.businessId } : {}),
+    ...(input.status ? { status: input.status } : {}),
+  };
+
+  const total = await prisma.websiteTicket.count({ where });
+  const { page, totalPages } = resolvePage(input.page ?? 1, total, pageSize);
+
+  const tickets = await prisma.websiteTicket.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    include: {
+      business: { select: { name: true, slug: true } },
+      attachments: { orderBy: { createdAt: "asc" } },
+    },
+  });
+
+  return {
+    rows: tickets.map(serializeAdminTicket),
+    page,
+    pageSize,
+    total,
+    totalPages,
+  };
+}
 
 function sanitizeFileName(fileName: string) {
   return fileName.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "image";

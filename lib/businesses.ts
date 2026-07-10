@@ -76,6 +76,13 @@ export type AdminBusinessRow = {
   createdAt: string;
 };
 
+export async function listBusinessFilterOptionsForAdmin() {
+  return prisma.business.findMany({
+    orderBy: { name: "asc" },
+    select: { id: true, name: true },
+  });
+}
+
 export async function listBusinessesForAdmin(
   requestedPage = 1,
   pageSize = ADMIN_PAGE_SIZE,

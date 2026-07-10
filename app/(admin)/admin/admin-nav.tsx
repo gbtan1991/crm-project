@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Building2, Users, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, Users, LogOut, Ticket } from "lucide-react";
 
 import { signOutAction } from "@/app/actions/auth";
 import { MeisterFlowLogo } from "@/components/meisterflow-logo";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 const tabs = [
   { href: "/admin/dashboard", label: "Übersicht", icon: LayoutDashboard },
   { href: "/admin/businesses", label: "Unternehmen", icon: Building2 },
+  { href: "/admin/tickets", label: "Tickets", icon: Ticket },
   { href: "/admin/users", label: "Benutzer", icon: Users },
 ];
 
