@@ -47,6 +47,11 @@ function displayFieldLabel(field: FormFieldRow): string {
   return byKey[field.key] ?? field.label;
 }
 
+const JSON_PREVIEW_OPTIONS = [
+  "Weniger als 50 Google-Bewertungen",
+  "Zu wenige Anfragen",
+] as const;
+
 function previewPlaceholder(field: FormFieldRow): string {
   if (field.placeholder?.trim()) {
     return field.placeholder.trim();
@@ -62,7 +67,7 @@ function previewPlaceholder(field: FormFieldRow): string {
     case "NUMBER":
       return "1";
     case "JSON":
-      return "Option A, Option B";
+      return JSON_PREVIEW_OPTIONS.join(", ");
     default:
       return field.key === "name" ? "Alex Müller" : displayFieldLabel(field);
   }
@@ -79,10 +84,7 @@ function sampleValueForField(field: FormFieldRow) {
     case "TEXTAREA":
       return "Ich möchte einen Termin für nächste Woche buchen.";
     case "JSON":
-      return [
-        "Weniger als 50 Google-Bewertungen",
-        "Zu wenige Anfragen",
-      ];
+      return [...JSON_PREVIEW_OPTIONS];
     default:
       return field.key === "name" ? "Alex Müller" : field.label;
   }
@@ -131,7 +133,7 @@ function FormPreview({ fields }: { fields: FormFieldRow[] }) {
               />
             ) : field.type === "JSON" ? (
               <div className="flex flex-wrap gap-2 rounded-md border bg-background/80 px-3 py-2">
-                {["Option A", "Option B"].map((option) => (
+                {JSON_PREVIEW_OPTIONS.map((option) => (
                   <Badge key={option} variant="secondary">
                     {option}
                   </Badge>
@@ -209,9 +211,9 @@ function FormCard({
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {form.fields.length} Feld
-              {form.fields.length === 1 ? "" : "s"} · {form.enquiryCount}{" "}
-              Anfrage{form.enquiryCount === 1 ? "" : "n"}
+              {form.fields.length}{" "}
+              {form.fields.length === 1 ? "Feld" : "Felder"} · {form.enquiryCount}{" "}
+              {form.enquiryCount === 1 ? "Anfrage" : "Anfragen"}
             </p>
           </div>
 
